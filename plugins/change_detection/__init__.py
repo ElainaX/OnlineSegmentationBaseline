@@ -1,4 +1,6 @@
-from .simple_depth_detector import SimpleDepthChangeDetector
+from .simple_depth_detector import (
+    MultiViewDepthChangeDetector,
+    SimpleDepthChangeDetector,
+)
 
-__all__ = ["SimpleDepthChangeDetector"]
-
+__all__ = ["MultiViewDepthChangeDetector", "SimpleDepthChangeDetector"]

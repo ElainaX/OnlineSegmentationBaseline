@@ -205,11 +205,23 @@ class ChangeDebugVisualizer:
         projection = cv2.dilate(projection, np.ones((5, 5), np.uint8))
         return projection.astype(bool)
 
-    def _write_history(self, event_dir, dataset, instance, conflict_points):
+    def _write_history(self, event_dir, dataset, instance, conflict_points,
+                       evidence_event):
         history_dir = os.path.join(event_dir, "history")
         os.makedirs(history_dir, exist_ok=True)
         saved_images = []
-        selected = self._select_history(instance.ori_mask_list, self.max_history_frames)
+        view_by_frame = {
+            int(view["frame_id"]): view for view in evidence_event.get("views", [])
+        }
+        if view_by_frame:
+            selected = []
+            for frame_id, view in view_by_frame.items():
+                for mask_id in view.get("source_mask_ids", []):
+                    selected.append((frame_id, int(mask_id)))
+            selected = self._select_history(selected, self.max_history_frames)
+        else:
+            selected = self._select_history(
+                instance.ori_mask_list, self.max_history_frames)
         points_world = conflict_points.detach().cpu().numpy()
 
         latest_seg_img = getattr(dataset, "latest_seg_img", None)
@@ -245,6 +257,19 @@ class ChangeDebugVisualizer:
             cv2.putText(
                 rgb, "frame=%d mask=%d" % (frame_id, mask_id), (8, 22),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 0), 1, cv2.LINE_AA)
+            validation = view_by_frame.get(int(frame_id))
+            if validation is not None:
+                cv2.putText(
+                    rgb,
+                    "%s proj=%.2f mask=%.3f d=%.2f c=%.2f" % (
+                        "VERIFIED" if validation["verified"] else "REJECTED",
+                        validation["projected_agreement"],
+                        validation["mask_coverage"],
+                        validation["depth_agreement"],
+                        validation["color_agreement"]),
+                    (8, 44), cv2.FONT_HERSHEY_SIMPLEX, 0.42,
+                    (0, 255, 0) if validation["verified"] else (255, 64, 64),
+                    1, cv2.LINE_AA)
             save_path = os.path.join(history_dir, "frame_%06d_mask_%03d.png" % (frame_id, mask_id))
             self._write_rgb(save_path, rgb)
             saved_images.append(rgb)
@@ -294,9 +319,11 @@ class ChangeDebugVisualizer:
         cv2.drawContours(gray_rgb, contours, -1, (255, 0, 0), 2)
         cv2.putText(
             gray_rgb,
-            "track=%d state=%s hits=%d ratio=%.3f" % (
+            "track=%d state=%s views=%d/%d ratio=%.3f" % (
                 instance.track_uid, evidence_event["new_state"],
-                evidence_event["independent_hit_count"], candidate["conflict_ratio"]),
+                evidence_event.get("verified_view_count", 0),
+                evidence_event.get("required_view_count", 0),
+                candidate["conflict_ratio"]),
             (8, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1, cv2.LINE_AA)
         self._write_rgb(os.path.join(event_dir, "current_conflict_gray.png"), gray_rgb)
 
@@ -315,7 +342,8 @@ class ChangeDebugVisualizer:
             o3d.io.write_point_cloud(os.path.join(event_dir, "conflict_points.ply"), pcd)
 
         history_images = self._write_history(
-            event_dir, scene_rep.dataset, instance, conflict_points)
+            event_dir, scene_rep.dataset, instance, conflict_points,
+            evidence_event)
         tiles = [gray_rgb] + history_images
         if tiles:
             target_h, target_w = 240, 320
@@ -328,12 +356,13 @@ class ChangeDebugVisualizer:
             "track_uid": int(instance.track_uid),
             "merged_mask_id": int(candidate["merged_mask_id"]),
             "state": evidence_event["new_state"],
-            "independent_hit_count": evidence_event["independent_hit_count"],
+            "verified_view_count": evidence_event.get("verified_view_count", 0),
+            "required_view_count": evidence_event.get("required_view_count", 0),
             "conflict_voxels": int(candidate["conflict_voxels"]),
             "visible_voxels": int(candidate["visible_voxels"]),
             "conflict_ratio": float(candidate["conflict_ratio"]),
             "depth_threshold": float(candidate["depth_threshold"]),
-            "hits": evidence_event["hits"],
+            "views": evidence_event.get("views", []),
             "historical_masks": [[int(f), int(m)] for f, m in instance.ori_mask_list],
         }
         with open(os.path.join(event_dir, "summary.json"), "w", encoding="utf-8") as file:

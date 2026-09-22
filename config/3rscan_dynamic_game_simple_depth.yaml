@@ -29,15 +29,18 @@ save:
   save_interval: 0
   ckpt_interval: 0
 
-# GaME-inspired, non-destructive disappearance detector. It ray-casts the
-# pre-integration TSDF, associates farther-depth conflicts with OnlineAnySeg
-# instances, and records independent temporal evidence plus debug artifacts.
+# GaME-style, non-destructive multi-view disappearance detector. It ray-casts
+# the pre-integration TSDF, requires depth AND color disagreement in the current
+# view, then verifies the old surface against RGB-D and CropFormer masks in
+# covisible historical keyframes.
 change_detection:
   enabled: true
   interval: 10
   warmup_frames: 30
 
   depth_threshold: 0.05
+  color_error_threshold: 0.10
+  require_current_color: true
   min_map_weight: 3.0
   range_map_down_factor: 8
   morph_kernel: 3
@@ -48,10 +51,22 @@ change_detection:
   min_conflict_ratio: 0.20
   visibility_depth_tolerance: 0.075
 
-  confirm_hits: 3
-  min_hit_frame_gap: 10
-  min_hit_translation: 0.05
-  min_hit_rotation_deg: 5.0
+  # Bounded CPU keyframe bank. A frame is kept only after sufficient motion.
+  keyframe_min_frame_gap: 5
+  keyframe_translation: 0.05
+  keyframe_rotation_deg: 5.0
+  max_keyframes: 200
+
+  # A current conflict is accepted only if the same old TSDF surface agrees
+  # with the original instance masks in at least this many historical views.
+  max_validation_views: 8
+  min_verified_views: 2
+  min_covisible_pixels: 20
+  history_depth_tolerance: 0.075
+  history_color_tolerance: 0.15
+  history_projected_agreement: 0.20
+  history_mask_coverage: 0.01
+  require_history_color: true
 
   debug:
     enabled: true

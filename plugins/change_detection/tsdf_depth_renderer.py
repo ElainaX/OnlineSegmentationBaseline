@@ -9,7 +9,7 @@ def _o3d_tensor_to_torch(tensor):
 
 
 class TSDFDepthRenderer:
-    """Render the pre-integration TSDF from the current camera viewpoint."""
+    """Render pre-integration TSDF depth and color from the current viewpoint."""
 
     def __init__(self, cfg):
         self.weight_threshold = float(cfg.get("min_map_weight", 3.0))
@@ -34,7 +34,7 @@ class TSDFDepthRenderer:
             extrinsic=extrinsic,
             width=scene_rep.img_w,
             height=scene_rep.img_h,
-            render_attributes=["depth"],
+            render_attributes=["depth", "color"],
             depth_scale=scene_rep.depth_scale,
             depth_min=max(float(scene_rep.cfg["cam"].get("depth_near", 0.1)), 0.001),
             depth_max=scene_rep.depth_far,
@@ -46,6 +46,15 @@ class TSDFDepthRenderer:
         rendered_depth = _o3d_tensor_to_torch(result["depth"]).clone().squeeze()
         rendered_depth = rendered_depth.to(dtype=torch.float32) / scene_rep.depth_scale
 
+        rendered_color = _o3d_tensor_to_torch(result["color"]).clone().squeeze()
+        rendered_color = rendered_color.to(dtype=torch.float32)
+        # Open3D versions differ in whether VoxelBlockGrid ray-cast colors are
+        # returned in [0, 1] or [0, 255]. OnlineAnySeg images use [0, 1].
+        if rendered_color.numel() and rendered_color.max().item() > 1.5:
+            rendered_color = rendered_color / 255.0
+        rendered_color = rendered_color.clamp(0.0, 1.0)
+
         return {
             "depth": rendered_depth,
+            "color": rendered_color,
         }

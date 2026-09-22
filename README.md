@@ -211,7 +211,7 @@ TODO
 
 ## 4. Evaluation
 
-An optional, non-destructive GaME-style TSDF depth-change detector is documented
+An optional, non-destructive GaME-style TSDF multi-view change detector is documented
 in [`docs/game_simple_depth_detection.md`](docs/game_simple_depth_detection.md).
 
 #### 4.1 Preparing Ground-Truth Segmentation Results

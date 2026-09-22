@@ -1,33 +1,39 @@
-# GaME-style Simple TSDF Depth Change Detection
+# GaME-style TSDF Multi-view Change Verification
 
-This extension detects potentially stale OnlineAnySeg instances without
-modifying the TSDF or deleting masks. It is intended as a safe first stage for
-debugging long-term scene changes.
+This plugin detects potentially stale OnlineAnySeg instances without deleting
+TSDF voxels or masks. It replaces the former repeated-hit heuristic with a
+GaME-style current-view conflict test followed by historical multi-view
+verification.
 
 ## Processing order
 
-For selected mapping frames, the extension runs before the current RGB-D frame
-is integrated:
+For a selected mapping frame, the plugin runs before that RGB-D frame is fused:
 
-1. Ray-cast the existing Open3D `VoxelBlockGrid` from the current camera pose.
-2. Mark a disappearance conflict where both depths are valid and
-   `observed_depth - rendered_depth > depth_threshold`.
-3. Back-project the old rendered surface, quantize it to OnlineAnySeg voxels,
-   and query the existing voxel-to-mask hash table.
-4. Require minimum conflict size and visible-instance coverage.
-5. Accumulate only observations separated in time or viewpoint. Three
-   independent observations change an instance from `ACTIVE` through
-   `SUSPECT` to `STALE` by default.
-6. Write an event directory with depth images, gray conflict overlays, an
-   instance outline, historical mask views, a point cloud, and JSON metadata.
+1. Ray-cast depth and color from the existing Open3D `VoxelBlockGrid`.
+2. Select pixels where the observation is farther than the old TSDF surface by
+   `depth_threshold` **and** the rendered/observed RGB error exceeds
+   `color_error_threshold`.
+3. Associate the old surface samples with OnlineAnySeg instances through the
+   voxel-to-mask hash table.
+4. For each candidate, project its conflicting TSDF samples into stored
+   historical keyframes that contributed original 2D masks to that instance.
+5. In each view, require agreement with historical depth, historical RGB, and
+   the original CropFormer mask. A view also has to pass projected-support and
+   mask-coverage thresholds.
+6. Mark the track `STALE` only when at least `min_verified_views` historical
+   keyframes pass. Repeated current-frame hits are no longer accumulated.
+7. Store the verified historical mask regions as per-keyframe occlusion masks
+   for the later TSDF repair/re-fusion stage.
 
-The sign of the depth difference is important. A closer observation usually
-indicates new foreground geometry or occlusion and is not disappearance
-evidence.
+The current frame is inserted into the bounded CPU keyframe bank only after its
+detection step, so it cannot validate itself. Keyframe selection uses frame
+spacing plus camera translation/rotation, and therefore does not depend on
+`session_boundary.json`.
 
 ## Run
 
-Use the change-detection config in place of the original 3RScan config:
+The existing config filename is retained so previous commands continue to
+work, but its detector is now the multi-view implementation:
 
 ```bash
 python main.py \
@@ -39,69 +45,49 @@ python main.py \
   --device cuda:0
 ```
 
-Other dataset configs can enable the same plugin by copying the
-`change_detection` block. When the block is absent, or `enabled: false`, the
-baseline behavior is unchanged.
+When `change_detection.enabled` is absent or false, the original OnlineAnySeg
+pipeline is unchanged.
+
+## Important controls
+
+- `interval`: current-frame conflict detection frequency. Keyframe collection
+  can still occur on every mapping frame.
+- `depth_threshold`, `color_error_threshold`: GaME-style current-view depth and
+  color disagreement gates.
+- `min_map_weight`: minimum TSDF weight accepted by Open3D ray casting; this is
+  the TSDF counterpart of GaME's opacity gate.
+- `keyframe_*`, `max_keyframes`: motion-based CPU keyframe-bank policy.
+- `min_verified_views`: number of historical views required to accept a stale
+  track.
+- `history_depth_tolerance`, `history_color_tolerance`: agreement thresholds in
+  a historical view.
+- `history_projected_agreement`: fraction of projected candidate samples that
+  must agree with depth, color, and the source mask.
+- `history_mask_coverage`: fraction of the source CropFormer mask covered by
+  agreeing candidate samples. GaME also uses a deliberately low mask-coverage
+  threshold to grow a partial conflict to an object mask.
+- `debug.preview_interval`: periodic current-view diagnostics even when no
+  instance is accepted.
 
 ## Output
 
-Events are stored under:
+Outputs remain under `<output>/<sequence>/change_debug/`. Accepted event
+directories contain current depth/color conflict views, `conflict_points.ply`,
+historical views annotated as `VERIFIED` or `REJECTED`, a contact sheet, and a
+`summary.json` containing per-view depth/color/mask agreement values.
+
+Console messages distinguish a rejected current candidate from an accepted
+multi-view event:
 
 ```text
-<output>/<sequence>/change_debug/
-  previews/
-    frame_<frame>/
-      comparison_sheet.png
-      current_rgb.png
-      observed_depth.png
-      tsdf_rendered_depth.png
-      signed_depth_residual.png
-      raw_conflict_mask.png
-      cleaned_conflict_mask.png
-      current_conflict_gray.png
-      summary.json
-  event_<id>_frame_<frame>_track_<stable_uid>/
-    summary.json
-    current_rgb.png
-    observed_depth.png
-    tsdf_rendered_depth.png
-    signed_depth_residual.png
-    current_conflict_gray.png
-    current_instance_overlay.png
-    conflict_points.ply
-    contact_sheet.png
-    history/*.png
+... history 0/2 -> REJECTED
+... history 3/2 -> STALE
 ```
 
-The `track_uid` is stable when merged-mask indices are compacted. When several
-instances merge, the oldest parent UID is retained and their evidence histories
-are combined.
+## Current boundary
 
-## Initial 3RScan thresholds
-
-The supplied config starts with a 5 cm depth threshold, which is twice the
-default 2.5 cm OnlineAnySeg voxel size. These values are starting points, not
-dataset-independent constants. Check the residual images before lowering the
-threshold.
-
-Important controls:
-
-- `interval`: detection frequency in input-frame IDs. Detection is also limited
-  by `mapping.keyframe_freq` because it runs at mapping frames.
-- `min_map_weight`: minimum TSDF ray-casting weight.
-- `min_conflict_voxels` and `min_conflict_ratio`: spatial support required for
-  one observation.
-- `confirm_hits`: independent observations required for `STALE`.
-- `min_hit_frame_gap`, `min_hit_translation`, and `min_hit_rotation_deg`:
-  independence constraints.
-- `debug.enabled`: disable image/point-cloud output while keeping detection.
-- `debug.preview_interval`: periodically write depth comparisons even when no
-  instance-level event passes the filters. A value of `0` disables previews.
-
-## Current limitation
-
-`STALE` is diagnostic state only. The plugin does not call
-`Scene_rep.remove_masks()` and does not reset TSDF weights. This prevents an
-early false positive from irreversibly damaging the reconstruction. Local TSDF
-block reset and recent-keyframe re-fusion should be implemented as a separate,
-explicit second stage after the detector has been validated.
+This change implements GaME's multi-view verification and keyframe occlusion
+state, but not its map mutation step. A `STALE` result therefore does not yet
+erase a TSDF surface. Stable voxel deactivation and re-fusion must be added as a
+separate repair stage; treating this detector as if it already repaired the
+map would be incorrect.
