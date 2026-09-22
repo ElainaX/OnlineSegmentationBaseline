@@ -10,6 +10,25 @@ cam:
   w_crop: 0
   bound: false
 
+# The converted 3RScan sequences provide an RGB-D image and a CropFormer
+# prediction for every frame.  Do not inherit ScanNet's 1-in-10 sampling here:
+# sparse sampling prevents short tracks from reaching the instance weight gate.
+mapping:
+  keyframe_freq: 1
+
+seg:
+  seg_add_interval: 1
+  # Keep the original 50-frame MaskGraph update cadence.
+  merge_kf_interval: 50
+  mask_weight_threshold: 5
+
+save:
+  save_mesh: false
+  # Intermediate frame-500 exports are unnecessary for this experiment.  The
+  # final point cloud and checkpoint are still exported explicitly by main.py.
+  save_interval: 0
+  ckpt_interval: 0
+
 # GaME-inspired, non-destructive disappearance detector. It ray-casts the
 # pre-integration TSDF, associates farther-depth conflicts with OnlineAnySeg
 # instances, and records independent temporal evidence plus debug artifacts.
@@ -36,5 +55,8 @@ change_detection:
 
   debug:
     enabled: true
+    # Save a depth-comparison preview even when no instance event is accepted.
+    # Set to 0 to disable periodic previews.
+    preview_interval: 50
     max_history_frames: 6
     gray_value: 128

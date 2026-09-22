@@ -26,6 +26,7 @@ DEFAULT_CONFIG = {
     "range_map_down_factor": 8,
     "debug": {
         "enabled": True,
+        "preview_interval": 50,
         "max_history_frames": 6,
         "gray_value": 128,
     },
@@ -59,14 +60,19 @@ class SimpleDepthChangeDetector:
         self.evidence = TemporalEvidenceBank(self.cfg)
         self.visualizer = ChangeDebugVisualizer(self.cfg["debug"])
 
+    def _detection_due(self, frame_id):
+        return frame_id % int(self.cfg["interval"]) == 0
+
     def _should_run(self, frame_id, scene_rep):
         if not self.enabled:
             return False
         if frame_id < int(self.cfg["warmup_frames"]):
             return False
-        if frame_id % int(self.cfg["interval"]) != 0:
+        if not (
+                self._detection_due(frame_id)
+                or self.visualizer.preview_due(frame_id)):
             return False
-        return scene_rep.voxel_grids.get_block_num > 0 and scene_rep.c_mask_num > 0
+        return scene_rep.voxel_grids.get_block_num > 0
 
     def _clean_conflict_mask(self, mask):
         mask_np = mask.detach().cpu().numpy().astype(np.uint8)
@@ -189,10 +195,18 @@ class SimpleDepthChangeDetector:
 
         # A farther observation means the current ray penetrates the old map
         # surface. The opposite sign indicates a new foreground/occluder.
-        conflict_mask = valid & (
+        raw_conflict_mask = valid & (
             observed_depth - rendered_depth > float(self.cfg["depth_threshold"]))
-        conflict_mask = self._clean_conflict_mask(conflict_mask)
-        if not conflict_mask.any():
+        conflict_mask = self._clean_conflict_mask(raw_conflict_mask)
+        self.visualizer.write_depth_preview(
+            scene_rep, frame_id, color_img, observed_depth, rendered_depth,
+            raw_conflict_mask, conflict_mask,
+            float(self.cfg["depth_threshold"]))
+
+        # A preview-only frame must not alter the temporal evidence cadence.
+        if not self._detection_due(frame_id):
+            return []
+        if scene_rep.c_mask_num == 0 or not conflict_mask.any():
             return []
 
         conflict_points = self._backproject_map_surface(

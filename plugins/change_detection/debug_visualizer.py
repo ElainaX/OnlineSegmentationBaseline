@@ -8,13 +8,21 @@ import torch
 
 
 class ChangeDebugVisualizer:
-    """Write event-based 2D/3D diagnostics instead of logging every frame."""
+    """Write periodic depth previews and event-based 2D/3D diagnostics."""
 
     def __init__(self, cfg):
         self.enabled = bool(cfg.get("enabled", True))
+        self.preview_interval = int(cfg.get("preview_interval", 50))
         self.max_history_frames = int(cfg.get("max_history_frames", 6))
         self.gray_value = int(cfg.get("gray_value", 128))
         self.event_counter = 0
+
+    def preview_due(self, frame_id):
+        return (
+            self.enabled
+            and self.preview_interval > 0
+            and frame_id % self.preview_interval == 0
+        )
 
     @staticmethod
     def _rgb_uint8(image):
@@ -44,6 +52,119 @@ class ChangeDebugVisualizer:
     @staticmethod
     def _write_rgb(path, rgb):
         cv2.imwrite(path, cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
+
+    @staticmethod
+    def _colorize_signed_residual(residual, valid, scale):
+        """Render closer observations blue and farther observations red."""
+        residual = np.asarray(residual, dtype=np.float32)
+        valid = np.asarray(valid, dtype=bool)
+        scale = max(float(scale), 1e-6)
+        normalized = np.clip(residual / scale, -1.0, 1.0)
+        colored = np.zeros((*residual.shape, 3), dtype=np.uint8)
+        colored[..., 0] = (np.clip(-normalized, 0.0, 1.0) * 255).astype(np.uint8)
+        colored[..., 2] = (np.clip(normalized, 0.0, 1.0) * 255).astype(np.uint8)
+        colored[~valid] = 0
+        return colored
+
+    def write_depth_preview(self, scene_rep, frame_id, color_img,
+                            observed_depth, rendered_depth,
+                            raw_conflict_mask, cleaned_conflict_mask,
+                            depth_threshold):
+        """Periodically save depth diagnostics even when no event is accepted."""
+        if not self.preview_due(frame_id):
+            return None
+
+        preview_dir = os.path.join(
+            scene_rep.seq_output_dir, "change_debug", "previews",
+            "frame_%06d" % frame_id)
+        os.makedirs(preview_dir, exist_ok=True)
+
+        rgb = self._rgb_uint8(color_img)
+        observed_np = observed_depth.detach().cpu().numpy()
+        rendered_np = rendered_depth.detach().cpu().numpy()
+        raw_conflict_np = self._mask_numpy(raw_conflict_mask)
+        cleaned_conflict_np = self._mask_numpy(cleaned_conflict_mask)
+
+        valid = (
+            np.isfinite(observed_np)
+            & np.isfinite(rendered_np)
+            & (observed_np > 0)
+            & (rendered_np > 0)
+        )
+        residual = observed_np - rendered_np
+        residual_bgr = self._colorize_signed_residual(
+            residual, valid, depth_threshold * 4.0)
+        observed_bgr = self._colorize_depth(observed_np, scene_rep.depth_far)
+        rendered_bgr = self._colorize_depth(rendered_np, scene_rep.depth_far)
+
+        self._write_rgb(os.path.join(preview_dir, "current_rgb.png"), rgb)
+        cv2.imwrite(os.path.join(preview_dir, "observed_depth.png"), observed_bgr)
+        cv2.imwrite(os.path.join(preview_dir, "tsdf_rendered_depth.png"), rendered_bgr)
+        cv2.imwrite(os.path.join(preview_dir, "signed_depth_residual.png"), residual_bgr)
+        cv2.imwrite(
+            os.path.join(preview_dir, "raw_conflict_mask.png"),
+            raw_conflict_np.astype(np.uint8) * 255)
+        cv2.imwrite(
+            os.path.join(preview_dir, "cleaned_conflict_mask.png"),
+            cleaned_conflict_np.astype(np.uint8) * 255)
+
+        gray_rgb = rgb.copy()
+        gray_rgb[cleaned_conflict_np] = self.gray_value
+        contours, _ = cv2.findContours(
+            cleaned_conflict_np.astype(np.uint8),
+            cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(gray_rgb, contours, -1, (255, 0, 0), 2)
+        cv2.putText(
+            gray_rgb,
+            "frame=%d raw=%d cleaned=%d" % (
+                frame_id, raw_conflict_np.sum(), cleaned_conflict_np.sum()),
+            (8, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+            (255, 255, 0), 1, cv2.LINE_AA)
+        self._write_rgb(
+            os.path.join(preview_dir, "current_conflict_gray.png"), gray_rgb)
+
+        tiles = [
+            cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR),
+            observed_bgr,
+            rendered_bgr,
+            residual_bgr,
+            cv2.cvtColor(gray_rgb, cv2.COLOR_RGB2BGR),
+        ]
+        labels = ["RGB", "Observed", "TSDF", "Residual", "Conflict"]
+        sheet_tiles = []
+        for tile, label in zip(tiles, labels):
+            tile = cv2.resize(tile, (320, 240))
+            cv2.putText(
+                tile, label, (8, 232), cv2.FONT_HERSHEY_SIMPLEX,
+                0.55, (255, 255, 255), 1, cv2.LINE_AA)
+            sheet_tiles.append(tile)
+        cv2.imwrite(
+            os.path.join(preview_dir, "comparison_sheet.png"),
+            np.concatenate(sheet_tiles, axis=1))
+
+        valid_residual = residual[valid]
+        summary = {
+            "frame_id": int(frame_id),
+            "depth_threshold": float(depth_threshold),
+            "valid_depth_pixels": int(valid.sum()),
+            "raw_conflict_pixels": int(raw_conflict_np.sum()),
+            "cleaned_conflict_pixels": int(cleaned_conflict_np.sum()),
+            "mean_signed_residual": (
+                float(valid_residual.mean()) if valid_residual.size else None),
+            "mean_absolute_residual": (
+                float(np.abs(valid_residual).mean())
+                if valid_residual.size else None),
+        }
+        with open(
+                os.path.join(preview_dir, "summary.json"),
+                "w", encoding="utf-8") as file:
+            json.dump(summary, file, ensure_ascii=False, indent=2)
+
+        print(
+            "[ChangeDetection][Preview] frame_%d: raw=%d cleaned=%d -> %s"
+            % (frame_id, raw_conflict_np.sum(),
+               cleaned_conflict_np.sum(), preview_dir))
+        return preview_dir
 
     @staticmethod
     def _select_history(ori_mask_list, limit):

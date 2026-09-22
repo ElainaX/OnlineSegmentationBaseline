@@ -49,6 +49,17 @@ Events are stored under:
 
 ```text
 <output>/<sequence>/change_debug/
+  previews/
+    frame_<frame>/
+      comparison_sheet.png
+      current_rgb.png
+      observed_depth.png
+      tsdf_rendered_depth.png
+      signed_depth_residual.png
+      raw_conflict_mask.png
+      cleaned_conflict_mask.png
+      current_conflict_gray.png
+      summary.json
   event_<id>_frame_<frame>_track_<stable_uid>/
     summary.json
     current_rgb.png
@@ -84,6 +95,8 @@ Important controls:
 - `min_hit_frame_gap`, `min_hit_translation`, and `min_hit_rotation_deg`:
   independence constraints.
 - `debug.enabled`: disable image/point-cloud output while keeping detection.
+- `debug.preview_interval`: periodically write depth comparisons even when no
+  instance-level event passes the filters. A value of `0` disables previews.
 
 ## Current limitation
 
@@ -92,4 +105,3 @@ Important controls:
 early false positive from irreversibly damaging the reconstruction. Local TSDF
 block reset and recent-keyframe re-fusion should be implemented as a separate,
 explicit second stage after the detector has been validated.
-

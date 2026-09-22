@@ -795,6 +795,12 @@ class Scene_rep:
     #-@return: Tensor(pred_inst_num, pts_num), dtype=bool.
     def process_mask_boundary_pts(self, pred_inst_masks, return_list=False):
         if isinstance(pred_inst_masks, list):
+            # An empty list is a valid result when no merged instance reaches
+            # the current weight/size threshold.  Keep it empty for checkpoint
+            # export instead of calling torch.stack([]), which raises.
+            if len(pred_inst_masks) == 0:
+                return [] if return_list else torch.empty(
+                    (0, 0), dtype=torch.bool, device=self.device)
             pred_inst_masks = torch.stack(pred_inst_masks, dim=0)
 
         # Step 1: sort each predicted instance by mask size, with ascending order
@@ -904,7 +910,25 @@ class Scene_rep:
             scene_pts_mask_list.append(scene_point_mask)
 
         # *** Step 3: process boundary points
-        pred_inst_masks = self.process_mask_boundary_pts(scene_pts_mask_list)
+        if num_instances == 0:
+            # Preserve the point dimension so downstream/debug code can still
+            # interpret this as zero instance masks over the current scene.
+            pred_inst_masks = torch.empty(
+                (0, scene_points.shape[0]), dtype=torch.bool,
+                device=scene_points.device)
+            weight_threshold = min(
+                self.merge_time + 2,
+                self.cfg["seg"]["mask_weight_threshold"])
+            max_weight = (
+                self.merged_mask_weight[:self.c_mask_num].max().item()
+                if self.c_mask_num > 0 else 0.0)
+            print(
+                "[WARNING] No valid merged masks at frame_%d; "
+                "saving a background-only segmented point cloud "
+                "(threshold=%.1f, max_weight=%.1f)."
+                % (frame_id, weight_threshold, max_weight))
+        else:
+            pred_inst_masks = self.process_mask_boundary_pts(scene_pts_mask_list)
         self.pred_inst_mask_frame_id = frame_id
         self.pred_inst_mask = pred_inst_masks
 
