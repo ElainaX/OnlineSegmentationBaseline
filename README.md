@@ -210,6 +210,10 @@ When finished, the 3D reconstruction and instance segmentation output of this se
 TODO
 
 ## 4. Evaluation
+
+An optional, non-destructive GaME-style TSDF depth-change detector is documented
+in [`docs/game_simple_depth_detection.md`](docs/game_simple_depth_detection.md).
+
 #### 4.1 Preparing Ground-Truth Segmentation Results
 We adopt the same format for ground-truth instance segmentation results as used in [MaskClustering](https://github.com/PKU-EPIC/MaskClustering). For detailed instructions on how to prepare the data, please refer to the [Data Preparation](https://github.com/PKU-EPIC/MaskClustering?tab=readme-ov-file#data-preparation) section of their repository.
 

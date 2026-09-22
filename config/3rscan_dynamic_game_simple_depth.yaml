@@ -1,0 +1,40 @@
+inherit_from: config/scannet_cropformer.yaml
+
+dataset: "scannet"
+
+cam:
+  img_h: 172
+  img_w: 224
+  depth_scale: 1000.0
+  h_crop: 0
+  w_crop: 0
+  bound: false
+
+# GaME-inspired, non-destructive disappearance detector. It ray-casts the
+# pre-integration TSDF, associates farther-depth conflicts with OnlineAnySeg
+# instances, and records independent temporal evidence plus debug artifacts.
+change_detection:
+  enabled: true
+  interval: 10
+  warmup_frames: 30
+
+  depth_threshold: 0.05
+  min_map_weight: 3.0
+  range_map_down_factor: 8
+  morph_kernel: 3
+  min_region_pixels: 30
+
+  min_conflict_voxels: 50
+  min_visible_voxels: 50
+  min_conflict_ratio: 0.20
+  visibility_depth_tolerance: 0.075
+
+  confirm_hits: 3
+  min_hit_frame_gap: 10
+  min_hit_translation: 0.05
+  min_hit_rotation_deg: 5.0
+
+  debug:
+    enabled: true
+    max_history_frames: 6
+    gray_value: 128

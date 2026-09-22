@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from Dataset.dataset import get_dataset
 import tool.config as config
 from Scene_rep import Scene_rep
+from plugins.change_detection import SimpleDepthChangeDetector
 
 max_frame_num = None
 
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     last_seg_frame_id = dataset.last_seg_frame_id
 
     scene_rep = Scene_rep(cfg, args, dataset, args.device)
+    change_detector = SimpleDepthChangeDetector(cfg)
     last_valid_c2w = torch.eye(4)
 
     local_output_dir = str( os.path.join(args.output_dir, args.seq_name) )
@@ -62,6 +64,8 @@ if __name__ == '__main__':
             with torch.no_grad():
                 # 2.1: fusing current frame
                 pose_w2c = torch.inverse(pose_c2w[0])
+                change_detector.before_integrate(
+                    frame_id, color_img[0], depth_img[0], pose_c2w[0], scene_rep)
                 frustum_block_coords, extrinsic = scene_rep.integrate_frame(frame_id, color_img[0], depth_img[0], pose_w2c)  # integrate this frame to global PC
 
                 if seg_flag[0] and frame_id % cfg["seg"]["seg_add_interval"] == 0:
@@ -71,6 +75,8 @@ if __name__ == '__main__':
                     # 2.3: periodically merge some rows and cols
                     if frame_id > 0 and frame_id % scene_rep.merge_frame_interval == 0:
                         scene_rep.update_masks(frame_id)
+
+                    change_detector.after_mask_update(scene_rep)
 
         # Step 2.4: update visualized segmentation result
         if scene_rep.vis_pc_flag:
