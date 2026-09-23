@@ -1,0 +1,163 @@
+# Standalone OnlineAnySeg configuration for converted 3RScan RGB-D sequences.
+#
+# Expected input layout:
+#   <data_root>/<sequence>/color/0.jpg
+#   <data_root>/<sequence>/depth/0.png
+#   <data_root>/<sequence>/pose/0.txt
+#   <data_root>/<sequence>/intrinsic/intrinsic_depth.txt
+#
+# 3RScan frames are 224 x 172.  The original ScanNet configuration assumes
+# 640 x 480, so pixel/visible-overlap thresholds below are reduced accordingly.
+# This file deliberately does not inherit from another configuration.
+
+dataset: "scannet"
+
+cam:
+  img_h: 172
+  img_w: 224
+  depth_scale: 1000.0
+  depth_near: 0.1
+  depth_far: 5.0
+  h_crop: 0
+  w_crop: 0
+  # Do not use the final-rescan GT point cloud as a reconstruction bound: a
+  # dynamic reference+rescan sequence can contain valid old geometry outside it.
+  bound: false
+
+scene:
+  voxel_size: 0.025
+  block_resolution: 4
+  block_count: 100000
+  mask_num: 2500
+  max_instances: 500
+  max_pts: 1000000
+  point_add: 200000
+  scene_radius_depth_ratio: 3
+  dense_down_ratio: 4
+  dense_down_ratio_sparse: 4
+
+pc_extractor:
+  geo_extractor_path: "third_party/FCGF/model/ResUNetBN2C-16feat-3conv.pth"
+  voxel_size: 0.025
+  feature_dim: 16
+
+# Retained for compatibility with code paths shared with the original project.
+Model:
+  config_file: "Detic/configs/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.yaml"
+  model_weights: "models/Detic_LCOCOI21k_CLIP_SwinB_896b32_4x_ft4x_max-size.pth"
+
+mapping:
+  # Integrate every RGB-D frame so the low-resolution 3RScan reconstruction is
+  # dense.  Mask inference remains sparse via seg_add_interval below.
+  keyframe_freq: 1
+  keyframe_interval_min: 10
+  keyframe_interval_max: 50
+  iter_num: 20
+  save_interval: 50
+  select_kf_num: 10
+  kf_n_rays_h: 180
+  kf_n_rays_w: 240
+  loss_rgb: 1.0
+  loss_depth: 0.1
+  d_max: 10
+  map_accum_step: 5
+  lr:
+    means3D: 0.0
+    rgb_colors: 0.0025
+    unnorm_rotations: 0.001
+    logit_opacities: 0.05
+    log_scales: 0.001
+    cam_unnorm_rots: 0.0
+    cam_trans: 0.0
+
+seg:
+  seman_min_value: 0.6
+  merge_overlap_thresh: 0.4
+  with_feature: true
+  sim_merge_thresh: 2.3
+  merge_contain_iter_num: 10
+  merge_contain_ratio: 0.8
+  merge_contain_ratio_feat_list: [0.8, 0.75, 0.7]
+  contain_feature_sim_thresh_list: [2.1, 2.2, 2.3]
+  containing_ratio: 0.8
+  contained_ratio: 0.3
+  merge_supporter_num: 5
+  score_threshold: 0.4
+  good_score_threshold: 0.6
+
+  # Generate/read CropFormer masks for frames 0, 10, 20, ... .  Five mask
+  # observations are accumulated before each global merge (every 50 frames).
+  seg_add_interval: 10
+  merge_kf_interval: 5
+  seg_interval: 20
+  global_merge_step: 5
+  filter_interval: 100
+  ckpt_interval: 200
+
+  visibility_thresh: 0.2
+  size_thresh: 100
+  iou_thresh: 0.3
+  contain_ratio: 0.8
+  recall_thresh: 0.5
+  mask_weight_threshold: 5
+  remove_overlap_ratio: 0.7
+  instance_size_g2l: 50
+  top_k_views: 5
+  candidate_k_views: 10
+
+mask:
+  denoise_rm_ratio: 0.2
+  voxel_on_recon_pc: true
+  feature_dim: 1024
+
+  # 400 pixels at 640x480 corresponds to about 50 pixels at 224x172.
+  few_pixel_threshold: 50
+  few_voxel_threshold: 10
+  coverage_threshold: 0.3
+  query_radius: 0.03
+  mask_valid_threshold: 0.7
+  mask_visible_threshold: 0.2
+  mask_visible_min_overlap: 100
+  contain_min_threshold: 0.025
+  contained_threshold: 0.8
+  underseg_threshold: 0.3
+  view_consensus_threshold: 0.9
+  observer_num_threshold: 3
+  mask_size_threshold: 50
+  merge_overlap_size: 25
+  intersect_threshold: 200
+  iou_threshold: 0.3
+  precision_threshold: 0.75
+  recall_threshold: 0.75
+  iou_threshold_self: 0.3
+  intersect_check_threshold: 200
+  precision_check_threshold: 0.3
+  recall_check_threshold: 0.3
+
+classifier:
+  enable: false
+  trust_thresh: 2.5
+  hesitate_thresh: 2.0
+  A: 1.0
+  B: 1.0
+  C: 1.0
+  d: -2.3
+  max_iter: 1000
+  pos_w: 0.001
+  neg_w: 0.0025
+
+save:
+  save_mesh: false
+  # main.py always writes ckpt_final.npz and final.ply.  Disable intermediate
+  # exports to avoid extra disk use and the original empty-instance save bug.
+  save_interval: 0
+  ckpt_interval: 0
+
+vis:
+  vis_color: false
+  vis_pc: false
+
+# Pure OnlineAnySeg baseline for this run.  The optional GaME-style detector is
+# intentionally disabled so it cannot affect runtime or diagnostics.
+change_detection:
+  enabled: false
