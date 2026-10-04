@@ -124,7 +124,7 @@ def main():
 
         def update_masks(self, frame_id):
             self._carve_frame=int(frame_id)
-            self.aabb_boxes_override=self._make_carved_boxes()
+            self.aabb_boxes_override=self._make_carved_boxes() if o.strength > 0 and o.band > 0 else None
             torch.cuda.synchronize(); start=time.perf_counter()
             self.metrics.frame=int(frame_id)
             result=super().update_masks(frame_id)
@@ -155,7 +155,7 @@ def main():
                           depth_shrink=getattr(scene, 'depth_shrink_stats', []),
                           ablation_stats=getattr(scene, 'ablation_stats', {}),
                           aabb_candidate_pairs=sum(int(x.get('eligible_pairs', 0)) for x in getattr(scene.metrics, 'records', [])),
-                          note='Sparse temporal pair graph replaces persistent contain_matrix; baseline Carving-AABB remains a soft score on candidate pairs; depth shrink changes only 3-D evidence and does not delete raw 2-D masks.')
+                          note='Original dense MaskGraph baseline; strength=0 bypasses Carving-AABB computation and score adjustment. Depth shrink changes temporary backprojection masks only. No lineage, same-frame guard or spatial pair audit.')
             dest=Path(scene.seq_output_dir)/'carved_aabb_manifest.json'; dest.write_text(json.dumps(manifest,indent=2))
             print('CARVED_AABB_RUN',status,'seconds',manifest['seconds'],'manifest',dest,flush=True)
 
