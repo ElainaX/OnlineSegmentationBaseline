@@ -11,6 +11,7 @@ submaps:
     enabled: true
     disjoint_pairs: true
     same_frame_guard: true
+    merge_interval_steps: 5
     merge_overlap_thresh: 0.4
     sim_merge_thresh: 2.3
     merge_contain_ratio: 0.8

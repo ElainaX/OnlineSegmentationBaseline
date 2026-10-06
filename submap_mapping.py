@@ -130,6 +130,8 @@ class SubmapManager:
         self.migrated_graph_enabled = bool(self.migrated_graph_opt.get('enabled', True))
         self.migrated_disjoint_pairs = bool(self.migrated_graph_opt.get('disjoint_pairs', True))
         self.migrated_same_frame_guard = bool(self.migrated_graph_opt.get('same_frame_guard', True))
+        self.migrated_merge_interval = max(1, int(self.migrated_graph_opt.get(
+            'merge_interval_steps', cfg.get('seg', {}).get('merge_kf_interval', 5))))
         self.migrated_merge_overlap = float(self.migrated_graph_opt.get(
             'merge_overlap_thresh', cfg.get('seg', {}).get('merge_overlap_thresh', 0.4)))
         self.migrated_sim_threshold = float(self.migrated_graph_opt.get(
@@ -145,6 +147,7 @@ class SubmapManager:
         self.migrated_stats = {'candidate_edges': 0, 'accepted_edges': 0,
                                'disjoint_rejected_edges': 0,
                                'containment_edges': 0, 'semantic_geometry_edges': 0}
+        self.migrated_pending_scores = []
         self.frame_cache = OrderedDict()
         self.pending_history = None
         self.max_blocks_seen = 0
@@ -806,7 +809,11 @@ class SubmapManager:
         # Complete the migrated baseline path after local assignment.  This
         # handles containment/semantic/geometric merges that are intentionally
         # broader than the one-to-one nearest-track assignment above.
-        self._migrated_maskgraph_merge(frame_id, sparse_pair_scores)
+        self.migrated_pending_scores.extend(sparse_pair_scores)
+        if self.step_index % self.migrated_merge_interval == 0:
+            pending = self.migrated_pending_scores
+            self.migrated_pending_scores = []
+            self._migrated_maskgraph_merge(frame_id, pending)
         for uid, track in list(self.tracks.items()):
             if uid in created_ids or uid in matched_targets:
                 continue
@@ -1292,6 +1299,11 @@ class SubmapManager:
         if not self.enabled:
             return
         out=Path(output_dir)
+        if self.migrated_pending_scores:
+            last_frame = max((o['frame'] for o in self.observations.values()), default=0)
+            pending = self.migrated_pending_scores
+            self.migrated_pending_scores = []
+            self._migrated_maskgraph_merge(last_frame, pending)
         objects_dir=out/'objects'
         objects_dir.mkdir(parents=True,exist_ok=True)
         if global_points is not None:
