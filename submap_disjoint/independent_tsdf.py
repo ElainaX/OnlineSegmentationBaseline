@@ -194,7 +194,7 @@ class IndependentTSDFStore:
 
     def integrate(self, key, frame, rgb, depth_m, K, pose, mask, source=None):
         f = self.fragments[str(key)]
-        if f.status != 'active': raise RuntimeError('cannot integrate into '+f.status+' fragment')
+        if f.status not in ('active', 'pending'): raise RuntimeError('cannot integrate into '+f.status+' fragment')
         # One union mask per fragment and frame. Different masks in the same
         # frame must be unioned by the caller before fusion to avoid overweighting.
         digest = hashlib.sha256(np.packbits(np.asarray(mask,bool)).tobytes()).hexdigest()
@@ -218,7 +218,7 @@ class IndependentTSDFStore:
         self.events.append({'operation':'link','identity':str(identity),'fragments':sorted(keys)})
 
     def set_status(self, key, status, reason):
-        if status not in ('active','frozen','inactive'): raise ValueError('invalid lifecycle state')
+        if status not in ('active','frozen','inactive','pending'): raise ValueError('invalid lifecycle state')
         if not reason: raise ValueError('record why a state changes')
         f=self.fragments[str(key)]
         self.events.append({'operation':'state','fragment':str(key),'before':f.status,
@@ -228,7 +228,8 @@ class IndependentTSDFStore:
     def surface(self, include_inactive=False):
         points=[]; colors=[]; fragment_keys=[]
         for key,f in self.fragments.items():
-            if f.status=='inactive' and not include_inactive: continue
+            # Pending geometry is queryable for audits, never published early.
+            if f.status in ('inactive', 'pending') and not include_inactive: continue
             p,c=f.volume.surface()
             points.append(p); colors.append(c); fragment_keys.extend([key]*len(p))
         return (np.concatenate(points) if points else np.empty((0,3)),
@@ -236,7 +237,7 @@ class IndependentTSDFStore:
 
     def manifest(self):
         return {'options':vars(self.options), 'identity_links_fuse_geometry':False,
-                'inactive_hidden_from_live_query':True,
+                'inactive_hidden_from_live_query':True, 'pending_hidden_from_live_query':True,
                 'fragments':[{ 'key':k,'status':f.status,'T_world_submap':f.volume.anchor.tolist(),
                                'blocks':int(f.volume.grid.hashmap().size()),
                                'attribute_capacity_bytes':f.volume.bytes_allocated_attributes(),
