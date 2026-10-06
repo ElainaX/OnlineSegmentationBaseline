@@ -137,7 +137,7 @@ def compute_sparse_containment(graph,merged_mask_ids,id_mapping):
         overlap=overlap[keep]; counts=counts[keep]
         if not overlap.numel(): continue
         frames=graph.merged_mask_in_frame_mat[overlap]
-        vf=graph.voxel_in_frame_matrix[inst.mask_voxel_indices].clamp(max=1.)
+        vf=graph.voxel_in_frame_matrix[inst.mask_voxel_indices].float().clamp(max=1.)
         vis=(vf@frames.T).clamp(max=1.).sum(0)
         ratio=counts.float()/vis
         condition=((vis/len(inst.mask_voxel_indices)>graph.mask_visible_threshold) |

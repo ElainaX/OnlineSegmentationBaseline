@@ -32,7 +32,14 @@ class SubmapEvidenceGraph:
                                else torch.zeros((self.t_mask_num, self.t_mask_num), dtype=torch.float32, device=self.device))
 
         # *** mask_id of each voxel on each seg_frame, Tensor(max_voxel_num, seg_frame_num)
-        self.voxel_in_frame_matrix = torch.zeros((self.max_voxel_num, self.seg_frame_num), dtype=torch.float32, device=self.device)  # fill-only (never be modified)
+        # All consumers use clamp(mask_id, max=1): only visibility is needed.
+        # Boolean storage is lossless for nonnegative mask IDs; IDs themselves
+        # remain in the original observation/voxel index, not this history table.
+        self.visibility_storage = cfg.get("visibility_storage", "float32")
+        if self.visibility_storage not in ("float32", "bool"):
+            raise ValueError("visibility_storage must be float32 or bool")
+        history_dtype = torch.bool if self.visibility_storage == "bool" else torch.float32
+        self.voxel_in_frame_matrix = torch.zeros((self.max_voxel_num, self.seg_frame_num), dtype=history_dtype, device=self.device)
 
         self.original_mask_in_frame_mat = []  #  seg_frame_ID for each original mask (append only)
         self.merged_mask_in_frame_mat = torch.zeros((self.t_mask_num, self.seg_frame_num), dtype=torch.float32, device=self.device)  # each merged mask's corresponding 的seg frame
@@ -92,6 +99,8 @@ class SubmapEvidenceGraph:
         for mask_id, mask_voxel_coords in mask_dict.items():
             # Step 1.1: record this mask's corresponding voxels
             mask_voxel_indices = self.voxel_hash_table.voxel_coords2voxel_indices(mask_voxel_coords)
+            if self.visibility_storage == "bool" and int(mask_id) < 0:
+                raise ValueError("boolean visibility requires nonnegative mask IDs")
             self.voxel_in_frame_matrix[mask_voxel_indices, seg_frame_id] = mask_id  # *** 填充self.voxel_in_frame_matrix
 
             # Step 1.2: record this mask's seg_frame_ID
@@ -204,7 +213,7 @@ class SubmapEvidenceGraph:
             return overlap_mask_ids, None, None
 
         # Step 2: (q_in_o_count) for each overlap mask, compute query mask's visible voxel num on its corrsponding frame set
-        mask_voxel_frame = self.voxel_in_frame_matrix[voxel_ids].clamp(max=1.)  # Tensor(mask_voxel_num, seg_frame_num)
+        mask_voxel_frame = self.voxel_in_frame_matrix[voxel_ids].float().clamp(max=1.)  # Tensor(mask_voxel_num, seg_frame_num)
         o_mask_frame = self.merged_mask_in_frame_mat[overlap_mask_ids]  # Tensor(o_mask_num, seg_frame_num)
         mask_voxel_o_mask = (mask_voxel_frame @ o_mask_frame.T).clamp(max=1.)  # whether each voxel in this mask can be seen by each overlap_mask, Tensor(mask_voxel_num, o_mask_num)
         q_in_o_vis_count = torch.sum(mask_voxel_o_mask, dim=0)  # Tensor(o_mask_num, )
@@ -216,7 +225,7 @@ class SubmapEvidenceGraph:
         overlap_mask_size = torch.zeros_like(o_in_q_vis_count)  # mask size of each (merged) overlap mask
         for i, o_mask_id in enumerate(overlap_mask_ids):
             o_voxel_indices = self.instance_dict[o_mask_id.item()].mask_voxel_indices
-            o_mask_voxel_frame = self.voxel_in_frame_matrix[o_voxel_indices].clamp(max=1)  # Tensor(o_mask_voxel_num, seg_frame_num)
+            o_mask_voxel_frame = self.voxel_in_frame_matrix[o_voxel_indices].float().clamp(max=1)  # Tensor(o_mask_voxel_num, seg_frame_num)
             o_mask_voxel_frame = mask_frame.unsqueeze(0) * o_mask_voxel_frame  # only consider query mask's frame set, Tensor(o_mask_voxel_num, seg_frame_num)
             o_in_q_count_i = o_mask_voxel_frame.any(-1).sum()
             o_in_q_vis_count[i] = o_in_q_count_i
@@ -263,7 +272,7 @@ class SubmapEvidenceGraph:
             mask_i_size = voxel_ids_i.shape[0]
 
             # project 3D mask_i to each mask's frame set
-            mask_voxel_frame = self.voxel_in_frame_matrix[voxel_ids_i].clamp(max=1.)  # seg_frames corresponding to mask_i's voxels, Tensor(mask_voxel_num, seg_frame_num)
+            mask_voxel_frame = self.voxel_in_frame_matrix[voxel_ids_i].float().clamp(max=1.)  # seg_frames corresponding to mask_i's voxels, Tensor(mask_voxel_num, seg_frame_num)
             mask_voxel_i_mask = (mask_voxel_frame @ all_masks_frame.T).clamp(max=1.)  # whether each voxel in this mask can be seen by each input mask, Tensor(mask_voxel_num, a)
             i_in_a_vis_count = torch.sum(mask_voxel_i_mask, dim=0)  # visible size of current mask(mask_i) on each input mask's frame set, Tensor(a, )
             i_in_a_vis_count_list.append(i_in_a_vis_count)
