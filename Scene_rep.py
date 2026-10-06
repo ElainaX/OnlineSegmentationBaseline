@@ -104,6 +104,9 @@ class Scene_rep:
         # Mapping from accepted raw 2-D mask IDs to append-only global mask IDs
         # for the object-track submap manager.
         self.last_inserted_mask_pairs = []
+        self.last_visibility_voxels = {}
+        self.last_visibility_voxel_indices = {}
+        self.last_mask_voxel_indices = {}
         self.instance_observation_counter = 0
 
         self.pred_inst_mask_frame_id = -1
@@ -330,6 +333,8 @@ class Scene_rep:
 
         mask_dict, valid_mask_ids, _, valid_mask_sem_features = self.voxel_grids.turn_mask_to_voxel(
             frame_id, depth_img, pose_c2w, voxel_coords, seg_image, mask_sem_features)
+        self.last_visibility_voxels = dict(mask_dict)
+        self.last_visibility_voxel_indices = {int(mid): self.voxel_grids.voxel_coords2voxel_indices(coords) for mid, coords in mask_dict.items()}
         valid_mask_ids_new = []
         mask_dict_new = {}
         valid_mask_sem_features_new = []
@@ -339,6 +344,7 @@ class Scene_rep:
                 valid_mask_ids_new.append(mask_id)
                 mask_dict_new[mask_id] = mask_coords
                 valid_mask_sem_features_new.append(mask_sem_feature)
+        self.last_mask_voxel_indices = {int(mid): self.voxel_grids.voxel_coords2voxel_indices(coords) for mid, coords in mask_dict_new.items()}
         for mask_id in valid_mask_ids_new:
             observation_id = int(self.instance_observation_counter)
             self.instance_observation_counter += 1
@@ -377,6 +383,8 @@ class Scene_rep:
         # Step 2: find valid 2D masks in this frame, and compute their corresponding voxels in 3D (coordinates in World CS) by back-projecting
         # 2.1: back-project each 2D mask in this frame to 3D
         mask_dict, valid_mask_ids, _, valid_mask_sem_features = self.voxel_grids.turn_mask_to_voxel(frame_id, depth_img, pose_c2w, voxel_coords, seg_image, mask_sem_features)
+        self.last_visibility_voxels = dict(mask_dict)
+        self.last_visibility_voxel_indices = {int(mid): self.voxel_grids.voxel_coords2voxel_indices(coords) for mid, coords in mask_dict.items()}
         mask_dict, mask_indices_dict, mask_in_frame_list = self.maskGraph.add_frame_masks(frame_id, mask_dict)  # compute each voxel's corresponding mask_ID in this frame
 
         # 2.2: check whether each 3D mask is valid
@@ -401,6 +409,7 @@ class Scene_rep:
         valid_mask_sem_features = valid_mask_sem_features_new
         mask_indices_dict = mask_indices_dict_new
         mask_in_frame_list = mask_in_frame_list_new
+        self.last_mask_voxel_indices = dict(mask_indices_dict)
 
         mask_num_this_frame = len(valid_mask_ids)
         if mask_num_this_frame == 0:

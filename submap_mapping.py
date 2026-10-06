@@ -20,6 +20,8 @@ from PIL import Image, ImageDraw, ImageFont
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial import cKDTree
 
+from submap_mask_graph import SparseSubmapMaskGraph
+
 
 def cpu(value):
     return value.detach().cpu().numpy() if hasattr(value, 'detach') else np.asarray(value)
@@ -37,6 +39,7 @@ class SubmapManager:
         self.dataset, self.device = dataset, device
         self.cfg = cfg
         self.opt = cfg.get('submaps', {})
+        self.sparse_mask_graph = SparseSubmapMaskGraph(cfg)
         # FCGF is optional at the submap layer.  Reuse Scene_rep's already
         # loaded extractor so enabling this path does not load a second model.
         self.pc_extractor = pc_extractor
@@ -249,12 +252,14 @@ class SubmapManager:
             if other['confirmed_frame'] is not None:
                 keep['confirmed_frame'] = min(x for x in (keep['confirmed_frame'], other['confirmed_frame']) if x is not None)
         keep['members'].sort(key=lambda i: (self.observations[i]['frame'], i))
+        if accepted_sources and self.sparse_mask_graph.enabled:
+            self.sparse_mask_graph.union([target] + accepted_sources)
         if accepted_sources:
             self.events.append({'type': 'merge', 'frame': int(now), 'target': target,
                                 'sources': accepted_sources, 'reason': reason})
         self._confirm(target, now)
 
-    def graph_update(self, frame_id, instances):
+    def graph_update(self, frame_id, instances, dense_contain_matrix=None):
         """Called after EVERY MaskGraph merge/prune, before IDs can be reused.
 
         Deleted instances remain in our lineage; deletion from the segmentation
@@ -293,6 +298,8 @@ class SubmapManager:
             snapshot.append({'merged_mask_id': int(merged_id), 'observation_ids': ids})
         self.graph_history.append({'frame': int(frame_id), 'instances': snapshot})
         self.latest_graph = {x['merged_mask_id']: x['observation_ids'] for x in snapshot}
+        if self.sparse_mask_graph.enabled and dense_contain_matrix is not None:
+            self.sparse_mask_graph.compare_dense_matrix({x['merged_mask_id']: x['observation_ids'] for x in snapshot}, dense_contain_matrix)
 
     def _project_mask(self, depth, pose, mask):
         y, x = np.nonzero(mask & np.isfinite(depth) & (depth > self.near) & (depth < self.far))
@@ -509,13 +516,16 @@ class SubmapManager:
 
     def observe(self, frame_id, color, depth, pose_c2w, seg_image,
                 mask_features=None, merged_pairs=None,
-                scene_feature_points=None, scene_feature_values=None):
+                scene_feature_points=None, scene_feature_values=None,
+                voxel_observations=None, visibility_voxels=None):
         if not self.enabled:
             return
         self.step_index += 1
         self.lifecycle_stats['observe_steps'] = self.step_index
         segmentation, dep, pose = cpu(seg_image), cpu(depth), cpu(pose_c2w)
         feats = cpu(mask_features)
+        if self.sparse_mask_graph.enabled:
+            self.sparse_mask_graph.add_observations(frame_id, merged_pairs, voxel_observations or {}, visibility_voxels=visibility_voxels)
         scene_feature_cache = None
         if (self.geometry_backend == 'fcgf' and self.fcgf_enabled and
                 self.fcgf_scene_cache and scene_feature_points is not None and
@@ -544,6 +554,8 @@ class SubmapManager:
                 points, scene_feature_cache=scene_feature_cache)
             candidates.append((uid, mid, mask, points, feature, pair,
                                geo_feature, geo_level, geo_count))
+            if self.sparse_mask_graph.enabled:
+                self.sparse_mask_graph.score_observation_against_tracks(uid)
         active = sorted(uid for uid, track in self.tracks.items()
                         if self.step_index - int(track.get('last_observed_step', self.step_index))
                         <= self.track_recent_steps)
@@ -1231,6 +1243,7 @@ class SubmapManager:
                   'observations':observations,'events':self.events,'mask_graph_history':self.graph_history,
                   'objects':entries,'confirmed_count':len(tiles),'tentative_count':len(entries)-len(tiles),
                   'max_object_blocks_seen':self.max_blocks_seen,'max_concurrent_object_tsdfs':1,
+                  'sparse_mask_graph':self.sparse_mask_graph.summary(),
                   'global_instance_export':global_mapping,
                   'source_dataset':str(self.dataset.data_location),
                   'source_masks':str(self.dataset.instance_dir),
@@ -1246,5 +1259,6 @@ class SubmapManager:
             summary['d3feat_match_score_p90'] = float(np.percentile(values, 90))
         (out/'submap_fcgf_summary.json').write_text(
             json.dumps(summary, indent=2), encoding='utf-8')
+        self.sparse_mask_graph.save(out/'sparse_mask_graph_summary.json')
         print('[ObjectSubmaps] confirmed=%d tentative=%d atlas=%s'%(len(tiles),len(entries)-len(tiles),out/'new_objects_first_view_atlas.png'),flush=True)
 

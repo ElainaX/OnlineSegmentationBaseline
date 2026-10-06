@@ -131,16 +131,20 @@ if __name__ == '__main__':
                         seg_image, mask_features,
                         merged_pairs=scene_rep.last_inserted_mask_pairs,
                         scene_feature_points=scene_rep.pc_xyz,
-                        scene_feature_values=scene_rep.pc_feature)
+                        scene_feature_values=scene_rep.pc_feature,
+                        voxel_observations=scene_rep.last_mask_voxel_indices,
+                        visibility_voxels=scene_rep.last_visibility_voxel_indices)
 
                     if instance_owner == "baseline":
                         submap_manager.graph_update(
-                            frame_id, scene_rep.maskGraph.instance_dict)
+                            frame_id, scene_rep.maskGraph.instance_dict,
+                            dense_contain_matrix=scene_rep.contain_matrix)
                         # 2.3: periodically merge baseline global masks.
                         if frame_id > 0 and frame_id % scene_rep.merge_frame_interval == 0:
                             scene_rep.update_masks(frame_id)
                             submap_manager.graph_update(
-                                frame_id, scene_rep.maskGraph.instance_dict)
+                                frame_id, scene_rep.maskGraph.instance_dict,
+                                dense_contain_matrix=scene_rep.contain_matrix)
 
         # Step 2.4: update visualized segmentation result
         if scene_rep.vis_pc_flag:
@@ -165,7 +169,8 @@ if __name__ == '__main__':
             frame_id_final % scene_rep.merge_frame_interval != 0):
         scene_rep.update_masks(frame_id_final)
         submap_manager.graph_update(
-            frame_id_final, scene_rep.maskGraph.instance_dict)
+            frame_id_final, scene_rep.maskGraph.instance_dict,
+            dense_contain_matrix=scene_rep.contain_matrix)
 
     ckpt_save_dir = os.path.join(local_output_dir, "ckpt_%d" % frame_id_final)
     os.makedirs(ckpt_save_dir, exist_ok=True)
