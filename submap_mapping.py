@@ -84,7 +84,25 @@ class SubmapManager:
         self.voxel_size = float(cfg['scene']['voxel_size'])
         self.near = max(0.0, float(cfg['cam'].get('depth_near', 0.1)))
         self.far = float(cfg['cam']['depth_far'])
+        # Track confirmation can use the historical distinct-frame rule or a
+        # confidence accumulator. Keep the old rule as the default so older
+        # configs remain reproducible; the new mode confirms strong matches
+        # quickly while requiring several weaker matches to accumulate.
+        self.confirmation_mode = str(
+            self.opt.get('confirmation_mode', 'legacy_frames')).lower()
         self.min_frames = int(self.opt.get('confirmation_frames', 3))
+        self.confirmation_threshold = float(
+            self.opt.get('confirmation_confidence_threshold', 1.0))
+        self.confirmation_score_floor = float(
+            self.opt.get('confirmation_score_floor', 0.45))
+        self.confirmation_decay = float(np.clip(
+            self.opt.get('confirmation_confidence_decay', 0.995), 0.0, 1.0))
+        self.confirmation_high_score = float(
+            self.opt.get('confirmation_high_score', 0.88))
+        self.confirmation_high_min_frames = max(1, int(
+            self.opt.get('confirmation_high_min_frames', 1)))
+        self.confirmation_min_evidence_frames = max(1, int(
+            self.opt.get('confirmation_min_evidence_frames', 1)))
         self.reject_covisible_graph_merge = bool(self.opt.get('reject_covisible_graph_merge', False))
         self.graph_merge_stats = {'accepted_edges': 0, 'rejected_covisible_edges': 0}
         self.sample_limit = int(self.opt.get('max_track_points', 4096))
@@ -96,7 +114,10 @@ class SubmapManager:
         self.free_margin = float(self.opt.get('free_space_margin_m', 0.10))
         self.free_ratio = float(self.opt.get('free_space_ratio', 0.60))
         self.history = deque(maxlen=int(self.opt.get('history_frames', 32)))
-        if self.min_frames < 2 or self.sample_limit < 32 or self.match_distance <= 0:
+        if self.confirmation_mode not in ('legacy_frames', 'cumulative_confidence'):
+            raise ValueError('Unknown submap confirmation_mode: ' + self.confirmation_mode)
+        if (self.confirmation_mode == 'legacy_frames' and self.min_frames < 2) or \
+                self.confirmation_threshold <= 0 or self.sample_limit < 32 or self.match_distance <= 0:
             raise ValueError('Invalid object submap confirmation/sampling configuration')
         self.observations = {}
         self.key_to_id = {}
@@ -133,12 +154,44 @@ class SubmapManager:
 
     def _confirm(self, uid, now):
         track = self.tracks[uid]
-        frames = {self.observations[i]['frame'] for i in track['members']}
-        if len(frames) >= self.min_frames and track['confirmed_frame'] is None:
+        if self.confirmation_mode == 'cumulative_confidence':
+            frames = len(track.get('confirmation_frames', []))
+            confident = track.get('confirmation_confidence', 0.0) >= self.confirmation_threshold
+            high_quality = (track.get('max_match_score', 0.0) >= self.confirmation_high_score and
+                            frames >= self.confirmation_high_min_frames)
+            ready = ((confident and frames >= self.confirmation_min_evidence_frames) or
+                     high_quality)
+        else:
+            frames = {self.observations[i]['frame'] for i in track['members']}
+            ready = len(frames) >= self.min_frames
+        if ready and track['confirmed_frame'] is None:
             track['confirmed_frame'] = int(now)
-            self.events.append({'type': 'confirmed', 'frame': int(now), 'object_id': uid})
+            self.events.append({'type': 'confirmed', 'frame': int(now), 'object_id': uid,
+                                'confirmation_mode': self.confirmation_mode,
+                                'confidence': round(float(track.get('confirmation_confidence', 0.0)), 5),
+                                'evidence_frames': int(frames) if isinstance(frames, int) else len(frames)})
 
-    def _union(self, ids, now, reason):
+    def _add_confirmation_evidence(self, uid, now, score):
+        """Accumulate one independent temporal match for a track."""
+        track = self.tracks[uid]
+        frame = int(now)
+        frames = track.setdefault('confirmation_frames', [])
+        if frame in frames:
+            return
+        previous = track.get('last_confirmation_frame')
+        if previous is not None:
+            gap = max(1, frame - int(previous))
+            track['confirmation_confidence'] *= self.confirmation_decay ** gap
+        floor = min(max(self.confirmation_score_floor, 0.0), 0.99)
+        gain = np.clip((float(score) - floor) / max(1.0 - floor, 1e-6), 0.0, 1.0)
+        track['confirmation_confidence'] += float(gain)
+        track['confirmation_evidence_count'] = int(track.get('confirmation_evidence_count', 0)) + 1
+        frames.append(frame)
+        track['last_confirmation_frame'] = frame
+        track['max_match_score'] = max(float(track.get('max_match_score', 0.0)), float(score))
+        self._confirm(uid, frame)
+
+    def _union(self, ids, now, reason, evidence_score=None):
         roots = sorted({self.root(i) for i in ids})
         if not roots:
             return
@@ -180,10 +233,27 @@ class SubmapManager:
             keep['last_frame'] = max(keep['last_frame'], other['last_frame'])
             if other['confirmed_frame'] is not None:
                 keep['confirmed_frame'] = min(x for x in (keep['confirmed_frame'], other['confirmed_frame']) if x is not None)
+            if self.confirmation_mode == 'cumulative_confidence':
+                keep['confirmation_confidence'] = (
+                    float(keep.get('confirmation_confidence', 0.0)) +
+                    float(other.get('confirmation_confidence', 0.0)))
+                keep['confirmation_evidence_count'] = (
+                    int(keep.get('confirmation_evidence_count', 0)) +
+                    int(other.get('confirmation_evidence_count', 0)))
+                keep['confirmation_frames'] = sorted(set(
+                    keep.get('confirmation_frames', []) + other.get('confirmation_frames', [])))
+                keep['last_confirmation_frame'] = max(
+                    [x for x in (keep.get('last_confirmation_frame'),
+                                  other.get('last_confirmation_frame')) if x is not None],
+                    default=None)
+                keep['max_match_score'] = max(float(keep.get('max_match_score', 0.0)),
+                                              float(other.get('max_match_score', 0.0)))
         keep['members'].sort(key=lambda i: (self.observations[i]['frame'], i))
         if accepted_sources:
             self.events.append({'type': 'merge', 'frame': int(now), 'target': target,
                                 'sources': accepted_sources, 'reason': reason})
+        if evidence_score is not None:
+            self._add_confirmation_evidence(target, now, evidence_score)
         self._confirm(target, now)
 
     def graph_update(self, frame_id, instances):
@@ -538,10 +608,16 @@ class SubmapManager:
                 'fcgf_feature_sum': (geo_feature.copy() if self.geometry_backend != 'd3feat' and geo_feature is not None else None),
                 'fcgf_feature_count': int(geo_feature is not None),
                 'd3feat_payload': (geo_feature if self.geometry_backend == 'd3feat' else None),
-                'last_frame':int(frame_id), 'confirmed_frame':None}
+                'last_frame':int(frame_id), 'confirmed_frame':None,
+                'confirmation_confidence':0.0, 'confirmation_evidence_count':0,
+                'confirmation_frames':[], 'last_confirmation_frame':None,
+                'max_match_score':0.0}
             self.events.append({'type':'candidate','frame':int(frame_id),'object_id':uid,'mask_id':mid})
             if i in matches:
-                self._union([uid,matches[i]],frame_id,'geometry_and_embedding')
+                matched_track = matches[i]
+                matched_column = active.index(matched_track)
+                self._union([uid, matched_track], frame_id, 'geometry_and_embedding',
+                            evidence_score=float(scores[i, matched_column]))
                 self.fcgf_stats['accepted_matches'] += 1
         if self.pending_history is not None:
             self.history.append(self.pending_history)
@@ -737,7 +813,7 @@ class SubmapManager:
                     continue
             self._union([left_root, right_root],
                         max(self.observations[pair[0]]['frame'], self.observations[pair[1]]['frame']),
-                        'mv3dis_3d_guide')
+                        'mv3dis_3d_guide', evidence_score=float(score))
             self.mv3dis_stats['accepted_edges'] += 1
             self.mv3dis_stats['merged_tracks'] += 1
             self.events.append({'type': 'mv3dis_guide_match',
@@ -1110,7 +1186,9 @@ class SubmapManager:
             item['final_merged_mask_id']=latest_for_obs.get(i)
             observations.append(item)
         metadata={'schema_version':2,'mode':'online_object_lineage_sequential_masked_tsdf_refusion',
-                  'groundtruth_used':False,'confirmation_distinct_frames':self.min_frames,
+                  'groundtruth_used':False,'confirmation_mode':self.confirmation_mode,
+                  'confirmation_distinct_frames':self.min_frames,
+                  'confirmation_confidence_threshold':self.confirmation_threshold,
                   'fcgf_online_matching':self.fcgf_stats,
                   'graph_merge_stats':self.graph_merge_stats,
                   'reject_covisible_graph_merge':self.reject_covisible_graph_merge,
