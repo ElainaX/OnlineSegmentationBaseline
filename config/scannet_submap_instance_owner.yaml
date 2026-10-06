@@ -1,0 +1,9 @@
+inherit_from: config/scannet_submaps_k70_carving.yaml
+
+# Complete instance-ownership migration experiment.  Scene_rep keeps only
+# TSDF/pose/point-cloud geometry; SubmapManager owns all instance state.
+instance_owner: submap
+
+submaps:
+  hybrid_baseline_fill: false
+  baseline_fallback_when_submaps_not_richer: false

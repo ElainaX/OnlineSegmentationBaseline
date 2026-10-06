@@ -20,6 +20,22 @@ from tool.visualization_helpers import vis_one_object, adjust_colors_to_pastel
 from tool.vis_utils import Vis_color, Vis_pointcloud
 
 
+class _GeometryOnlyMaskGraph:
+    """Minimal compatibility surface used when SubmapManager owns instances.
+
+    Scene_rep still owns TSDF/pose geometry, but no global mask/track graph.
+    Keeping these attributes makes geometry-only checkpoint/debug code safe.
+    """
+    def __init__(self, cfg, dataset, voxel_grids, device):
+        mask_num = int(cfg["scene"]["mask_num"])
+        self.contain_matrix = torch.zeros((mask_num, mask_num), dtype=torch.float32, device=device)
+        self.mask_voxels_coords = {}
+        self.instance_dict = {}
+
+    def get_instance_rgb(self, *args, **kwargs):
+        return []
+
+
 class Scene_rep:
     def __init__(self, cfg, args, dataset, device="cuda:0"):
         self.cfg = cfg
@@ -52,7 +68,16 @@ class Scene_rep:
         self.pc_feature = None  # latest extracted feature pointcloud, Tensor(pts_num, feature_dim)
         self.pc_feature_frame_id = -1  # latest frame_id that we extracted feature pointcloud, int
 
-        self.maskGraph = MaskGraph(self.cfg, self.dataset, self.voxel_grids, self.device)
+        # In submap-owner mode Scene_rep is geometry-only.  The baseline
+        # MaskGraph remains available unchanged for the baseline path, while
+        # SubmapManager owns mask observations, tracks, and merges.
+        self.instance_owner = str(self.cfg.get("instance_owner", "baseline")).lower()
+        if self.instance_owner not in ("baseline", "submap"):
+            raise ValueError("instance_owner must be 'baseline' or 'submap'")
+        if self.instance_owner == "submap":
+            self.maskGraph = _GeometryOnlyMaskGraph(self.cfg, self.dataset, self.voxel_grids, self.device)
+        else:
+            self.maskGraph = MaskGraph(self.cfg, self.dataset, self.voxel_grids, self.device)
         self.metrics = Metrics(self.cfg, self.device)
 
         # related matrix
@@ -79,6 +104,7 @@ class Scene_rep:
         # Mapping from accepted raw 2-D mask IDs to append-only global mask IDs
         # for the object-track submap manager.
         self.last_inserted_mask_pairs = []
+        self.instance_observation_counter = 0
 
         self.pred_inst_mask_frame_id = -1
         self.pred_inst_masks = None
@@ -282,6 +308,46 @@ class Scene_rep:
         cluster_geo_feature_merged = torch.sum(weighted_cluster_geo_features, dim=0) / torch.sum(cluster_geo_features_weight)
         cluster_geo_feature_mask_merged = torch.any(cluster_geo_features_mask).float()
         return cluster_geo_feature_merged, cluster_geo_feature_mask_merged
+
+
+    def collect_seg_frame_evidence(self, frame_id, depth_img, pose_c2w, frustum_block_coords_o3c, seg_image, mask_sem_features, mask_min_size=50):
+        """Convert a segmentation frame into append-only submap observations.
+
+        This deliberately performs the same RGB-D back-projection and size
+        filtering as the baseline, but never inserts the masks into the global
+        MaskGraph.  ``global_mask_id`` is only an observation identity for the
+        SubmapManager; it is not a global merged-instance identity.
+        """
+        if self.instance_owner != "submap":
+            raise RuntimeError("collect_seg_frame_evidence requires instance_owner=submap")
+        self.last_inserted_mask_pairs = []
+        cur_block_indices_o3c, _ = self.voxel_block_grids.hashmap().find(frustum_block_coords_o3c)
+        o3c.cuda.synchronize()
+        voxel_coords_o3c, voxel_indices_o3c = self.voxel_block_grids.voxel_coordinates_and_flattened_indices(cur_block_indices_o3c)
+        voxel_coords = torch.utils.dlpack.from_dlpack(voxel_coords_o3c.to_dlpack())
+        voxel_indices = torch.utils.dlpack.from_dlpack(voxel_indices_o3c.to_dlpack())
+        self.set_active_frustum(frame_id, voxel_coords, voxel_indices)
+
+        mask_dict, valid_mask_ids, _, valid_mask_sem_features = self.voxel_grids.turn_mask_to_voxel(
+            frame_id, depth_img, pose_c2w, voxel_coords, seg_image, mask_sem_features)
+        valid_mask_ids_new = []
+        mask_dict_new = {}
+        valid_mask_sem_features_new = []
+        for mask_id, mask_sem_feature in zip(valid_mask_ids, valid_mask_sem_features):
+            mask_coords = mask_dict[mask_id]
+            if int(mask_coords.shape[0]) > int(mask_min_size):
+                valid_mask_ids_new.append(mask_id)
+                mask_dict_new[mask_id] = mask_coords
+                valid_mask_sem_features_new.append(mask_sem_feature)
+        for mask_id in valid_mask_ids_new:
+            observation_id = int(self.instance_observation_counter)
+            self.instance_observation_counter += 1
+            self.last_inserted_mask_pairs.append({
+                "mask_id": int(mask_id),
+                "global_mask_id": observation_id,
+                "merged_mask_id": observation_id,
+            })
+        return valid_mask_ids_new, mask_dict_new
 
 
     # @brief: insert a new seg frame, then process masks in this frame and incorporate it in Contain_Matrix

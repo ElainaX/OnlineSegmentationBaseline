@@ -1,3 +1,4 @@
+import numpy as np
 import sys
 sys.path.append("third_party/FCGF")
 import argparse
@@ -29,6 +30,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     cfg = config.load_config(args.config)
+    instance_owner = str(cfg.get("instance_owner", "baseline")).lower()
+    if instance_owner == "submap" and not bool(cfg.get("submaps", {}).get("enabled", False)):
+        raise ValueError("instance_owner=submap requires submaps.enabled=true")
 
     dataset = get_dataset(args.dataset, args.instance_dir, cfg, args.device)
     dataloader = DataLoader(dataset, batch_size=1, num_workers=0)
@@ -112,29 +116,39 @@ if __name__ == '__main__':
                 frustum_block_coords, extrinsic = scene_rep.integrate_frame(frame_id, color_img[0], depth_img[0], pose_w2c)  # integrate this frame to global PC
 
                 if seg_flag[0] and frame_id % cfg["seg"]["seg_add_interval"] == 0:
-                    # 2.2: add detected masks in current frame into global mask bank
-                    valid_mask_ids, valid_mask_voxels = scene_rep.insert_seg_frame(frame_id, color_img[0], depth_img[0], pose_c2w[0], frustum_block_coords, seg_image, mask_features)
+                    # 2.2: collect masks as baseline instances or append-only
+                    # observations owned by the submap manager.
+                    if instance_owner == "submap":
+                        valid_mask_ids, valid_mask_voxels = scene_rep.collect_seg_frame_evidence(
+                            frame_id, depth_img[0], pose_c2w[0], frustum_block_coords,
+                            seg_image, mask_features)
+                    else:
+                        valid_mask_ids, valid_mask_voxels = scene_rep.insert_seg_frame(
+                            frame_id, color_img[0], depth_img[0], pose_c2w[0],
+                            frustum_block_coords, seg_image, mask_features)
                     submap_manager.observe(
                         frame_id, color_img[0], depth_img[0], pose_c2w[0],
                         seg_image, mask_features,
                         merged_pairs=scene_rep.last_inserted_mask_pairs,
                         scene_feature_points=scene_rep.pc_xyz,
                         scene_feature_values=scene_rep.pc_feature)
-                    submap_manager.graph_update(
-                        frame_id, scene_rep.maskGraph.instance_dict)
 
-                    # 2.3: periodically merge some rows and cols
-                    if frame_id > 0 and frame_id % scene_rep.merge_frame_interval == 0:
-                        scene_rep.update_masks(frame_id)
+                    if instance_owner == "baseline":
                         submap_manager.graph_update(
                             frame_id, scene_rep.maskGraph.instance_dict)
+                        # 2.3: periodically merge baseline global masks.
+                        if frame_id > 0 and frame_id % scene_rep.merge_frame_interval == 0:
+                            scene_rep.update_masks(frame_id)
+                            submap_manager.graph_update(
+                                frame_id, scene_rep.maskGraph.instance_dict)
 
         # Step 2.4: update visualized segmentation result
         if scene_rep.vis_pc_flag:
             scene_rep.vis_pc.update()
 
         # Step 2.5: save latest ckpt
-        if cfg["save"]["ckpt_interval"] > 0 and frame_id > 0 and frame_id % cfg["save"]["ckpt_interval"] == 0:
+        if (instance_owner == "baseline" and cfg["save"]["ckpt_interval"] > 0
+                and frame_id > 0 and frame_id % cfg["save"]["ckpt_interval"] == 0):
             ckpt_save_dir = os.path.join(local_output_dir, "ckpt_%d" % frame_id)
             os.makedirs(ckpt_save_dir, exist_ok=True)
             scene_rep.save_ckpt(frame_id, ckpt_save_dir)
@@ -145,9 +159,9 @@ if __name__ == '__main__':
     frame_id_final = (processed_frame_ids[-1] if max_frame_num is None
                       else min(processed_frame_ids[-1], max_frame_num - 1))
 
-    # The last sparse mask batch may arrive after the regular merge interval.
-    # Merge it once before exporting persistent object submaps.
-    if (frame_id_final > 0 and
+    # Baseline owns the final global merge.  In submap-owner mode there is no
+    # global MaskGraph merge to flush; SubmapManager is the sole instance owner.
+    if (instance_owner == "baseline" and frame_id_final > 0 and
             frame_id_final % scene_rep.merge_frame_interval != 0):
         scene_rep.update_masks(frame_id_final)
         submap_manager.graph_update(
@@ -156,29 +170,31 @@ if __name__ == '__main__':
     ckpt_save_dir = os.path.join(local_output_dir, "ckpt_%d" % frame_id_final)
     os.makedirs(ckpt_save_dir, exist_ok=True)
 
-    # save final ckpt
-    # Preserve the original Scene_rep result for an apples-to-apples AP
-    # baseline.  Submap labels are written to the canonical ckpt_final.npz
-    # after object TSDF export below.
+    # Save geometry and choose the sole instance owner.
     final_ckpt_path = os.path.join(local_output_dir, "ckpt_scene_rep_final.npz")
-    pred_instance_mask_list = scene_rep.save_ckpt(frame_id_final, ckpt_save_dir, filter_flag=True, ckpt_path=final_ckpt_path)
-    # Keep the output contract even when an ablation leaves no valid instances.
-    # The evaluator accepts an empty (N_points x 0) mask matrix.
-    if not os.path.exists(final_ckpt_path):
+    if instance_owner == "baseline":
+        scene_rep.save_ckpt(frame_id_final, ckpt_save_dir, filter_flag=True, ckpt_path=final_ckpt_path)
+        if not os.path.exists(final_ckpt_path):
+            point_count = int(scene_rep.points.shape[0])
+            feature_dim = int(cfg["mask"]["feature_dim"])
+            np.savez(final_ckpt_path, pred_masks=np.zeros((point_count, 0), dtype=bool),
+                     pred_score=np.ones((0,), dtype=np.float64),
+                     pred_classes=np.zeros((0,), dtype=np.int32),
+                     pred_sem_features=np.zeros((feature_dim, 0), dtype=np.float32))
+    else:
+        # Geometry-only checkpoint: instances are exported by SubmapManager.
+        scene_rep.points, scene_rep.colors = scene_rep.get_pc()
+        scene_rep.pc_frame_id = frame_id_final
         point_count = int(scene_rep.points.shape[0])
         feature_dim = int(cfg["mask"]["feature_dim"])
-        import numpy as np
-        np.savez(
-            final_ckpt_path,
-            pred_masks=np.zeros((point_count, 0), dtype=bool),
-            pred_score=np.ones((0,), dtype=np.float64),
-            pred_classes=np.zeros((0,), dtype=np.int32),
-            pred_sem_features=np.zeros((feature_dim, 0), dtype=np.float32),
-        )
-        print("Saved empty segmentation checkpoint:", final_ckpt_path)
+        np.savez(final_ckpt_path, pred_masks=np.zeros((point_count, 0), dtype=bool),
+                 pred_score=np.ones((0,), dtype=np.float64),
+                 pred_classes=np.zeros((0,), dtype=np.int32),
+                 pred_sem_features=np.zeros((feature_dim, 0), dtype=np.float32))
+        print("Saved geometry-only checkpoint:", final_ckpt_path)
 
-    # save final seg pc
-    scene_rep.save_merging_result(frame_id_final, reextract=False)
+    if instance_owner == "baseline":
+        scene_rep.save_merging_result(frame_id_final, reextract=False)
 
     # save finally reconstructed pointcloud
     final_pc_path = os.path.join(local_output_dir, "final.ply")
