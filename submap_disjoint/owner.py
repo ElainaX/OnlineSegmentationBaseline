@@ -1078,6 +1078,24 @@ class DisjointSubmapManager:
         # # Step 3: for each pred 3D instance, apply DBSCAN for filtering
         instance_mask_list_filtered, instance_feature_list_filtered, valid_instance_indices = filter_instances(self.points, instance_mask_list, instance_feature_list)
 
+        # Opt-in diagnostics only: preserve the original export and merge behavior.
+        if self.cfg.get('experiment', {}).get('export_stage_audit', False):
+            all_ids = sorted(self.maskGraph.instance_dict)
+            all_masks = self.get_instance_scene_pts_mask(
+                [self.mask_voxels_coords[i] for i in all_ids], self.points)
+            arrays = {}
+            for name, masks in [('all_tracks', all_masks),
+                                ('before_dbscan', instance_mask_list),
+                                ('after_dbscan', instance_mask_list_filtered)]:
+                masks = [m.cpu().numpy() if isinstance(m, torch.Tensor) else m for m in masks]
+                stack = np.stack(masks) if masks else np.zeros((0, len(self.points)), bool)
+                arrays[name] = np.packbits(stack, axis=1)
+            np.savez_compressed(os.path.join(ckpt_save_dir, 'export_stage_audit.npz'),
+                point_count=len(self.points), all_ids=all_ids,
+                all_weights=self.merged_mask_weight[all_ids].cpu().numpy(),
+                valid_ids_before_size_sort=valid_merged_mask_ids.cpu().numpy(),
+                filtered_parent_indices=valid_instance_indices, **arrays)
+
         # Step 4: save current reconstruction result
         recon_pc_path = os.path.join(ckpt_save_dir, "recon_%d.ply" % frame_id)
         self.save_pc(self.points, self.colors, recon_pc_path)
