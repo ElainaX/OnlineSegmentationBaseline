@@ -128,14 +128,19 @@ class PointFeatureExtractor:
             min_pts_num = self.min_pts_num
         self.last_mask_point_counts = []
         self.last_mask_feature_valid = []
-        if pts_feature is not None and scene_points.shape[0] == pts_feature.shape[0]:
+        success_flag = False
+        if pts_feature is not None and scene_points is not None and scene_points.shape[0] == pts_feature.shape[0]:
             # if feature pointcloud is provided, skip extracting feature pc
             success_flag = True
         else:
             try:
                 success_flag, pts_feature, scene_points = self.get_feature_pc(scene_points)
-            except MemoryError as me:
-                print(3)
+            except (MemoryError, UnboundLocalError) as me:
+                # Low-resolution frames can have no extractable surface points.
+                print("[FCGF] skipped frame with no usable scene points:", type(me).__name__)
+                success_flag = False
+                pts_feature = None
+                scene_points = None
 
         if not success_flag:
             return False, None, None, None

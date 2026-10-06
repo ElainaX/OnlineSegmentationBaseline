@@ -1,0 +1,4 @@
+inherit_from: /root/OnlineSegmentationBaseline_baseline_ablation/config/3rscan_submap_instance_owner.yaml
+seg:
+  seg_add_interval: 2
+
