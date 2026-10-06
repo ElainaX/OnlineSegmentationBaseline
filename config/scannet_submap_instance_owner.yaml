@@ -7,3 +7,11 @@ instance_owner: submap
 submaps:
   hybrid_baseline_fill: false
   baseline_fallback_when_submaps_not_richer: false
+  migrated_mask_graph:
+    enabled: true
+    disjoint_pairs: true
+    merge_overlap_thresh: 0.4
+    sim_merge_thresh: 2.3
+    merge_contain_ratio: 0.8
+    merge_contain_ratio_feat_list: [0.8, 0.75, 0.7]
+    contain_feature_sim_thresh_list: [2.1, 2.2, 2.3]

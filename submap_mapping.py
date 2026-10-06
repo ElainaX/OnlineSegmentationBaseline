@@ -123,6 +123,27 @@ class SubmapManager:
         self.events = []
         self.graph_history = []
         self.latest_graph = {}
+        # Migrated MaskGraph policy.  The sparse graph owns the evidence and
+        # this manager owns the union-find/track lifetime; no dense
+        # voxel-by-frame matrix is needed.
+        self.migrated_graph_opt = self.opt.get('migrated_mask_graph', {})
+        self.migrated_graph_enabled = bool(self.migrated_graph_opt.get('enabled', True))
+        self.migrated_disjoint_pairs = bool(self.migrated_graph_opt.get('disjoint_pairs', True))
+        self.migrated_merge_overlap = float(self.migrated_graph_opt.get(
+            'merge_overlap_thresh', cfg.get('seg', {}).get('merge_overlap_thresh', 0.4)))
+        self.migrated_sim_threshold = float(self.migrated_graph_opt.get(
+            'sim_merge_thresh', cfg.get('seg', {}).get('sim_merge_thresh', 2.3)))
+        self.migrated_contain_threshold = float(self.migrated_graph_opt.get(
+            'merge_contain_ratio', cfg.get('seg', {}).get('merge_contain_ratio', 0.8)))
+        self.migrated_contain_feature_thresholds = [float(x) for x in self.migrated_graph_opt.get(
+            'contain_feature_sim_thresh_list', cfg.get('seg', {}).get(
+                'contain_feature_sim_thresh_list', [2.1, 2.2, 2.3]))]
+        self.migrated_contain_ratio_features = [float(x) for x in self.migrated_graph_opt.get(
+            'merge_contain_ratio_feat_list', cfg.get('seg', {}).get(
+                'merge_contain_ratio_feat_list', [0.8, 0.75, 0.7]))]
+        self.migrated_stats = {'candidate_edges': 0, 'accepted_edges': 0,
+                               'disjoint_rejected_edges': 0,
+                               'containment_edges': 0, 'semantic_geometry_edges': 0}
         self.frame_cache = OrderedDict()
         self.pending_history = None
         self.max_blocks_seen = 0
@@ -506,6 +527,118 @@ class SubmapManager:
                 'interpretation': 'free_space_candidate' if len(free_views)>=2 else
                                   ('previous_surface' if known_views else 'unknown_or_occluded')}
 
+    @staticmethod
+    def _maskgraph_feature_mapping(value, min_value=0.7, max_value=1.0, k=0.1):
+        """Match Metrics.compute_final_sim_mat's nonlinear feature mapping."""
+        value = float(np.clip(value, min_value, max_value))
+        numerator = 1.0 - math.exp(-k * (value - min_value))
+        denominator = 1.0 - math.exp(-k * (max_value - min_value))
+        return float(numerator / max(denominator, 1e-8))
+
+    def _migrated_track_similarity(self, left, right):
+        """Return the baseline semantic+geometric score for two sparse tracks."""
+        lf = np.asarray(left.get('feature_sum', []), dtype=np.float32)
+        rf = np.asarray(right.get('feature_sum', []), dtype=np.float32)
+        sem = float(lf @ rf / max(np.linalg.norm(lf) * np.linalg.norm(rf), 1e-8)) if len(lf) and len(rf) else 0.0
+        sem_min = float(self.cfg.get('seg', {}).get('seman_min_value', 0.7))
+        sem_score = self._maskgraph_feature_mapping(sem, sem_min, 1.0)
+        geo_score = 0.0
+        if self.geometry_backend == 'd3feat':
+            # D3Feat is kept as a local cue in the migrated path.  Its
+            # descriptor matcher already performs mutual matching, so use a
+            # bounded score when both tracks have valid payloads.
+            if left.get('d3feat_payload') is not None and right.get('d3feat_payload') is not None:
+                evidence = self._d3feat_similarity(left['d3feat_payload'], right['d3feat_payload'])
+                if evidence is not None:
+                    geo_score = self._maskgraph_feature_mapping(float(evidence[0]), sem_min, 1.0)
+        else:
+            lg, rg = left.get('fcgf_feature_sum'), right.get('fcgf_feature_sum')
+            if lg is not None and rg is not None:
+                lg = np.asarray(lg, dtype=np.float32); rg = np.asarray(rg, dtype=np.float32)
+                geo = float(lg @ rg / max(np.linalg.norm(lg) * np.linalg.norm(rg), 1e-8))
+                geo_score = self._maskgraph_feature_mapping(geo, sem_min, 1.0)
+        return sem_score, geo_score
+
+    def _migrated_maskgraph_merge(self, frame_id, scored_pairs):
+        """Apply the original MaskGraph merge decisions to sparse evidence.
+
+        The old implementation formed a dense containment matrix and then
+        applied mutual-overlap plus semantic/geometric gates.  Here the same
+        gates are evaluated only for sparse voxel-posting candidates, and
+        union-find updates the owning submap tracks directly.
+        """
+        if not (self.enabled and self.migrated_graph_enabled and self.sparse_mask_graph.enabled):
+            return
+        edges = []
+        seen = set()
+        # A score is recorded for each new observation against roots that share
+        # at least one voxel. Re-score after local assignment so the current
+        # union lineage is included in the visible-frame denominator.
+        for item in scored_pairs:
+            a, b = int(item.get('a', -1)), int(item.get('b', -1))
+            if a not in self.parent or b not in self.parent:
+                continue
+            a, b = self.root(a), self.root(b)
+            if a == b:
+                continue
+            key = (min(a, b), max(a, b))
+            if key in seen:
+                continue
+            seen.add(key)
+            score = self.sparse_mask_graph.score_pair(a, b)
+            self.migrated_stats['candidate_edges'] += 1
+            left, right = self.tracks.get(a), self.tracks.get(b)
+            if left is None or right is None:
+                continue
+            # MaskGraph's matrix convention is directional; its primary
+            # similarity gate requires both directions to exceed threshold.
+            c_ab = float(score.get('a_contains_b', 0.0))
+            c_ba = float(score.get('b_contains_a', 0.0))
+            if c_ab <= self.migrated_merge_overlap or c_ba <= self.migrated_merge_overlap:
+                continue
+            sem_score, geo_score = self._migrated_track_similarity(left, right)
+            final_score = 0.5 * (c_ab + c_ba) + sem_score + geo_score
+            if final_score > self.migrated_sim_threshold:
+                edges.append((final_score, a, b, c_ab, c_ba, 'similarity'))
+                self.migrated_stats['semantic_geometry_edges'] += 1
+            # This is the iterative containment+feature rule used after a
+            # confirmed merge. It is deliberately evaluated independently of
+            # the global similarity plane.
+            if max(c_ab, c_ba) > self.migrated_contain_threshold:
+                for ratio, threshold in zip(self.migrated_contain_ratio_features,
+                                            self.migrated_contain_feature_thresholds):
+                    if max(c_ab, c_ba) > ratio and sem_score + geo_score > threshold:
+                        edges.append((sem_score + geo_score + max(c_ab, c_ba), a, b,
+                                      c_ab, c_ba, 'containment'))
+                        self.migrated_stats['containment_edges'] += 1
+                        break
+        if not edges:
+            return
+        # Keep the strongest edge per pair and use deterministic greedy
+        # disjoint pairs, matching the current reference branch's policy.
+        unique = {}
+        for edge in edges:
+            key = (min(edge[1], edge[2]), max(edge[1], edge[2]))
+            if key not in unique or edge[0] > unique[key][0]:
+                unique[key] = edge
+        edges = sorted(unique.values(), reverse=True)
+        used = set()
+        for score, a, b, c_ab, c_ba, reason in edges:
+            a, b = self.root(a), self.root(b)
+            if a == b:
+                continue
+            if self.migrated_disjoint_pairs and (a in used or b in used):
+                self.migrated_stats['disjoint_rejected_edges'] += 1
+                continue
+            self._union([a, b], frame_id, 'migrated_sparse_mask_graph')
+            used.update((a, b))
+            self.migrated_stats['accepted_edges'] += 1
+            self.events.append({'type': 'migrated_mask_graph_merge',
+                                'frame': int(frame_id), 'target': int(a),
+                                'source': int(b), 'score': float(score),
+                                'containment': [float(c_ab), float(c_ba)],
+                                'reason': reason})
+
     def before_frame(self, frame_id, depth, pose_c2w):
         """Prepare bounded depth history on mask frames, without self-validation."""
         if not self.enabled:
@@ -539,6 +672,7 @@ class SubmapManager:
                     cKDTree(cache_points), cache_points, cache_features,
                     float(self.fcgf_opt.get('scene_feature_cache_radius_m', 0.08)))
         candidates = []
+        sparse_pair_scores = []
         # Empty accepted-pairs means no observation; do not silently use rejected masks.
         for pair in merged_pairs or []:
             mid, uid = int(pair['mask_id']), int(pair['global_mask_id'])
@@ -555,7 +689,8 @@ class SubmapManager:
             candidates.append((uid, mid, mask, points, feature, pair,
                                geo_feature, geo_level, geo_count))
             if self.sparse_mask_graph.enabled:
-                self.sparse_mask_graph.score_observation_against_tracks(uid)
+                sparse_pair_scores.extend(
+                    self.sparse_mask_graph.score_observation_against_tracks(uid))
         active = sorted(uid for uid, track in self.tracks.items()
                         if self.step_index - int(track.get('last_observed_step', self.step_index))
                         <= self.track_recent_steps)
@@ -661,6 +796,10 @@ class SubmapManager:
                     target = self.root(target)
                     self._touch_track(target, frame_id, self.step_index)
                     matched_targets.add(target)
+        # Complete the migrated baseline path after local assignment.  This
+        # handles containment/semantic/geometric merges that are intentionally
+        # broader than the one-to-one nearest-track assignment above.
+        self._migrated_maskgraph_merge(frame_id, sparse_pair_scores)
         for uid, track in list(self.tracks.items()):
             if uid in created_ids or uid in matched_targets:
                 continue
@@ -1238,6 +1377,7 @@ class SubmapManager:
                   'graph_merge_stats':self.graph_merge_stats,
                   'reject_covisible_graph_merge':self.reject_covisible_graph_merge,
                   'mv3dis_guided_merge':self.mv3dis_stats,
+                  'migrated_mask_graph':self.migrated_stats,
                   'track_lifecycle':self.lifecycle_stats,
                   'retired_track_count':len(self.retired_ids),
                   'observations':observations,'events':self.events,'mask_graph_history':self.graph_history,
