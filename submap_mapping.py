@@ -95,6 +95,13 @@ class SubmapManager:
         self.min_pixels = int(self.opt.get('min_mask_pixels', 50))
         self.free_margin = float(self.opt.get('free_space_margin_m', 0.10))
         self.free_ratio = float(self.opt.get('free_space_ratio', 0.60))
+        # Lifecycle is measured in processed observation steps, which remains
+        # meaningful when an input sequence is sampled with a stride.
+        self.track_recent_steps = max(0, int(self.opt.get('track_recent_steps', 16)))
+        self.track_max_unmatched_steps = max(1, int(self.opt.get('track_max_unmatched_steps', 8)))
+        self.track_min_observations = max(1, int(self.opt.get('track_min_observations', 2)))
+        self.track_min_points = max(1, int(self.opt.get('track_min_points', 24)))
+        self.track_warmup_steps = max(0, int(self.opt.get('track_warmup_steps', 2)))
         self.history = deque(maxlen=int(self.opt.get('history_frames', 32)))
         if self.min_frames < 2 or self.sample_limit < 32 or self.match_distance <= 0:
             raise ValueError('Invalid object submap confirmation/sampling configuration')
@@ -102,6 +109,14 @@ class SubmapManager:
         self.key_to_id = {}
         self.parent = {}
         self.tracks = {}
+        self.retired_ids = set()
+        self.step_index = 0
+        self.lifecycle_stats = {
+            'observe_steps': 0, 'created_tracks': 0, 'retired_tracks': 0,
+            'retired_stale': 0, 'retired_low_support': 0,
+            'recent_active_track_counts': [], 'baseline_graph_updates': 0,
+            'baseline_graph_merges': 0, 'baseline_graph_merge_sources': 0,
+        }
         self.events = []
         self.graph_history = []
         self.latest_graph = {}
@@ -138,8 +153,52 @@ class SubmapManager:
             track['confirmed_frame'] = int(now)
             self.events.append({'type': 'confirmed', 'frame': int(now), 'object_id': uid})
 
+    def _touch_track(self, uid, frame_id, step, baseline_merge=False):
+        if uid not in self.tracks:
+            return
+        track = self.tracks[uid]
+        track['last_frame'] = max(int(track.get('last_frame', frame_id)), int(frame_id))
+        track['last_observed_step'] = max(int(track.get('last_observed_step', step)), int(step))
+        track['missed_steps'] = 0
+        if baseline_merge:
+            track['baseline_merge_count'] = int(track.get('baseline_merge_count', 0)) + 1
+
+    def _prune_tracks(self, frame_id):
+        # Keep confirmed identities for final export; retire only tentative
+        # hypotheses that are stale or never accumulated enough support.
+        for uid, track in list(self.tracks.items()):
+            if track.get('confirmed_frame') is not None:
+                continue
+            age = self.step_index - int(track.get('last_observed_step', self.step_index))
+            stale = int(track.get('missed_steps', 0)) >= self.track_max_unmatched_steps
+            low_support = (age >= self.track_warmup_steps and
+                           (len(track.get('members', ())) < self.track_min_observations or
+                            len(track.get('points', ())) < self.track_min_points))
+            if not (stale or low_support):
+                continue
+            reason = 'stale_unmatched' if stale else 'low_support'
+            self.tracks.pop(uid, None)
+            self.retired_ids.add(uid)
+            self.lifecycle_stats['retired_tracks'] += 1
+            self.lifecycle_stats['retired_stale' if stale else 'retired_low_support'] += 1
+            self.events.append({'type': 'retired', 'frame': int(frame_id),
+                                'object_id': int(uid), 'reason': reason,
+                                'missed_steps': int(track.get('missed_steps', 0)),
+                                'observations': len(track.get('members', ())),
+                                'points': len(track.get('points', ()))})
+
     def _union(self, ids, now, reason):
-        roots = sorted({self.root(i) for i in ids})
+        roots = set()
+        for uid in ids:
+            if uid not in self.parent:
+                continue
+            try:
+                root = self.root(uid)
+            except (KeyError, RecursionError):
+                continue
+            if root in self.tracks:
+                roots.add(root)
+        roots = sorted(roots)
         if not roots:
             return
         target = roots[0]
@@ -178,6 +237,15 @@ class SubmapManager:
                 keep['fcgf_feature_count'] = (keep.get('fcgf_feature_count', 0) +
                                               other.get('fcgf_feature_count', 0))
             keep['last_frame'] = max(keep['last_frame'], other['last_frame'])
+            keep['last_observed_step'] = max(
+                int(keep.get('last_observed_step', 0)),
+                int(other.get('last_observed_step', 0)))
+            keep['missed_steps'] = min(
+                int(keep.get('missed_steps', 0)),
+                int(other.get('missed_steps', 0)))
+            keep['baseline_merge_count'] = (
+                int(keep.get('baseline_merge_count', 0)) +
+                int(other.get('baseline_merge_count', 0)))
             if other['confirmed_frame'] is not None:
                 keep['confirmed_frame'] = min(x for x in (keep['confirmed_frame'], other['confirmed_frame']) if x is not None)
         keep['members'].sort(key=lambda i: (self.observations[i]['frame'], i))
@@ -194,12 +262,34 @@ class SubmapManager:
         """
         if not self.enabled:
             return
+        self.lifecycle_stats['baseline_graph_updates'] += 1
         snapshot = []
         for merged_id, inst in instances.items():
-            ids = sorted(self.key_to_id[k] for k in inst.ori_mask_list if k in self.key_to_id)
+            ids = sorted({self.key_to_id[k] for k in inst.ori_mask_list
+                          if k in self.key_to_id and self.key_to_id[k] in self.tracks})
             if not ids:
                 continue
+            before = set(self.tracks)
+            roots_before = set()
+            for i in ids:
+                if i in self.parent:
+                    root = self.root(i)
+                    if root in self.tracks:
+                        roots_before.add(root)
             self._union(ids, frame_id, 'OnlineAnySeg_mask_graph')
+            roots = []
+            for i in ids:
+                if i not in self.parent:
+                    continue
+                root = self.root(i)
+                if root in self.tracks:
+                    roots.append(root)
+            if roots:
+                self._touch_track(min(roots), frame_id, self.step_index, baseline_merge=True)
+            removed = len(before - set(self.tracks))
+            if len(roots_before) > 1 and removed:
+                self.lifecycle_stats['baseline_graph_merges'] += 1
+                self.lifecycle_stats['baseline_graph_merge_sources'] += removed
             snapshot.append({'merged_mask_id': int(merged_id), 'observation_ids': ids})
         self.graph_history.append({'frame': int(frame_id), 'instances': snapshot})
         self.latest_graph = {x['merged_mask_id']: x['observation_ids'] for x in snapshot}
@@ -422,6 +512,8 @@ class SubmapManager:
                 scene_feature_points=None, scene_feature_values=None):
         if not self.enabled:
             return
+        self.step_index += 1
+        self.lifecycle_stats['observe_steps'] = self.step_index
         segmentation, dep, pose = cpu(seg_image), cpu(depth), cpu(pose_c2w)
         feats = cpu(mask_features)
         scene_feature_cache = None
@@ -452,7 +544,10 @@ class SubmapManager:
                 points, scene_feature_cache=scene_feature_cache)
             candidates.append((uid, mid, mask, points, feature, pair,
                                geo_feature, geo_level, geo_count))
-        active = sorted(self.tracks)
+        active = sorted(uid for uid, track in self.tracks.items()
+                        if self.step_index - int(track.get('last_observed_step', self.step_index))
+                        <= self.track_recent_steps)
+        self.lifecycle_stats['recent_active_track_counts'].append(len(active))
         scores = np.full((len(candidates), len(active)), -1.0)
         for j, track_id in enumerate(active):
             t = self.tracks[track_id]
@@ -514,6 +609,8 @@ class SubmapManager:
             for i,j in zip(rows,cols):
                 if j<len(active) and scores[i,j]>0:
                     matches[i] = active[j]
+        created_ids = set()
+        matched_targets = set()
         for i,(uid,mid,mask,pts,feature,pair,geo_feature,geo_level,geo_count) in enumerate(candidates):
             if uid in self.observations:
                 raise ValueError('Duplicate append-only observation ID')
@@ -538,11 +635,25 @@ class SubmapManager:
                 'fcgf_feature_sum': (geo_feature.copy() if self.geometry_backend != 'd3feat' and geo_feature is not None else None),
                 'fcgf_feature_count': int(geo_feature is not None),
                 'd3feat_payload': (geo_feature if self.geometry_backend == 'd3feat' else None),
-                'last_frame':int(frame_id), 'confirmed_frame':None}
+                'last_frame':int(frame_id), 'confirmed_frame':None,
+                'last_observed_step': self.step_index, 'missed_steps': 0,
+                'baseline_merge_count': 0}
+            created_ids.add(uid)
+            self.lifecycle_stats['created_tracks'] += 1
             self.events.append({'type':'candidate','frame':int(frame_id),'object_id':uid,'mask_id':mid})
             if i in matches:
-                self._union([uid,matches[i]],frame_id,'geometry_and_embedding')
+                target = matches[i]
+                self._union([uid,target],frame_id,'geometry_and_embedding')
                 self.fcgf_stats['accepted_matches'] += 1
+                if target in self.parent:
+                    target = self.root(target)
+                    self._touch_track(target, frame_id, self.step_index)
+                    matched_targets.add(target)
+        for uid, track in list(self.tracks.items()):
+            if uid in created_ids or uid in matched_targets:
+                continue
+            track['missed_steps'] = int(track.get('missed_steps', 0)) + 1
+        self._prune_tracks(frame_id)
         if self.pending_history is not None:
             self.history.append(self.pending_history)
             self.pending_history = None
@@ -1115,6 +1226,8 @@ class SubmapManager:
                   'graph_merge_stats':self.graph_merge_stats,
                   'reject_covisible_graph_merge':self.reject_covisible_graph_merge,
                   'mv3dis_guided_merge':self.mv3dis_stats,
+                  'track_lifecycle':self.lifecycle_stats,
+                  'retired_track_count':len(self.retired_ids),
                   'observations':observations,'events':self.events,'mask_graph_history':self.graph_history,
                   'objects':entries,'confirmed_count':len(tiles),'tentative_count':len(entries)-len(tiles),
                   'max_object_blocks_seen':self.max_blocks_seen,'max_concurrent_object_tsdfs':1,

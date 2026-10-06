@@ -30,6 +30,12 @@ submaps:
   max_track_points: 4096
   free_space_margin_m: 0.10
   free_space_ratio: 0.60
+  # Track lifecycle, measured in processed stride steps.
+  track_recent_steps: 16
+  track_max_unmatched_steps: 8
+  track_min_observations: 2
+  track_min_points: 24
+  track_warmup_steps: 2
   max_object_blocks: 30000
   global_assign_distance_m: 0.090
   global_min_points: 100
