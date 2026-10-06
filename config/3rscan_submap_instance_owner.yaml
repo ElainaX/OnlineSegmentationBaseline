@@ -1,0 +1,41 @@
+inherit_from: /root/autodl-tmp/3RScan/3rscan_k70_carving.yaml
+
+instance_owner: submap
+
+experiment:
+  max_processed_frames: 600
+
+submaps:
+  enabled: true
+  confirmation_frames: 3
+  history_frames: 32
+  min_mask_pixels: 50
+  match_distance_m: 0.06
+  match_coverage: 0.30
+  match_feature_similarity: 0.65
+  match_ambiguity_margin: 0.06
+  max_track_points: 4096
+  free_space_margin_m: 0.10
+  free_space_ratio: 0.60
+  track_recent_steps: 16
+  track_max_unmatched_steps: 8
+  track_min_observations: 2
+  track_min_points: 24
+  track_warmup_steps: 2
+  max_object_blocks: 30000
+  global_assign_distance_m: 0.090
+  global_min_points: 100
+  hybrid_baseline_fill: false
+  baseline_fallback_when_submaps_not_richer: false
+  save_tsdf: true
+  fcgf_matching:
+    enabled: true
+    backend: fcgf
+    require_valid: false
+    score_weight: 0.25
+    min_similarity: 0.25
+    input_point_limits: [32, 96, 256]
+    point_count_thresholds: [96, 384]
+    min_points_by_level: [12, 20, 32]
+    scene_feature_cache: true
+    scene_feature_cache_radius_m: 0.08
