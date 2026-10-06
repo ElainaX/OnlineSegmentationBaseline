@@ -100,7 +100,7 @@ class PointFeatureExtractor:
     #-@return pts_feature: extracted per-point feature, Tensor(n, feature_dim), dtype=float32;
     #-@return pts_xyz: extracted pointcloud, Tensor(n, 3), dtype=float32.
     def get_feature_pc(self, pts_xyz, return_pc=True):
-        if pts_xyz.shape[0] > 0:
+        if pts_xyz is not None and pts_xyz.shape[0] > 0:
             success_flag = True
         else:
             return False, None, None
@@ -135,9 +135,9 @@ class PointFeatureExtractor:
         else:
             try:
                 success_flag, pts_feature, scene_points = self.get_feature_pc(scene_points)
-            except (MemoryError, UnboundLocalError) as me:
-                # Low-resolution frames can have no extractable surface points.
-                print("[FCGF] skipped frame with no usable scene points:", type(me).__name__)
+            except MemoryError as me:
+                # Failed extraction must not leave success_flag uninitialized.
+                print("[FCGF] feature extraction failed (MemoryError):", str(me), flush=True)
                 success_flag = False
                 pts_feature = None
                 scene_points = None
