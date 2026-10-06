@@ -129,6 +129,7 @@ class SubmapManager:
         self.migrated_graph_opt = self.opt.get('migrated_mask_graph', {})
         self.migrated_graph_enabled = bool(self.migrated_graph_opt.get('enabled', True))
         self.migrated_disjoint_pairs = bool(self.migrated_graph_opt.get('disjoint_pairs', True))
+        self.migrated_same_frame_guard = bool(self.migrated_graph_opt.get('same_frame_guard', True))
         self.migrated_merge_overlap = float(self.migrated_graph_opt.get(
             'merge_overlap_thresh', cfg.get('seg', {}).get('merge_overlap_thresh', 0.4)))
         self.migrated_sim_threshold = float(self.migrated_graph_opt.get(
@@ -627,6 +628,12 @@ class SubmapManager:
             a, b = self.root(a), self.root(b)
             if a == b:
                 continue
+            if self.migrated_same_frame_guard:
+                frames_a = {self.observations[x]['frame'] for x in self.tracks[a].get('members', ())}
+                frames_b = {self.observations[x]['frame'] for x in self.tracks[b].get('members', ())}
+                if frames_a & frames_b:
+                    self.migrated_stats['disjoint_rejected_edges'] += 1
+                    continue
             if self.migrated_disjoint_pairs and (a in used or b in used):
                 self.migrated_stats['disjoint_rejected_edges'] += 1
                 continue
