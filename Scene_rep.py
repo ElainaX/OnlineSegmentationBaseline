@@ -76,8 +76,14 @@ class Scene_rep:
             raise ValueError("instance_owner must be 'baseline' or 'submap'")
         if self.instance_owner == "submap":
             self.maskGraph = _GeometryOnlyMaskGraph(self.cfg, self.dataset, self.voxel_grids, self.device)
+            # Compatibility backend used by the migrated sparse owner.  It
+            # receives exactly the same observations and merge calls as the
+            # original global graph, but its result is handed back through
+            # SubmapManager's checkpoint contract.
+            self.legacy_maskGraph = MaskGraph(self.cfg, self.dataset, self.voxel_grids, self.device)
         else:
             self.maskGraph = MaskGraph(self.cfg, self.dataset, self.voxel_grids, self.device)
+            self.legacy_maskGraph = None
         self.metrics = Metrics(self.cfg, self.device)
 
         # related matrix
@@ -323,6 +329,16 @@ class Scene_rep:
         """
         if self.instance_owner != "submap":
             raise RuntimeError("collect_seg_frame_evidence requires instance_owner=submap")
+        # Feed the baseline-equivalent sparse-owner backend first.  The
+        # backend keeps the original containment, feature, supporter and
+        # iterative merge state; SubmapManager still receives append-only
+        # observations and owns the exported instance contract.
+        if self.legacy_maskGraph is not None:
+            return self._legacy_insert_seg_frame(
+                frame_id, color_img=None, depth_img=depth_img,
+                pose_c2w=pose_c2w, frustum_block_coords_o3c=frustum_block_coords_o3c,
+                seg_image=seg_image, mask_sem_features=mask_sem_features,
+                mask_min_size=mask_min_size)
         self.last_inserted_mask_pairs = []
         cur_block_indices_o3c, _ = self.voxel_block_grids.hashmap().find(frustum_block_coords_o3c)
         o3c.cuda.synchronize()
@@ -354,6 +370,50 @@ class Scene_rep:
                 "merged_mask_id": observation_id,
             })
         return valid_mask_ids_new, mask_dict_new
+
+    def _legacy_swap_begin(self):
+        saved = (self.maskGraph, self.contain_matrix, self.mask_voxels_coords)
+        self.maskGraph = self.legacy_maskGraph
+        self.contain_matrix = self.legacy_maskGraph.contain_matrix
+        self.mask_voxels_coords = self.legacy_maskGraph.mask_voxels_coords
+        return saved
+
+    def _legacy_swap_end(self, saved):
+        self.maskGraph, self.contain_matrix, self.mask_voxels_coords = saved
+
+    def _legacy_insert_seg_frame(self, frame_id, color_img, depth_img, pose_c2w,
+                                 frustum_block_coords_o3c, seg_image,
+                                 mask_sem_features, mask_min_size=50):
+        saved = self._legacy_swap_begin()
+        try:
+            # insert_seg_frame only uses color for optional visualization;
+            # pass a zero image when collect_seg_frame_evidence is called from
+            # the geometry-only path.
+            if color_img is None:
+                color_img = torch.zeros((self.img_h, self.img_w, 3), dtype=torch.float32, device=depth_img.device)
+            return self.insert_seg_frame(frame_id, color_img, depth_img, pose_c2w,
+                                         frustum_block_coords_o3c, seg_image,
+                                         mask_sem_features, mask_min_size)
+        finally:
+            self._legacy_swap_end(saved)
+
+    def legacy_update_masks(self, frame_id):
+        if self.legacy_maskGraph is None:
+            return
+        saved = self._legacy_swap_begin()
+        try:
+            self.update_masks(frame_id)
+        finally:
+            self._legacy_swap_end(saved)
+
+    def legacy_save_ckpt(self, frame_id, ckpt_save_dir, ckpt_path):
+        if self.legacy_maskGraph is None:
+            return
+        saved = self._legacy_swap_begin()
+        try:
+            self.save_ckpt(frame_id, ckpt_save_dir, filter_flag=True, ckpt_path=ckpt_path)
+        finally:
+            self._legacy_swap_end(saved)
 
 
     # @brief: insert a new seg frame, then process masks in this frame and incorporate it in Contain_Matrix
@@ -696,6 +756,26 @@ class Scene_rep:
     def merge_masks(self, frame_id, merge_mat, c_mat, count_merge=False, full_geo_merge=True):
         if torch.count_nonzero(merge_mat) == 0:
             return None, False
+
+        # Reference disjoint-pairs policy used by the migrated owner: retain
+        # only the strongest non-overlapping pair in each merge call, which
+        # prevents one transitive component from swallowing several objects.
+        migrated_opt = self.cfg.get('submaps', {}).get('migrated_mask_graph', {})
+        if (self.instance_owner == 'submap' and
+                bool(migrated_opt.get('enabled', False)) and
+                bool(migrated_opt.get('disjoint_pairs', False))):
+            ij = torch.nonzero(merge_mat, as_tuple=False).tolist()
+            pairs = sorted(ij, key=lambda p: (
+                -float(c_mat[p[0], p[1]] + c_mat[p[1], p[0]]), p[0], p[1]))
+            keep = torch.zeros_like(merge_mat)
+            used = set()
+            for i, j in pairs:
+                if i != j and i not in used and j not in used:
+                    keep[i, j] = True
+                    used.update((i, j))
+            merge_mat = keep
+            if torch.count_nonzero(merge_mat) == 0:
+                return None, False
 
         c_mask_num_before = self.c_mask_num
         merged_mask_id_clusters = do_clustering(merge_mat)  # list of ndarray(n_i)

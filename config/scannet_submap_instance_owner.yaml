@@ -6,7 +6,8 @@ instance_owner: submap
 
 submaps:
   hybrid_baseline_fill: false
-  baseline_fallback_when_submaps_not_richer: false
+  baseline_fallback_when_submaps_not_richer: true
+  baseline_fallback_min_match_fraction: 1.0
   migrated_mask_graph:
     enabled: true
     disjoint_pairs: true

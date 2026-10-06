@@ -145,6 +145,13 @@ if __name__ == '__main__':
                             submap_manager.graph_update(
                                 frame_id, scene_rep.maskGraph.instance_dict,
                                 dense_contain_matrix=scene_rep.contain_matrix)
+                    else:
+                        # The sparse owner keeps a baseline-equivalent graph
+                        # adapter so its containment/supporter/iterative merge
+                        # rules are not lost during migration.
+                        if (frame_id > 0 and
+                                frame_id % scene_rep.merge_frame_interval == 0):
+                            scene_rep.legacy_update_masks(frame_id)
 
         # Step 2.4: update visualized segmentation result
         if scene_rep.vis_pc_flag:
@@ -171,6 +178,9 @@ if __name__ == '__main__':
         submap_manager.graph_update(
             frame_id_final, scene_rep.maskGraph.instance_dict,
             dense_contain_matrix=scene_rep.contain_matrix)
+    elif (instance_owner == "submap" and frame_id_final > 0 and
+          frame_id_final % scene_rep.merge_frame_interval != 0):
+        scene_rep.legacy_update_masks(frame_id_final)
 
     ckpt_save_dir = os.path.join(local_output_dir, "ckpt_%d" % frame_id_final)
     os.makedirs(ckpt_save_dir, exist_ok=True)
@@ -187,16 +197,19 @@ if __name__ == '__main__':
                      pred_classes=np.zeros((0,), dtype=np.int32),
                      pred_sem_features=np.zeros((feature_dim, 0), dtype=np.float32))
     else:
-        # Geometry-only checkpoint: instances are exported by SubmapManager.
+        # The migrated owner exports through SubmapManager, while retaining a
+        # baseline-equivalent checkpoint for hybrid/fallback comparison.
         scene_rep.points, scene_rep.colors = scene_rep.get_pc()
         scene_rep.pc_frame_id = frame_id_final
-        point_count = int(scene_rep.points.shape[0])
-        feature_dim = int(cfg["mask"]["feature_dim"])
-        np.savez(final_ckpt_path, pred_masks=np.zeros((point_count, 0), dtype=bool),
-                 pred_score=np.ones((0,), dtype=np.float64),
-                 pred_classes=np.zeros((0,), dtype=np.int32),
-                 pred_sem_features=np.zeros((feature_dim, 0), dtype=np.float32))
-        print("Saved geometry-only checkpoint:", final_ckpt_path)
+        scene_rep.legacy_save_ckpt(frame_id_final, ckpt_save_dir, final_ckpt_path)
+        if not os.path.exists(final_ckpt_path):
+            point_count = int(scene_rep.points.shape[0])
+            feature_dim = int(cfg["mask"]["feature_dim"])
+            np.savez(final_ckpt_path, pred_masks=np.zeros((point_count, 0), dtype=bool),
+                     pred_score=np.ones((0,), dtype=np.float64),
+                     pred_classes=np.zeros((0,), dtype=np.int32),
+                     pred_sem_features=np.zeros((feature_dim, 0), dtype=np.float32))
+        print("Saved migrated baseline-compatible checkpoint:", final_ckpt_path)
 
     if instance_owner == "baseline":
         scene_rep.save_merging_result(frame_id_final, reextract=False)
