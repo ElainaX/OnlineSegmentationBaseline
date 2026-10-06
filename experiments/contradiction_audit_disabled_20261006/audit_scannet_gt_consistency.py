@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+import argparse,json,sys
+from pathlib import Path
+import cv2,numpy as np,open3d as o3d,open3d.core as o3c
+from scipy.spatial import cKDTree
+REPO=Path(__file__).resolve().parents[2]; sys.path.insert(0,str(REPO)); sys.path.insert(0,str(REPO/'experiments/contradiction_audit'))
+from audit_3rscan import AuditDataset,raycast,backproject
+from voxelized_points import VoxelBlockGrid
+import tool.config as config
+
+def main():
+ ap=argparse.ArgumentParser(); ap.add_argument('--data-root',required=True); ap.add_argument('--gt-root',required=True); ap.add_argument('--seq',required=True); ap.add_argument('--output-root',required=True); ap.add_argument('--config',default=str(REPO/'config/scannet_stride10_controlled.yaml')); ap.add_argument('--audit-interval',type=int,default=10); ap.add_argument('--tau-min',type=float,default=.035); ap.add_argument('--tau-rel',type=float,default=.04); ap.add_argument('--ratio-threshold',type=float,default=.05); ap.add_argument('--min-pixels',type=int,default=400); ap.add_argument('--gt-dist',type=float,default=.08); args=ap.parse_args()
+ ds=AuditDataset(Path(args.data_root)/args.seq); cfg=config.load_config(args.config); wrap=VoxelBlockGrid(cfg,ds,'cuda:0'); grid=wrap.voxel_block_grids; K_o3c=o3c.Tensor.from_numpy(ds.K.astype(np.float64)); dev=o3c.Device('CUDA:0'); scale=float(cfg['cam']['depth_scale']); far=float(cfg['cam']['depth_far']); trunc=float(cfg['scene'].get('trunc_voxel_multiplier',4.))
+ ply=Path(args.gt_root)/args.seq/f'{args.seq}_vh_clean_2.ply'; gt=np.asarray(o3d.io.read_point_cloud(str(ply)).points,dtype=np.float32); tree=cKDTree(gt); out=Path(args.output_root)/args.seq; out.mkdir(parents=True,exist_ok=True); frames=[]; last=np.eye(4,dtype=np.float32)
+ for n,fid in enumerate(ds.ids):
+  depth=cv2.imread(str(ds.depths[fid]),cv2.IMREAD_UNCHANGED); color=cv2.imread(str(ds.colors[fid]),cv2.IMREAD_COLOR); pose=ds.poses[fid]; pose=pose if np.isfinite(pose).all() else last; last=pose; pw=np.linalg.inv(pose)
+  if n%max(1,args.audit_interval)==0:
+   pred,_=raycast(grid,K_o3c,pw,depth,ds.target_w,ds.target_h,scale,far,trunc); obs=depth.astype(np.float32)/scale; both=(obs>0)&(pred>0); tau=np.maximum(args.tau_min,args.tau_rel*np.maximum(pred,.1)); free=both&(obs>pred+tau); fg=both&(obs<pred-tau); ow,ov,_=backproject(obs,ds.K,pose); pworld,pv,_=backproject(pred,ds.K,pose); od=np.full((ov.size,),np.inf,dtype=np.float32); pd=np.full((pv.size,),np.inf,dtype=np.float32); od[ov]=tree.query(ow[ov],k=1,workers=-1)[0]; pd[pv]=tree.query(pworld[pv],k=1,workers=-1)[0]; fl=free.reshape(-1); bl=both.reshape(-1); obs_good=fl&(od<=args.gt_dist); pred_good=fl&(pd<=args.gt_dist); map_error=obs_good&(pd>args.gt_dist); frames.append({'frame':int(fid),'both':int(bl.sum()),'free':int(free.sum()),'occluded':int(fg.sum()),'free_ratio':float(free.sum()/max(1,bl.sum())),'obs_gt_good_free':int(obs_good.sum()),'map_gt_bad_free':int(map_error.sum()),'free_unknown':int((fl&~obs_good).sum()),'obs_gt_good_ratio':float(obs_good.sum()/max(1,fl.sum())),'map_gt_bad_ratio':float(map_error.sum()/max(1,fl.sum()))})
+  rgb=cv2.cvtColor(color,cv2.COLOR_BGR2RGB); di=o3d.t.geometry.Image(np.ascontiguousarray(depth)).to(o3c.uint16).to(dev); ci=o3d.t.geometry.Image(np.ascontiguousarray(rgb)).to(o3c.uint8).to(dev); ext=o3c.Tensor.from_numpy(np.ascontiguousarray(pw.astype(np.float64))); fc=grid.compute_unique_block_coordinates(di,K_o3c,ext,scale,far); grid.integrate(fc,di,ci,K_o3c,ext,scale,far,trunc_voxel_multiplier=trunc)
+  if n%500==0: print(f'{args.seq}: {n+1}/{len(ds.ids)} blocks={grid.hashmap().size()}',flush=True)
+ free=np.asarray([x['free'] for x in frames],dtype=float); obs_good=np.asarray([x['obs_gt_good_free'] for x in frames],dtype=float); map_bad=np.asarray([x['map_gt_bad_free'] for x in frames],dtype=float); ratios=np.asarray([x['free_ratio'] for x in frames],dtype=float); summary={'sequence':args.seq,'parameters':vars(args),'metrics':{'audited_frames':len(frames),'free_pixels':int(free.sum()),'free_obs_near_gt_fraction':float(obs_good.sum()/max(1,free.sum())),'free_map_far_from_gt_fraction':float(map_bad.sum()/max(1,free.sum())),'mean_free_ratio':float(ratios.mean()),'p95_free_ratio':float(np.percentile(ratios,95))},'frames':frames}; json.dump(summary,open(out/'gt_consistency_summary.json','w'),indent=2); print(json.dumps(summary['metrics'],indent=2),flush=True)
+if __name__=='__main__': main()

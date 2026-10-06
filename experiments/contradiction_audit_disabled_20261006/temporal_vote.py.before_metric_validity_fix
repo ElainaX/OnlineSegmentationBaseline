@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""Temporal/view-overlap post-audit for contradiction_summary.json.
+This consumes diagnostic outputs and never changes map or segmentation results.
+"""
+import argparse, json, math
+from pathlib import Path
+import numpy as np
+
+
+def pose_forward(T):
+    # camera optical axis is +Z in the RGB-D convention used by the loader.
+    return T[:3, 2] / max(1e-9, np.linalg.norm(T[:3, 2]))
+
+
+def overlap_to_reference(T, refs, max_dist=0.5, max_angle=30.0):
+    if len(refs) == 0:
+        return 0.0, float("inf"), 180.0
+    c = T[:3, 3]
+    f = pose_forward(T)
+    rc = np.asarray([x[:3, 3] for x in refs])
+    rf = np.asarray([pose_forward(x) for x in refs])
+    dist = np.linalg.norm(rc - c[None, :], axis=1)
+    dots = np.clip(rf @ f, -1.0, 1.0)
+    angle = np.degrees(np.arccos(dots))
+    good = (dist <= max_dist) & (angle <= max_angle)
+    if not np.any(good):
+        return 0.0, float(np.min(dist)), float(np.min(angle))
+    # A continuous score is useful for temporal weighting; 1 means nearly the same view.
+    score = np.exp(-dist[good] / max_dist) * np.cos(np.radians(angle[good]))
+    j = np.argmax(score)
+    return float(score[j]), float(dist[good][j]), float(angle[good][j])
+
+
+def gt_union(data_root, seq):
+    ids = set()
+    for name in ("gt_seg_reference_changed", "gt_seg_changed"):
+        p = Path(data_root) / name / f"{seq}.txt"
+        if p.exists():
+            x = np.loadtxt(str(p), dtype=np.int64).reshape(-1)
+            ids.update(int(v) for v in np.unique(x) if v > 0)
+    return ids
+
+
+def run_one(summary_path, data_root, args):
+    summary = json.load(open(summary_path))
+    seq = summary["sequence"]
+    seq_dir = Path(data_root) / seq
+    boundary = int(summary["boundary"])
+    frames = summary["frames"]
+    ref_poses = []
+    for f in range(boundary):
+        p = seq_dir / "pose" / f"{f}.txt"
+        if p.exists():
+            T = np.loadtxt(str(p)).astype(np.float32)
+            if np.isfinite(T).all():
+                ref_poses.append(T)
+    gt = gt_union(data_root, seq)
+    # A frame-level temporal vote. We keep a fixed-size deque of candidate IDs.
+    recent = []
+    score = {}
+    accepted = set()
+    accepted_by_frame = []
+    usable_frames = 0
+    for st in frames:
+        if st["phase"] != "rescan":
+            continue
+        fid = int(st["frame"])
+        Tpath = seq_dir / "pose" / f"{fid}.txt"
+        T = np.loadtxt(str(Tpath)).astype(np.float32)
+        if not np.isfinite(T).all():
+            continue
+        view_score, view_dist, view_angle = overlap_to_reference(T, ref_poses, args.max_view_dist, args.max_view_angle)
+        coverage = float(st["both_pixels"] / max(1, st["observed_pixels"]))
+        usable = bool(st.get("trigger", False) and view_score >= args.min_view_score and coverage >= args.min_coverage)
+        evidence = st.get("instance_evidence", {})
+        if evidence:
+            ids = {int(k) for k, v in evidence.items() if int(v.get("total", 0)) >= args.min_instance_pixels} if usable else set()
+        else:
+            ids = set(int(x) for x in st.get("changed_instance_ids", [])) if usable else set()
+        recent.append(ids)
+        if len(recent) > args.window:
+            recent.pop(0)
+        # Decay all live evidence, then add this frame's view-weighted vote.
+        for k in list(score):
+            score[k] *= args.decay
+            if score[k] < 1e-4:
+                del score[k]
+        for k in ids:
+            score[k] = score.get(k, 0.0) + max(0.1, view_score)
+        votes = {}
+        for s in recent:
+            for k in s:
+                votes[k] = votes.get(k, 0) + 1
+        now = {k for k, v in votes.items() if v >= args.min_votes and score.get(k, 0.0) >= args.min_score}
+        accepted |= now
+        accepted_by_frame.append({"frame": fid, "view_score": view_score, "view_dist_m": view_dist,
+                                  "view_angle_deg": view_angle, "coverage": coverage, "usable": usable,
+                                  "raw_ids": sorted(set(int(x) for x in st.get("changed_instance_ids", []))),
+                                  "voted_ids": sorted(now), "votes": votes, "scores": {str(k): score[k] for k in votes}})
+        usable_frames += int(usable)
+    tp = len(accepted & gt)
+    report = {"sequence": seq, "parameters": vars(args), "gt_union_instances": sorted(gt),
+              "raw_detected_instances": sorted(set(int(x) for s in frames if s["phase"] == "rescan" for x in s.get("changed_instance_ids", []))),
+              "voted_instances": sorted(accepted), "instance_precision": tp / max(1, len(accepted)),
+              "instance_recall": tp / max(1, len(gt)), "usable_rescan_frames": usable_frames,
+              "rescan_frames": sum(s["phase"] == "rescan" for s in frames), "frames": accepted_by_frame}
+    return report
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--audit-root", required=True)
+    ap.add_argument("--data-root", required=True)
+    ap.add_argument("--output", required=True)
+    ap.add_argument("--window", type=int, default=8)
+    ap.add_argument("--min-votes", type=int, default=3)
+    ap.add_argument("--decay", type=float, default=0.85)
+    ap.add_argument("--min-score", type=float, default=1.5)
+    ap.add_argument("--min-instance-pixels", type=int, default=0, help="minimum contradiction pixels for one instance in one frame")
+    ap.add_argument("--min-view-score", type=float, default=0.35)
+    ap.add_argument("--min-coverage", type=float, default=0.25)
+    ap.add_argument("--max-view-dist", type=float, default=0.5)
+    ap.add_argument("--max-view-angle", type=float, default=30.0)
+    args = ap.parse_args()
+    root = Path(args.audit_root)
+    reports = [run_one(p, args.data_root, args) for p in sorted(root.glob("*/contradiction_summary.json"))]
+    out = {"method": "view-overlap gated temporal instance voting", "parameters": vars(args), "sequences": reports}
+    json.dump(out, open(args.output, "w"), indent=2)
+    for r in reports:
+        print(r["sequence"], "raw", len(r["raw_detected_instances"]), "voted", len(r["voted_instances"]),
+              "P", round(r["instance_precision"], 3), "R", round(r["instance_recall"], 3),
+              "usable", r["usable_rescan_frames"], "/", r["rescan_frames"])
+
+if __name__ == "__main__":
+    main()

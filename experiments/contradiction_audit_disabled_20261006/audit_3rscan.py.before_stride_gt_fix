@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+"""Diagnostic-only RGB-D/TSDF contradiction audit for 3RScan.
+
+The map state is identical to ordinary TSDF integration: this script only
+ray-casts the map immediately before integrating each frame and writes
+residual/evidence statistics.  It never changes voxels, masks, or tracks.
+"""
+import argparse, json, os, re, sys
+from pathlib import Path
+import cv2
+import numpy as np
+import open3d as o3d
+import open3d.core as o3c
+from scipy.spatial import cKDTree
+
+# Make the repository modules importable when launched from any directory.
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO))
+from voxelized_points import VoxelBlockGrid
+import tool.config as config
+
+
+def numeric_files(folder, pattern=None):
+    out = []
+    for p in Path(folder).iterdir():
+        if not p.is_file():
+            continue
+        if pattern and p.suffix.lower() != pattern:
+            continue
+        m = re.match(r"^(\d+)", p.stem)
+        if m:
+            out.append((int(m.group(1)), p))
+    return dict(sorted(out))
+
+
+class AuditDataset:
+    def __init__(self, seq_dir):
+        self.seq_dir = Path(seq_dir)
+        colors = numeric_files(self.seq_dir / "color", ".jpg")
+        depths = numeric_files(self.seq_dir / "depth", ".png")
+        self.ids = sorted(set(colors) & set(depths))
+        if not self.ids:
+            raise RuntimeError(f"no numeric RGB-D frames under {self.seq_dir}")
+        self.colors = colors
+        self.depths = depths
+        self.poses = {i: np.loadtxt(self.seq_dir / "pose" / f"{i}.txt").astype(np.float32) for i in self.ids}
+        self.K = np.loadtxt(self.seq_dir / "intrinsic" / "intrinsic_depth.txt")[:3, :3].astype(np.float32)
+        d0 = cv2.imread(str(self.depths[self.ids[0]]), cv2.IMREAD_UNCHANGED)
+        self.target_h, self.target_w = d0.shape[:2]
+        self.cam_intrinsic = __import__("torch").from_numpy(self.K).cuda()
+
+
+def load_gt_mesh(seq_dir, gt_root, seq, changed_dir):
+    # PLY vertices are already in reference-scan world coordinates.
+    if gt_root == "reference":
+        ply = Path(seq_dir) / "../gt_reference" / seq / f"{seq}_vh_clean_2.ply"
+        lab = Path(seq_dir) / "../gt_seg_reference_changed" / f"{seq}.txt"
+    else:
+        ply = Path(seq_dir) / f"{seq}_vh_clean_2.ply"
+        lab = Path(seq_dir) / "../gt_seg_changed" / f"{seq}.txt"
+    if not ply.exists() or not lab.exists():
+        return None
+    pcd = o3d.io.read_point_cloud(str(ply))
+    xyz = np.asarray(pcd.points, dtype=np.float32)
+    labels = np.loadtxt(str(lab), dtype=np.int64).reshape(-1)
+    if xyz.shape[0] != labels.shape[0]:
+        raise RuntimeError(f"GT vertex/label mismatch {ply}: {xyz.shape[0]} vs {labels.shape[0]}")
+    return {"tree": cKDTree(xyz), "xyz": xyz, "labels": labels,
+            "changed_ids": sorted(int(x) for x in np.unique(labels) if x > 0)}
+
+
+def nearest_changed(gt, points, max_dist):
+    if gt is None or points.shape[0] == 0:
+        return np.zeros((points.shape[0],), dtype=np.int64), np.full((points.shape[0],), np.inf, dtype=np.float32)
+    dist, idx = gt["tree"].query(points, k=1, workers=-1)
+    dist = np.asarray(dist, dtype=np.float32)
+    labels = gt["labels"][np.asarray(idx, dtype=np.int64)]
+    labels = np.where(dist <= max_dist, labels, 0)
+    return labels.astype(np.int64), dist
+
+
+def backproject(depth, K, pose, stride=1):
+    h, w = depth.shape
+    yy, xx = np.mgrid[0:h:stride, 0:w:stride]
+    z = depth[::stride, ::stride].astype(np.float32)
+    valid = z > 0
+    x = (xx.astype(np.float32) - K[0, 2]) * z / K[0, 0]
+    y = (yy.astype(np.float32) - K[1, 2]) * z / K[1, 1]
+    cam = np.stack([x, y, z], axis=-1)
+    world = cam @ pose[:3, :3].T + pose[:3, 3]
+    return world.reshape(-1, 3), valid.reshape(-1), (yy.reshape(-1), xx.reshape(-1))
+
+
+def raycast(grid, K_o3c, pose_w2c, depth_raw, width, height, depth_scale, depth_far, voxel_trunc):
+    dev = o3c.Device("CUDA:0")
+    depth_img = o3d.t.geometry.Image(np.ascontiguousarray(depth_raw)).to(o3c.uint16).to(dev)
+    ext = o3c.Tensor.from_numpy(np.ascontiguousarray(pose_w2c.astype(np.float64)))
+    frustum = grid.compute_unique_block_coordinates(depth_img, K_o3c, ext, depth_scale, depth_far)
+    if frustum.shape[0] == 0 or grid.hashmap().size() == 0:
+        return np.zeros((height, width), dtype=np.float32), frustum
+    _, found = grid.hashmap().find(frustum)
+    frustum_existing = frustum[found]
+    if frustum_existing.shape[0] == 0:
+        return np.zeros((height, width), dtype=np.float32), frustum
+    rendered = grid.ray_cast(frustum_existing, K_o3c, ext, width, height, ["depth"],
+                             depth_scale=depth_scale, depth_min=0.1, depth_max=depth_far,
+                             weight_threshold=1.0, trunc_voxel_multiplier=voxel_trunc,
+                             range_map_down_factor=1)
+    # Open3D returns depth in the requested uint16 scale; convert to metres.
+    pred = rendered.depth.cpu().numpy().reshape(height, width).astype(np.float32) / float(depth_scale)
+    pred[~np.isfinite(pred)] = 0
+    return pred, frustum
+
+
+def update_acc(dst, src):
+    for k, v in src.items():
+        dst[k] = dst.get(k, 0) + float(v)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data-root", required=True)
+    ap.add_argument("--seq", required=True)
+    ap.add_argument("--output-root", required=True)
+    ap.add_argument("--config", default=str(REPO / "../autodl-tmp/3RScan/3rscan_k70_carving.yaml"))
+    ap.add_argument("--stride", type=int, default=2, help="pixel stride for GT attribution; TSDF still uses every pixel")
+    ap.add_argument("--max-frames", type=int, default=0)
+    ap.add_argument("--tau-min", type=float, default=0.035)
+    ap.add_argument("--tau-rel", type=float, default=0.04)
+    ap.add_argument("--gt-dist", type=float, default=0.08)
+    ap.add_argument("--trigger-ratio", type=float, default=0.05)
+    ap.add_argument("--trigger-pixels", type=int, default=40)
+    args = ap.parse_args()
+
+    data_root = Path(args.data_root)
+    seq_dir = data_root / args.seq
+    meta = json.load(open(seq_dir / "session_boundary.json"))
+    boundary = int(meta["rescan_start_frame"])
+    ds = AuditDataset(seq_dir)
+    cfg = config.load_config(args.config)
+    # The existing VoxelBlockGrid uses only these dataset fields.
+    grid_wrap = VoxelBlockGrid(cfg, ds, "cuda:0")
+    grid = grid_wrap.voxel_block_grids
+    K_o3c = o3c.Tensor.from_numpy(ds.K.astype(np.float64))
+    depth_scale = float(cfg["cam"]["depth_scale"])
+    depth_far = float(cfg["cam"]["depth_far"])
+    trunc = float(cfg["scene"].get("trunc_voxel_multiplier", 4.0))
+
+    out = Path(args.output_root) / args.seq
+    out.mkdir(parents=True, exist_ok=True)
+    frame_stats = []
+    totals = {"reference": {}, "rescan": {}, "all": {}}
+    phase_gt = {"reference": load_gt_mesh(seq_dir, "reference", args.seq, "changed"),
+                "rescan": load_gt_mesh(seq_dir, "rescan", args.seq, "changed")}
+    phase_changed = {p: (set(g["changed_ids"]) if g else set()) for p, g in phase_gt.items()}
+    changed_instance_frames = {"reference": {}, "rescan": {}}
+    last_pose = np.eye(4, dtype=np.float32)
+
+    ids = ds.ids if not args.max_frames else ds.ids[:args.max_frames]
+    for n, frame_id in enumerate(ids):
+        color = cv2.imread(str(ds.colors[frame_id]), cv2.IMREAD_COLOR)
+        depth = cv2.imread(str(ds.depths[frame_id]), cv2.IMREAD_UNCHANGED)
+        if depth is None:
+            continue
+        pose = ds.poses[frame_id]
+        if not np.isfinite(pose).all():
+            pose = last_pose
+        else:
+            last_pose = pose
+        pose_w2c = np.linalg.inv(pose)
+        pred, frustum = raycast(grid, K_o3c, pose_w2c, depth, ds.target_w, ds.target_h, depth_scale, depth_far, trunc)
+
+        obs = depth.astype(np.float32) / depth_scale
+        s = max(1, int(args.stride))
+        obs_s = obs[::s, ::s]
+        pred_s = pred[::s, ::s]
+        both = (obs_s > 0) & (pred_s > 0)
+        tau = np.maximum(args.tau_min, args.tau_rel * np.maximum(pred_s, 0.1))
+        free = both & (obs_s > pred_s + tau)       # old surface no longer occupies the ray
+        foreground = both & (obs_s < pred_s - tau) # new/closer surface in front of old map
+        consistent = both & ~(free | foreground)
+        phase = "reference" if frame_id < boundary else "rescan"
+        stat = {"frame": int(frame_id), "phase": phase, "map_blocks": int(grid.hashmap().size()),
+                "raycast_pixels": int(np.count_nonzero(pred_s > 0)),
+                "observed_pixels": int(np.count_nonzero(obs_s > 0)),
+                "both_pixels": int(np.count_nonzero(both)),
+                "free_pixels": int(np.count_nonzero(free)),
+                "foreground_pixels": int(np.count_nonzero(foreground)),
+                "consistent_pixels": int(np.count_nonzero(consistent)),
+                "free_ratio": float(np.count_nonzero(free) / max(1, np.count_nonzero(both))),
+                "foreground_ratio": float(np.count_nonzero(foreground) / max(1, np.count_nonzero(both)))}
+        # Attribute contradiction pixels to changed GT vertices in the correct scan.
+        gt_ref = phase_gt["reference"]
+        gt_cur = phase_gt[phase]
+        free_world, free_valid, _ = backproject(pred_s, ds.K, pose, stride=1)
+        fg_world, fg_valid, _ = backproject(obs_s, ds.K, pose, stride=1)
+        free_flat = free.reshape(-1) & free_valid
+        fg_flat = foreground.reshape(-1) & fg_valid
+        free_lab, free_dist = nearest_changed(gt_ref, free_world[free_flat], args.gt_dist)
+        fg_lab, fg_dist = nearest_changed(gt_cur, fg_world[fg_flat], args.gt_dist)
+        free_known = free_dist <= args.gt_dist
+        fg_known = fg_dist <= args.gt_dist
+        stat.update({"free_changed_pixels": int(np.count_nonzero(free_lab)),
+                     "foreground_changed_pixels": int(np.count_nonzero(fg_lab)),
+                     "free_known_pixels": int(np.count_nonzero(free_known)),
+                     "foreground_known_pixels": int(np.count_nonzero(fg_known)),
+                     "free_unknown_ratio": float(1.0 - np.count_nonzero(free_known) / max(1, np.count_nonzero(free_flat))),
+                     "foreground_unknown_ratio": float(1.0 - np.count_nonzero(fg_known) / max(1, np.count_nonzero(fg_flat))),
+                     "free_precision": float(np.count_nonzero(free_lab) / max(1, np.count_nonzero(free_known))),
+                     "foreground_precision": float(np.count_nonzero(fg_lab) / max(1, np.count_nonzero(fg_known)))})
+        # Frame-level recall denominator: changed GT points among all visible predicted/observed samples.
+        all_pred_world, all_pred_valid, _ = backproject(pred_s, ds.K, pose)
+        all_obs_world, all_obs_valid, _ = backproject(obs_s, ds.K, pose)
+        vis_ref_lab, _ = nearest_changed(gt_ref, all_pred_world[all_pred_valid], args.gt_dist)
+        vis_cur_lab, _ = nearest_changed(gt_cur, all_obs_world[all_obs_valid], args.gt_dist)
+        stat["free_recall"] = float(np.count_nonzero(free_lab) / max(1, np.count_nonzero(vis_ref_lab)))
+        stat["foreground_recall"] = float(np.count_nonzero(fg_lab) / max(1, np.count_nonzero(vis_cur_lab)))
+        stat["trigger"] = bool((stat["free_pixels"] + stat["foreground_pixels"] >= args.trigger_pixels) and
+                                (stat["free_ratio"] + stat["foreground_ratio"] >= args.trigger_ratio))
+        # Per changed instance evidence for later association to tracks/submaps.
+        ids_frame = np.unique(np.concatenate([free_lab[free_lab > 0], fg_lab[fg_lab > 0]]) if (free_lab.size + fg_lab.size) else np.array([], dtype=np.int64))
+        stat["changed_instance_ids"] = [int(x) for x in ids_frame]
+        stat["instance_evidence"] = {}
+        for iid in ids_frame:
+            iid = int(iid)
+            free_i = int(np.count_nonzero(free_lab == iid))
+            fg_i = int(np.count_nonzero(fg_lab == iid))
+            free_known_i = int(np.count_nonzero((free_lab == iid) & free_known))
+            fg_known_i = int(np.count_nonzero((fg_lab == iid) & fg_known))
+            stat["instance_evidence"][str(iid)] = {
+                "free": free_i, "foreground": fg_i, "total": free_i + fg_i,
+                "free_known": free_known_i, "foreground_known": fg_known_i,
+                "known_total": free_known_i + fg_known_i,
+            }
+            d = changed_instance_frames[phase].setdefault(str(iid), {"frames": 0, "free": 0, "foreground": 0})
+            d["frames"] += 1
+            d["free"] += free_i
+            d["foreground"] += fg_i
+        update_acc(totals[phase], {"both": stat["both_pixels"], "free": stat["free_pixels"],
+                                   "foreground": stat["foreground_pixels"], "free_changed": stat["free_changed_pixels"],
+                                   "foreground_changed": stat["foreground_changed_pixels"],
+                                   "visible_ref_changed": int(np.count_nonzero(vis_ref_lab)),
+                                   "visible_cur_changed": int(np.count_nonzero(vis_cur_lab)),
+                                   "free_known": stat["free_known_pixels"],
+                                   "foreground_known": stat["foreground_known_pixels"],
+                                   "trigger": int(stat["trigger"])})
+        frame_stats.append(stat)
+
+        # Integrate after auditing, preserving the normal map update exactly.
+        dev = o3c.Device("CUDA:0")
+        color_rgb = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
+        depth_img = o3d.t.geometry.Image(np.ascontiguousarray(depth)).to(o3c.uint16).to(dev)
+        color_img = o3d.t.geometry.Image(np.ascontiguousarray(color_rgb)).to(o3c.uint8).to(dev)
+        ext = o3c.Tensor.from_numpy(np.ascontiguousarray(pose_w2c.astype(np.float64)))
+        frustum = grid.compute_unique_block_coordinates(depth_img, K_o3c, ext, depth_scale, depth_far)
+        grid.integrate(frustum, depth_img, color_img, K_o3c, ext, depth_scale, depth_far, trunc_voxel_multiplier=trunc)
+        if n % 25 == 0:
+            print(f"{args.seq}: {n+1}/{len(ids)} frame={frame_id} phase={phase} blocks={grid.hashmap().size()} trigger={stat['trigger']}", flush=True)
+
+    def final_metrics(p):
+        t = totals[p]
+        return {"frames": sum(1 for x in frame_stats if x["phase"] == p),
+                "trigger_frames": int(t.get("trigger", 0)),
+                "free_precision": float(t.get("free_changed", 0) / max(1, t.get("free_known", 0))),
+                "foreground_precision": float(t.get("foreground_changed", 0) / max(1, t.get("foreground_known", 0))),
+                "free_known_ratio": float(t.get("free_known", 0) / max(1, t.get("free", 0))),
+                "foreground_known_ratio": float(t.get("foreground_known", 0) / max(1, t.get("foreground", 0))),
+                "free_recall_proxy": float(t.get("free_changed", 0) / max(1, t.get("visible_ref_changed", 0))),
+                "foreground_recall_proxy": float(t.get("foreground_changed", 0) / max(1, t.get("visible_cur_changed", 0))),
+                "free_pixels": int(t.get("free", 0)), "foreground_pixels": int(t.get("foreground", 0))}
+    summary = {"sequence": args.seq, "boundary": boundary, "parameters": vars(args),
+               "gt_changed_instances": {k: sorted(v) for k, v in phase_changed.items()},
+               "metrics": {p: final_metrics(p) for p in ("reference", "rescan")},
+               "changed_instance_frames": changed_instance_frames, "frames": frame_stats}
+    with open(out / "contradiction_summary.json", "w") as f:
+        json.dump(summary, f, indent=2)
+    print(json.dumps({"sequence": args.seq, "metrics": summary["metrics"]}, indent=2), flush=True)
+
+
+if __name__ == "__main__":
+    main()
