@@ -1,5 +1,6 @@
 import os
 import time
+import json
 import cv2
 import numpy as np
 import torch
@@ -75,6 +76,9 @@ class Scene_rep:
         self.pc_frame_id = -1
         self.points = None
         self.colors = None
+        # Mapping from accepted raw 2-D mask IDs to append-only global mask IDs
+        # for the object-track submap manager.
+        self.last_inserted_mask_pairs = []
 
         self.pred_inst_mask_frame_id = -1
         self.pred_inst_masks = None
@@ -91,7 +95,83 @@ class Scene_rep:
         self.save_interval = self.cfg["save"]["save_interval"]
         self.seq_output_dir = str( os.path.join(self.args.output_dir, self.args.seq_name) )
         os.makedirs(self.seq_output_dir, exist_ok=True)
+        self._init_fcgf_diagnostics()
     # END __init__()
+
+    def _init_fcgf_diagnostics(self):
+        opt = self.cfg.get("fcgf_diagnostics", {})
+        self.fcgf_diag_enabled = bool(opt.get("enabled", False))
+        self.fcgf_diag_min_pts = int(opt.get("min_pts_num", self.cfg.get("pc_extractor", {}).get("min_pts_num", 50)))
+        self.fcgf_diag_similarity = float(opt.get("similarity_threshold", 0.90))
+        self.fcgf_diag_max_pairs_per_call = int(opt.get("max_pairs_per_call", 20))
+        self.fcgf_diag_max_exports = int(opt.get("max_pair_exports_total", 200))
+        self.fcgf_diag_export_pairs = bool(opt.get("export_high_similarity_pairs", True))
+        self.fcgf_diag_use_in_merge = bool(opt.get("use_in_merge", True))
+        self.fcgf_diag_dir = os.path.join(self.seq_output_dir, "fcgf_diagnostics")
+        self.fcgf_diag_stats_path = os.path.join(self.fcgf_diag_dir, "mask_stats.jsonl")
+        self.fcgf_diag_summary_path = os.path.join(self.fcgf_diag_dir, "summary.json")
+        self.fcgf_diag_pair_dir = os.path.join(self.fcgf_diag_dir, "high_similarity_pairs")
+        self.fcgf_diag_summary = {"enabled":self.fcgf_diag_enabled,"min_pts_num":self.fcgf_diag_min_pts,"similarity_threshold":self.fcgf_diag_similarity,"extraction_calls":0,"mask_observations":0,"feature_valid_observations":0,"below_min_point_observations":0,"other_invalid_observations":0,"pair_candidates_above_threshold":0,"pair_exports":0,"counts_are_observations":True}
+        self.fcgf_diag_small_mask_keys = set()
+        if self.fcgf_diag_enabled:
+            os.makedirs(self.fcgf_diag_pair_dir, exist_ok=True)
+            open(self.fcgf_diag_stats_path, "w").close()
+
+    def _record_fcgf_diagnostics(self, frame_id, mask_ids, context):
+        if not self.fcgf_diag_enabled:
+            return
+        counts=list(self.pc_extractor.last_mask_point_counts); valid=list(self.pc_extractor.last_mask_feature_valid)
+        counts=counts[:len(mask_ids)]+[-1]*max(0,len(mask_ids)-len(counts))
+        valid=valid[:len(mask_ids)]+[False]*max(0,len(mask_ids)-len(valid))
+        records=[]
+        for i,mid in enumerate(mask_ids):
+            n=int(counts[i]); small=n>=0 and n<self.fcgf_diag_min_pts; good=bool(valid[i]) and not small
+            self.fcgf_diag_summary["mask_observations"]+=1
+            self.fcgf_diag_summary["feature_valid_observations"]+=int(good)
+            self.fcgf_diag_summary["below_min_point_observations"]+=int(small)
+            if small:
+                self.fcgf_diag_small_mask_keys.add("%s:%d" % (context, int(mid)))
+            self.fcgf_diag_summary["other_invalid_observations"]+=int(not good and not small)
+            records.append({"frame_id":int(frame_id),"context":str(context),"mask_id":int(mid),"scene_point_count":int(self.pc_extractor.last_scene_point_count),"mask_point_count":n,"min_pts_num":self.fcgf_diag_min_pts,"feature_valid":good,"below_min_point_threshold":small})
+        self.fcgf_diag_summary["extraction_calls"]+=1
+        with open(self.fcgf_diag_stats_path,"a") as f:
+            for rec in records: f.write(json.dumps(rec,sort_keys=True)+"\n")
+        if context=="update" and self.fcgf_diag_export_pairs:
+            self._export_high_similarity_pairs(frame_id)
+
+    def _mask_points_for_diagnostics(self, mask_id):
+        if self.pc_xyz is None or int(mask_id) not in self.mask_voxels_coords: return np.empty((0,3),dtype=np.float32)
+        points=self.pc_xyz
+        pv=self.voxel_grids.world_coords2voxel_coords(points).to(self.device)
+        pi=self.voxel_grids.voxel_coords2voxel_indices(pv)
+        mi=self.voxel_grids.voxel_coords2voxel_indices(self.mask_voxels_coords[int(mask_id)])
+        return points[torch.isin(pi,mi)].detach().cpu().numpy().astype(np.float32)
+
+    def _export_high_similarity_pairs(self, frame_id):
+        if self.fcgf_diag_summary["pair_exports"]>=self.fcgf_diag_max_exports: return
+        ids=torch.where(self.get_mask_geo_features_mask>0)[0].detach().cpu().tolist()
+        if len(ids)<2: return
+        feats=self.get_mask_geo_features[ids]; feats=feats/(feats.norm(dim=-1,keepdim=True)+1e-7); sim=feats@feats.T
+        pairs=[(float(sim[i,j]),int(ids[i]),int(ids[j])) for i in range(len(ids)) for j in range(i+1,len(ids)) if float(sim[i,j])>=self.fcgf_diag_similarity]
+        pairs.sort(reverse=True); self.fcgf_diag_summary["pair_candidates_above_threshold"]+=len(pairs)
+        left=self.fcgf_diag_max_exports-self.fcgf_diag_summary["pair_exports"]
+        frame_dir=os.path.join(self.fcgf_diag_pair_dir,"frame_%06d"%int(frame_id))
+        for score,a,b in pairs[:min(self.fcgf_diag_max_pairs_per_call,left)]:
+            pa=self._mask_points_for_diagnostics(a); pb=self._mask_points_for_diagnostics(b)
+            if len(pa)==0 or len(pb)==0: continue
+            k=self.fcgf_diag_summary["pair_exports"]; d=os.path.join(frame_dir,"pair_%04d_%04d_%04d"%(k,a,b)); os.makedirs(d,exist_ok=True)
+            ca=o3d.geometry.PointCloud(); ca.points=o3d.utility.Vector3dVector(pa); ca.paint_uniform_color([0.95,0.25,0.15])
+            cb=o3d.geometry.PointCloud(); cb.points=o3d.utility.Vector3dVector(pb); cb.paint_uniform_color([0.15,0.45,0.95])
+            o3d.io.write_point_cloud(os.path.join(d,"mask_left.ply"),ca); o3d.io.write_point_cloud(os.path.join(d,"mask_right.ply"),cb); o3d.io.write_point_cloud(os.path.join(d,"combined.ply"),ca+cb)
+            with open(os.path.join(d,"metadata.json"),"w") as f: json.dump({"frame_id":int(frame_id),"left_mask_id":a,"right_mask_id":b,"fcgf_cosine_similarity":score,"left_point_count":len(pa),"right_point_count":len(pb)},f,indent=2)
+            self.fcgf_diag_summary["pair_exports"]+=1
+
+    def finalize_fcgf_diagnostics(self):
+        if getattr(self,"fcgf_diag_enabled",False):
+            self.fcgf_diag_summary["unique_small_mask_keys"] = len(self.fcgf_diag_small_mask_keys)
+            if hasattr(self.pc_extractor, 'runtime_summary'):
+                self.fcgf_diag_summary["extractor_runtime"] = self.pc_extractor.runtime_summary()
+            with open(self.fcgf_diag_summary_path,"w") as f: json.dump(self.fcgf_diag_summary,f,indent=2,sort_keys=True)
 
     def initialize_seg_vars(self):
         self.merge_frame_interval = self.cfg["seg"]["seg_add_interval"] * self.cfg["seg"]["merge_kf_interval"]  # frame interval num for updating masks
@@ -215,6 +295,7 @@ class Scene_rep:
     #-@return frame_valid_mask_ids: merged_mask_IDs of all new mask inserted in this frame, list of int;
     #-@return frame_valid_mask_voxels: voxel coordinates(in World CS) of all new mask inserted in this frame, list of Tensor(n_i, 3).
     def insert_seg_frame(self, frame_id, color_img, depth_img, pose_c2w, frustum_block_coords_o3c, seg_image, mask_sem_features, mask_min_size=50):
+        self.last_inserted_mask_pairs = []
         # Step 1: get corresponding blocks and their containing voxels in VoxelBlockGrid of current frame
         cur_block_indices_o3c, _ = self.voxel_block_grids.hashmap().find(frustum_block_coords_o3c)  # Tensor(N, )
         o3c.cuda.synchronize()
@@ -318,6 +399,11 @@ class Scene_rep:
             # 4.1: update its global_mask_id and merged_mask_id
             self.global_f_mask_ids.append(f_mask_id)
             self.global2merged_mask_id.append(merged_mask_id)  # for new 2D masks in this frame, its merged_mask_ID is the current largest merged_mask_ID + 1
+            self.last_inserted_mask_pairs.append({
+                "mask_id": int(mask_id),
+                "global_mask_id": int(global_mask_id),
+                "merged_mask_id": int(merged_mask_id),
+            })
             self.merged_mask_size.append(mask_voxels.shape[0])
             self.merged_mask_weight[merged_mask_id] = 1.
             self.merged_mask_last_frame[merged_mask_id] = frame_id
@@ -336,6 +422,7 @@ class Scene_rep:
             mask_id_list = frame_valid_mask_ids
 
         extract_flag, mask_geo_feature_list, pts_feature, pts_xyz = self.pc_extractor.get_masks_geometric_features(mask_voxels_list, scene_points=self.get_pc_xyz)
+        self._record_fcgf_diagnostics(frame_id, mask_id_list, "insert")
         if extract_flag:
             for i, mask_geo_feature in enumerate(mask_geo_feature_list):
                 if mask_geo_feature is None:
@@ -391,6 +478,8 @@ class Scene_rep:
                 self.mask_geo_features[merged_mask_id] = merged_mask_geo_feature
                 self.mask_geo_features_mask[merged_mask_id] = merged_mask_geo_feature_mask
 
+        self._record_fcgf_diagnostics(frame_id, merged_mask_ids, "update")
+
         ########################### TEST ###########################
         time_interval = time.time() - start_time
         mask_w_geo_num_aft = torch.sum(self.get_mask_geo_features_mask).item()
@@ -404,7 +493,8 @@ class Scene_rep:
         # Step 0: preparation: update each merged_mask's geometric feature
         self.update_mask_geo_features(frame_id)
 
-        c_mat, sem_feature_mat, geo_feature_mat = self.get_containing_mat, self.get_mask_features, self.get_mask_geo_features
+        c_mat, sem_feature_mat = self.get_containing_mat, self.get_mask_features
+        geo_feature_mat = self.get_mask_geo_features if self.fcgf_diag_use_in_merge else torch.zeros_like(self.get_mask_geo_features)
         ut_mask = create_lower_triangular_matrix(self.c_mask_num)
 
         # Step 1: Mask Merging Strategy 1: Overall Similarity
@@ -458,7 +548,7 @@ class Scene_rep:
                 # 4.2: Merging rule 2 (iterative merge with semantic similarity):
                 if self.with_feature:
                     sem_feature_mat = self.get_mask_features
-                    geo_feature_mat = self.get_mask_geo_features
+                    geo_feature_mat = self.get_mask_geo_features if self.fcgf_diag_use_in_merge else torch.zeros_like(self.get_mask_geo_features)
                     feature_sim_mat, _, sem_feature_sim_mat, geo_feature_sim_mat = self.metrics.compute_final_sim_mat(c_mat, sem_feature_mat, geo_feature_mat, use_IoU=False)
                     feature_sim_mat = mask_matrix_rows_and_cols(feature_sim_mat, valid_merged_mask_ids)
 
@@ -645,6 +735,7 @@ class Scene_rep:
         # 2.4: for each new merged mask, re-compute its geometric feature, fill new c_mat in region (4), and update self.global2merged_mask_id
         if full_geo_merge and frame_id == self.pc_feature_frame_id:
             _, merged_mask_geo_feature_list, _, _ = self.pc_extractor.get_masks_geometric_features(merged_mask_voxel_coords_list, scene_points=self.pc_xyz, pts_feature=self.pc_feature)
+            self._record_fcgf_diagnostics(frame_id, merged_mask_ids_new, "merge")
         else:
             merged_mask_geo_feature_list = [None for _ in range(merged_mask_num_valid)]
 
@@ -795,6 +886,12 @@ class Scene_rep:
     #-@return: Tensor(pred_inst_num, pts_num), dtype=bool.
     def process_mask_boundary_pts(self, pred_inst_masks, return_list=False):
         if isinstance(pred_inst_masks, list):
+            # An empty list is a valid result when no merged instance reaches
+            # the current weight/size threshold.  Keep it empty for checkpoint
+            # export instead of calling torch.stack([]), which raises.
+            if len(pred_inst_masks) == 0:
+                return [] if return_list else torch.empty(
+                    (0, 0), dtype=torch.bool, device=self.device)
             pred_inst_masks = torch.stack(pred_inst_masks, dim=0)
 
         # Step 1: sort each predicted instance by mask size, with ascending order
@@ -904,7 +1001,25 @@ class Scene_rep:
             scene_pts_mask_list.append(scene_point_mask)
 
         # *** Step 3: process boundary points
-        pred_inst_masks = self.process_mask_boundary_pts(scene_pts_mask_list)
+        if num_instances == 0:
+            # Preserve the point dimension so downstream/debug code can still
+            # interpret this as zero instance masks over the current scene.
+            pred_inst_masks = torch.empty(
+                (0, scene_points.shape[0]), dtype=torch.bool,
+                device=scene_points.device)
+            weight_threshold = min(
+                self.merge_time + 2,
+                self.cfg["seg"]["mask_weight_threshold"])
+            max_weight = (
+                self.merged_mask_weight[:self.c_mask_num].max().item()
+                if self.c_mask_num > 0 else 0.0)
+            print(
+                "[WARNING] No valid merged masks at frame_%d; "
+                "saving a background-only segmented point cloud "
+                "(threshold=%.1f, max_weight=%.1f)."
+                % (frame_id, weight_threshold, max_weight))
+        else:
+            pred_inst_masks = self.process_mask_boundary_pts(scene_pts_mask_list)
         self.pred_inst_mask_frame_id = frame_id
         self.pred_inst_mask = pred_inst_masks
 

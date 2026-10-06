@@ -1,0 +1,57 @@
+inherit_from: config/scannet_depth_k70_controlled.yaml
+
+experiment:
+  max_processed_frames: 600
+
+mapping:
+  keyframe_freq: 10
+
+seg:
+  seg_add_interval: 10
+  save_interval: 0
+  ckpt_interval: 0
+
+save:
+  save_mesh: false
+  save_interval: 0
+  ckpt_interval: 0
+
+# Instance retrieval is local to each persistent object submap.  The global
+# contradiction audit is intentionally disabled in this configuration.
+submaps:
+  enabled: true
+  confirmation_frames: 3
+  history_frames: 32
+  min_mask_pixels: 50
+  match_distance_m: 0.06
+  match_coverage: 0.30
+  match_feature_similarity: 0.65
+  match_ambiguity_margin: 0.06
+  max_track_points: 4096
+  free_space_margin_m: 0.10
+  free_space_ratio: 0.60
+  max_object_blocks: 30000
+  global_assign_distance_m: 0.090
+  global_min_points: 100
+  hybrid_baseline_fill: true
+  hybrid_min_baseline_overlap: 0.50
+  hybrid_min_baseline_iou: 0.20
+  baseline_fallback_when_submaps_not_richer: true
+  baseline_fallback_submap_count_ratio: 1.25
+  baseline_fallback_min_match_fraction: 1.0
+  save_tsdf: true
+  fcgf_matching:
+    enabled: true
+    backend: fcgf
+    require_valid: false
+    score_weight: 0.25
+    min_similarity: 0.25
+    input_point_limits: [32, 96, 256]
+    point_count_thresholds: [96, 384]
+    min_points_by_level: [12, 20, 32]
+    scene_feature_cache: true
+    scene_feature_cache_radius_m: 0.08
+
+fcgf_diagnostics:
+  enabled: false
+  use_in_merge: true

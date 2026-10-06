@@ -141,7 +141,10 @@ class MaskGraph:
         rgb_this = self.color_bank[self.t_instance_num]
 
         # create a new Instance obj
-        inst = Instance(frame_id, merged_mask_id, mask_voxel_coords, mask_voxel_indices, ori_mask_list, mask_sem_feature, self.cfg, rgb_this, self.device)
+        inst = Instance(
+            frame_id, merged_mask_id, mask_voxel_coords, mask_voxel_indices,
+            ori_mask_list, mask_sem_feature, self.cfg, rgb_this, self.device,
+            track_uid=self.t_instance_num)
 
         self.instance_dict[merged_mask_id] = inst
         self.t_instance_num += 1
@@ -159,7 +162,9 @@ class MaskGraph:
         # Step 1: for each kept mask
         new_mask_counter = 0
         for mask_id_kept in masks_to_keep:
-            instance_dict_new[new_mask_counter] = self.instance_dict[mask_id_kept]
+            kept_instance = self.instance_dict[mask_id_kept]
+            kept_instance.mask_id = new_mask_counter
+            instance_dict_new[new_mask_counter] = kept_instance
             merged_mask_in_frame_mat_new[new_mask_counter] = self.merged_mask_in_frame_mat[mask_id_kept]
             new_mask_counter += 1
 

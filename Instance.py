@@ -3,7 +3,7 @@ import torch
 
 
 class Instance:
-    def __init__(self, frame_id, merged_mask_id, mask_voxel_coords, mask_voxel_indices, ori_mask_list, mask_sem_feature, cfg, rgb=None, device="cuda:0"):
+    def __init__(self, frame_id, merged_mask_id, mask_voxel_coords, mask_voxel_indices, ori_mask_list, mask_sem_feature, cfg, rgb=None, device="cuda:0", track_uid=None, parent_track_uids=None):
         self.cfg = cfg
         self.device = device
         self.rgb = rgb
@@ -14,6 +14,10 @@ class Instance:
         self.mask_voxel_indices = mask_voxel_indices
         self.ori_mask_list = ori_mask_list  # list of (frame_ID, mask_ID)
         self.mask_sem_feature = mask_sem_feature
+        self.track_uid = merged_mask_id if track_uid is None else int(track_uid)
+        if parent_track_uids is None:
+            parent_track_uids = [self.track_uid]
+        self.parent_track_uids = sorted({int(uid) for uid in parent_track_uids})
         self.visible_frame_ids = [ori_mask[0] for ori_mask in ori_mask_list]  # list of frame_ID
 
         if len(self.ori_mask_list) > 1:
@@ -46,7 +50,15 @@ class Instance:
         mask_voxel_indices_new = torch.unique(mask_voxel_indices_new, dim=0)
 
         mask_sem_feature_new = torch.stack(mask_sem_feature_list, dim=0).sum(dim=0)  # Tensor(feature_dim, )
-        new_instance = Instance(frame_id, merged_mask_id, mask_voxel_coords_new, mask_voxel_indices_new, list(ori_mask_list_new), mask_sem_feature_new, cfg, rgb_this, device)
+        parent_track_uids = set()
+        for instance in instance_list:
+            parent_track_uids.add(instance.track_uid)
+            parent_track_uids.update(instance.parent_track_uids)
+        track_uid = min(parent_track_uids)
+        new_instance = Instance(
+            frame_id, merged_mask_id, mask_voxel_coords_new, mask_voxel_indices_new,
+            list(ori_mask_list_new), mask_sem_feature_new, cfg, rgb_this, device,
+            track_uid=track_uid, parent_track_uids=parent_track_uids)
         return new_instance
 
     @property
