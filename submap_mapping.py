@@ -116,6 +116,7 @@ class SubmapManager:
             'enabled': self.fcgf_enabled, 'backend': self.geometry_backend,
             'candidates': 0, 'valid_descriptors': 0, 'below_min_points': 0,
             'extraction_errors': 0, 'matches_considered': 0,
+            'scene_feature_cache_hits': 0, 'scene_feature_cache_misses': 0,
             'matches_with_fcgf': 0, 'fcgf_rejected': 0,
             'fallback_matches': 0, 'accepted_matches': 0,
             'd3feat_mutual_matches': 0, 'd3feat_rejected': 0,
