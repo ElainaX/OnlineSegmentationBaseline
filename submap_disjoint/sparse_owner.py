@@ -19,6 +19,9 @@ class SparseDisjointSubmapManager(DisjointSubmapManager):
         self.contain_matrix = None
         self.maskGraph.contain_matrix = None
         self.verify_sparse = bool(cfg.get("sparse_candidate",{}).get("verify",False))
+        self.merge_selection = cfg.get('ig_submap',{}).get('merge_selection','disjoint_pairs')
+        if self.merge_selection not in ('disjoint_pairs','baseline_components'):
+            raise ValueError('Unsupported IG-Submap merge selection: '+str(self.merge_selection))
 
     @property
     def get_containing_mat(self):
@@ -242,7 +245,7 @@ class SparseDisjointSubmapManager(DisjointSubmapManager):
             return None, False
         c_mask_num_before = self.c_mask_num
         merged_mask_id_clusters = sparse_clusters(
-            merge_mat, self.c_mask_num, c_mat, self.migration_audit)
+            merge_mat, self.c_mask_num, c_mat, self.migration_audit, mode=self.merge_selection)
 
         # (1) assign a new merged_mask_id for each cluster, and reassign other merged masks' merged_mask_id;
         # (2) in containing matrix, firstly remove rows (and cols) corresponding to masks that need to be merged, then append new rows (and cols) for merged masks to the end;

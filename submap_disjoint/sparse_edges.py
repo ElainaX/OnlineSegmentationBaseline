@@ -48,7 +48,31 @@ class Edges:
             if i<n and j<n: out[i,j]=v
         return out
 
-def sparse_clusters(pairs,n,edges,audit):
+def sparse_clusters(pairs,n,edges,audit,mode='disjoint_pairs'):
+    if mode == 'baseline_components':
+        # Same undirected connected components as baseline do_clustering,
+        # without materializing its dense adjacency matrix. Include isolates.
+        parent=list(range(n))
+        def find(i):
+            while parent[i]!=i:
+                parent[i]=parent[parent[i]]
+                i=parent[i]
+            return i
+        candidates=sorted(set(pairs))
+        for i,j in candidates:
+            ri,rj=find(i),find(j)
+            if ri!=rj: parent[max(ri,rj)]=min(ri,rj)
+        groups=defaultdict(list)
+        for i in range(n): groups[find(i)].append(i)
+        result=sorted((np.asarray(g,dtype=np.int64) for g in groups.values()),key=lambda g:int(g[0]))
+        merged=[g for g in result if len(g)>1]
+        audit['merge_calls']+=1
+        audit['candidate_edges']+=len(candidates)
+        audit['multi_merge_groups']=audit.get('multi_merge_groups',0)+len(merged)
+        audit['merged_instances']=audit.get('merged_instances',0)+sum(len(g) for g in merged)
+        return result
+    if mode != 'disjoint_pairs':
+        raise ValueError('Unknown merge selection mode: '+str(mode))
     # Match row-major torch.nonzero tie order and float32 addition.
     ordered=sorted(set(pairs),key=lambda p:(
         -float(np.float32(np.float32(edges[p])+np.float32(edges[p[1],p[0]]))),p[0],p[1]))

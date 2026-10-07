@@ -1142,7 +1142,8 @@ class DisjointSubmapManager:
         ckpt.mkdir(exist_ok=True, parents=True)
         self.unpack_edges()
         try:
-            if frame_id > 0 and frame_id % self.merge_frame_interval != 0:
+            if (self.cfg.get('ig_submap',{}).get('final_merge',True)
+                    and frame_id > 0 and frame_id % self.merge_frame_interval != 0):
                 self.update_masks(frame_id)
             self.save_ckpt(frame_id, str(ckpt), filter_flag=True, ckpt_path=str(out/'ckpt_final.npz'))
             if not (out/'ckpt_final.npz').exists():
