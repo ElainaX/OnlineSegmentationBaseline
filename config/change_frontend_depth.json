@@ -1,0 +1,16 @@
+{
+  "frontend": {
+    "enabled": true,
+    "interval": 10,
+    "rgb_enabled": false,
+    "min_map_weight": 3.0,
+    "min_instance_observations": 5,
+    "depth_epsilon_m": 0.08,
+    "depth_relative_epsilon": 0.01,
+    "min_valid_pixels": 80,
+    "min_reference_points": 100,
+    "min_reference_tested_points": 100,
+    "contradiction_ratio": 0.5,
+    "max_global_conflict_fraction": 0.75
+  }
+}

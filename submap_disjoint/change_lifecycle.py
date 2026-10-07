@@ -12,6 +12,8 @@ import time
 import numpy as np
 from .contradiction import (AuditOptions, UNKNOWN, SUPPORT, FREE, OCCLUDED,
     validate_camera, sample_surface, raycast_volume, audit_surface)
+from .change_frontend import (FrontendOptions, render_quality, compose_history,
+    prepare_context, fragment_evidence, ownership_slots)
 
 
 @dataclass(frozen=True)
@@ -95,24 +97,52 @@ class TrackedFragment:
     last_stats: dict = field(default_factory=dict)
 
 
+class ReferenceNotReady(ValueError):
+    """A fragment can stay in the map without being safe to use as change evidence."""
+
+
 class ChangeLifecycle:
-    def __init__(self, store, options=None, audit_options=None):
+    def __init__(self, store, options=None, audit_options=None, frontend_options=None):
         self.store = store
         self.options = options or LifecycleOptions()
         self.audit_options = audit_options or AuditOptions(near_m=store.options.near_m, far_m=store.options.far_m)
+        self.frontend_options = frontend_options or FrontendOptions()
         self.tracks = {}; self.events = []; self.tick = 0; self.last_frame = None
+        self.reference_skips = {}
+
+    @property
+    def required_observations(self):
+        return max(self.options.min_reference_observations,
+                   self.frontend_options.min_instance_observations if self.frontend_options.enabled else 0)
+
+    def _surface_samples(self, fragment):
+        points = (fragment.volume.surface(weight_threshold=self.frontend_options.min_map_weight)[0]
+                  if self.frontend_options.enabled else fragment.volume.surface()[0])
+        return sample_surface(points, self.audit_options)
 
     def register_reference(self, key):
         key = str(key)
         if key in self.tracks: raise ValueError('already registered')
         f = self.store.fragments[key]
-        if f.status not in ('active', 'frozen') or len(f.observations) < self.options.min_reference_observations:
-            raise ValueError('reference must be live and have sufficient prior observations')
-        points = sample_surface(f.volume.surface()[0], self.audit_options)
-        if len(points) < self.options.min_cells: raise ValueError('insufficient reference surface')
+        if f.status not in ('active', 'frozen') or len(f.observations) < self.required_observations:
+            raise ReferenceNotReady('reference must be live and have sufficient prior observations')
+        points = self._surface_samples(f)
+        minimum = max(self.options.min_cells, self.frontend_options.min_reference_points if self.frontend_options.enabled else 0)
+        if len(points) < minimum: raise ReferenceNotReady('insufficient reliable reference surface')
         # Close the historical temporal segment before any new evidence arrives.
         self.store.set_status(key, 'frozen', 'seal historical reference before change audit')
         self.tracks[key] = TrackedFragment(key, 'reference', 'stable', self.tick, points, EvidenceWindow(self.options))
+
+    def register_available_references(self):
+        """Low-quality/small references are retained, logged, and excluded from auditing."""
+        for key, f in self.store.fragments.items():
+            if key in self.tracks: continue
+            try:
+                self.register_reference(key)
+            except ReferenceNotReady as error:
+                self.reference_skips[key] = str(error)
+                if f.status == 'active': self.store.set_status(key, 'frozen', 'historical segment retained but not reliable enough to audit')
+        return dict(self.reference_skips)
 
     def _transition(self, tr, state, reason, frame):
         if tr.state == state: return
@@ -123,7 +153,7 @@ class ChangeLifecycle:
                   'pending' if state == 'pending' else 'frozen')
         self.store.set_status(tr.key, status, reason)
 
-    def _decide(self, tr, state, pose, frame):
+    def _decide(self, tr, state, pose, frame, appearance_suspect=False):
         independent = tr.history.update(self.tick, pose, state)
         support, free = tr.history.counts(len(tr.points)); count = support + free
         confirmed_free = (free >= self.options.min_views) & (free / np.maximum(count, 1) >= self.options.cell_consensus)
@@ -140,18 +170,20 @@ class ChangeLifecycle:
         if tr.state == 'pending':
             if enough_free:
                 self._transition(tr, 'rejected', 'proposal geometry contradicted by later independent views', frame)
-            elif enough_support and sf >= self.options.accept_fraction:
+            elif enough_support and sf >= self.options.accept_fraction and not appearance_suspect:
                 self._transition(tr, 'accepted', 'proposal geometry supported before current-frame fusion', frame)
         elif tr.state == 'retired':
-            if enough_support and sf >= self.options.restore_fraction:
+            if enough_support and sf >= self.options.restore_fraction and not appearance_suspect:
                 self._transition(tr, 'stable', 'later observations support retained historical surface', frame)
         elif tr.state not in ('rejected', 'unresolved'):
             if enough_free:
                 self._transition(tr, 'retired', 'multi-view free-space evidence covers reference surface', frame)
-            elif enough_support and sf >= self.options.restore_fraction:
+            elif enough_support and sf >= self.options.restore_fraction and not appearance_suspect:
                 if tr.state == 'suspect': self._transition(tr, 'stable', 'contradiction refuted by later support', frame)
             elif int((state == FREE).sum()) >= self.options.min_cells and (state == FREE).mean() >= self.options.suspect_fraction:
                 self._transition(tr, 'suspect', 'partial contradiction; keep geometry while awaiting evidence', frame)
+        if appearance_suspect and tr.state in ('stable', 'accepted'):
+            self._transition(tr, 'suspect', 'appearance differs at consistent depth; no geometry deletion authorized', frame)
 
     def step(self, frame, rgb, depth_m, K, pose, assignments=None):
         """Audit all sealed references and provisional volumes, then integrate.
@@ -182,26 +214,68 @@ class ChangeLifecycle:
         total_bytes = sum(f.volume.bytes_allocated_attributes() for f in self.store.fragments.values())
         if total_bytes > self.options.max_attribute_bytes:
             raise MemoryError('TSDF attribute budget exceeded; checkpoint or explicitly release history')
-        self.tick += 1; self.last_frame = int(frame); event_start = len(self.events)
+        front = self.frontend_options
+        audit_due = not front.enabled or int(frame) % front.interval == 0
+        self.tick += int(audit_due); self.last_frame = int(frame); event_start = len(self.events)
         rendered = {}
-        for key, f in self.store.fragments.items():
-            if key in self.tracks and self.tracks[key].state in ('rejected', 'unresolved'): continue
-            rendered[key] = raycast_volume(f.volume, K, pose, depth_m.shape)
+        if audit_due:
+            for key, f in self.store.fragments.items():
+                if key in self.tracks and self.tracks[key].state in ('rejected', 'unresolved'): continue
+                rendered[key] = (render_quality(f.volume, K, pose, depth_m.shape, front) if front.enabled
+                                 else raycast_volume(f.volume, K, pose, depth_m.shape))
         # Compose only published geometry. Retired and pending volumes must not
         # mask each other's audit visibility. Measured nearer depth still occludes.
-        live = np.full(depth_m.shape, np.inf, np.float32)
-        for key, pred in rendered.items():
-            if self.store.fragments[key].status in ('active', 'frozen'):
-                live = np.minimum(live, np.where(pred > 0, pred, np.inf))
-        live[~np.isfinite(live)] = 0
+        diagnostics = dict(audit_due=audit_due, enabled=front.enabled, skip_reasons=[])
+        context = None
+        if front.enabled and audit_due:
+            slots = ownership_slots(self.store, rendered)
+            published = [k for k in rendered if self.store.fragments[k].status in ('active', 'frozen')]
+            history = compose_history(rendered, published, slots, depth_m.shape, front)
+            # If all history is retired, keep auditing it for recovery. A private
+            # render supplies calibration/quality, never republishes geometry.
+            if not published:
+                history = compose_history(rendered, list(rendered), slots, depth_m.shape, front)
+            context = prepare_context(rgb, depth_m, history, front, self.audit_options.near_m, self.audit_options.far_m)
+            diagnostics.update(skip_reasons=context['skip_reasons'], global_conflict_ratio=context['global_ratio'],
+                rgb={k: v for k, v in context['rgb'].items() if k not in ('current_lab', 'bad')},
+                ambiguous_pixels=int((history['owners'] == -2).sum()))
+        else:
+            live = np.full(depth_m.shape, np.inf, np.float32)
+            for key, pred in rendered.items():
+                if self.store.fragments[key].status in ('active', 'frozen'):
+                    live = np.minimum(live, np.where(pred > 0, pred, np.inf))
+            live[~np.isfinite(live)] = 0
         for key, tr in self.tracks.items():
             if key not in rendered: continue
             f = self.store.fragments[key]
-            if tr.state == 'pending' and not len(tr.points) and len(f.observations) >= self.options.min_reference_observations:
-                tr.points = sample_surface(f.volume.surface()[0], self.audit_options)
+            if tr.state == 'pending' and not len(tr.points) and len(f.observations) >= self.required_observations:
+                tr.points = self._surface_samples(f)
             if len(tr.points):
-                state = audit_surface(tr.points, depth_m, rendered[key], live, K, pose, self.audit_options)
-                self._decide(tr, state, pose, frame)
+                if front.enabled:
+                    if context['skip_reasons']:
+                        tr.last_stats['frontend'] = dict(skipped=True, reasons=context['skip_reasons'])
+                    else:
+                        state, appearance, detail = fragment_evidence(tr.points, rgb, depth_m, K, pose,
+                            rendered[key], history, context, slots[key], len(f.observations), front,
+                            self.audit_options.near_m, self.audit_options.far_m, self.audit_options.map_gate_m,
+                            private=f.status in ('pending', 'inactive'))
+                        candidate_seen = tr.last_stats.get('candidate_started', False) or detail['candidate']
+                        # Candidate screening must precede destructive evidence.
+                        # Support can still disprove a candidate or restore history.
+                        if not candidate_seen: state = np.where(state == FREE, UNKNOWN, state).astype(np.uint8)
+                        appearance_suspect = (int(appearance.sum()) >= self.options.min_cells and
+                            int(appearance.sum()) / max(1, detail['tested_reference']) >= front.contradiction_ratio)
+                        if detail['tested_reference'] >= front.min_reference_tested_points:
+                            self._decide(tr, state, pose, frame, appearance_suspect=appearance_suspect and candidate_seen)
+                        else:
+                            detail['paused'] = 'insufficient_tested_reference'
+                        tr.last_stats.update(frontend=detail, candidate_started=bool(candidate_seen),
+                            appearance_warning=bool(appearance_suspect), rgb_cannot_authorize_retirement=True)
+                        for event in self.events[event_start:]:
+                            if event['fragment'] == key: event['evidence'] = dict(tr.last_stats)
+                else:
+                    state = audit_surface(tr.points, depth_m, rendered[key], live, K, pose, self.audit_options)
+                    self._decide(tr, state, pose, frame)
             if tr.state == 'pending' and self.tick - tr.created >= self.options.max_pending_steps:
                 self._transition(tr, 'unresolved', 'proposal timed out without enough evidence; not evidence of disappearance', frame)
         audit_seconds = time.perf_counter() - started
@@ -228,7 +302,7 @@ class ChangeLifecycle:
             # silently evicting evidence; caller must stop, not continue this step.
             raise MemoryError('post-integration attribute budget exceeded')
         return dict(frame=int(frame), tick=self.tick, fragments={k: dict(state=t.state, **t.last_stats) for k, t in self.tracks.items()},
-            events=self.events[event_start:], integrated=integrated, attribute_bytes=total_bytes,
+            events=self.events[event_start:], integrated=integrated, attribute_bytes=total_bytes, frontend=diagnostics,
             sealed_proposals=[k for k, t in self.tracks.items() if t.state == 'pending' and len(t.points)],
             audit_seconds=audit_seconds, total_seconds=time.perf_counter() - started)
 
@@ -243,17 +317,20 @@ class ChangeLifecycle:
             tracks.append(dict(key=tr.key, role=tr.role, state=tr.state, created=tr.created,
                 history=[dict(tick=r[0], pose=r[1].tolist()) for r in tr.history.records], last_stats=tr.last_stats))
         np.savez_compressed(directory / 'change_evidence.npz', **arrays)
-        (directory / 'change_lifecycle.json').write_text(json.dumps(dict(format=1,
-            options=asdict(self.options), audit_options=asdict(self.audit_options), tick=self.tick,
-            last_frame=self.last_frame, tracks=tracks, events=self.events), indent=2))
+        (directory / 'change_lifecycle.json').write_text(json.dumps(dict(format=2,
+            options=asdict(self.options), audit_options=asdict(self.audit_options),
+            frontend_options=asdict(self.frontend_options), tick=self.tick,
+            last_frame=self.last_frame, tracks=tracks, events=self.events, reference_skips=self.reference_skips), indent=2))
 
     @classmethod
     def load(cls, directory):
         from .independent_tsdf import IndependentTSDFStore
         directory = Path(directory); data = json.loads((directory / 'change_lifecycle.json').read_text())
-        if data['format'] != 1: raise ValueError('unsupported lifecycle checkpoint')
-        obj = cls(IndependentTSDFStore.load(directory), LifecycleOptions(**data['options']), AuditOptions(**data['audit_options']))
+        if data['format'] not in (1, 2): raise ValueError('unsupported lifecycle checkpoint')
+        obj = cls(IndependentTSDFStore.load(directory), LifecycleOptions(**data['options']), AuditOptions(**data['audit_options']),
+                  FrontendOptions(**data.get('frontend_options', {})))
         obj.tick, obj.last_frame, obj.events = data['tick'], data['last_frame'], data['events']
+        obj.reference_skips = data.get('reference_skips', {})
         with np.load(directory / 'change_evidence.npz') as arrays:
             for i, item in enumerate(data['tracks']):
                 window = EvidenceWindow(obj.options)

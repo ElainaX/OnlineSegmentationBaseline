@@ -93,10 +93,12 @@ class LocalTSDF:
         self.integrations += 1
         return int(valid.sum())
 
-    def surface(self):
+    def surface(self, weight_threshold=None):
         if not self.grid.hashmap().size():
             return np.empty((0,3)), np.empty((0,3))
-        pc = self.grid.extract_point_cloud(weight_threshold=self.options.extraction_weight)
+        threshold = self.options.extraction_weight if weight_threshold is None else float(weight_threshold)
+        if not np.isfinite(threshold) or threshold <= 0: raise ValueError('invalid extraction weight')
+        pc = self.grid.extract_point_cloud(weight_threshold=threshold)
         xyz = pc.point.positions.cpu().numpy()
         return xyz @ self.anchor[:3,:3].T + self.anchor[:3,3], pc.point.colors.cpu().numpy()
 

@@ -13,6 +13,7 @@ import numpy as np
 from submap_disjoint.independent_tsdf import IndependentTSDFStore, TSDFOptions
 from submap_disjoint.change_lifecycle import ChangeLifecycle, LifecycleOptions
 from submap_disjoint.contradiction import AuditOptions, validate_camera
+from submap_disjoint.change_frontend import FrontendOptions
 
 
 def write_cloud(path, store):
@@ -73,7 +74,8 @@ def run_manifest(args, out):
         store = IndependentTSDFStore(TSDFOptions(device=args.device, **config.get('tsdf', {})))
         audit = dict(near_m=store.options.near_m, far_m=store.options.far_m)
         audit.update(config.get('audit', {}))
-        ctrl = ChangeLifecycle(store, LifecycleOptions(**config.get('lifecycle', {})), AuditOptions(**audit))
+        ctrl = ChangeLifecycle(store, LifecycleOptions(**config.get('lifecycle', {})), AuditOptions(**audit),
+            FrontendOptions(**config.get('frontend', {})))
         live_started = False
     manifest = Path(args.manifest); previous = ctrl.last_frame
     log = out / 'frames.jsonl'
@@ -105,7 +107,7 @@ def run_manifest(args, out):
                     result = dict(frame=frame, phase='reference')
                 elif phase == 'live':
                     if not live_started:
-                        for key in store.fragments: ctrl.register_reference(key)
+                        ctrl.register_available_references()
                         live_started = True
                     result = ctrl.step(frame, rgb, dep, K, pose, masks)
                 else: raise ValueError('phase must be reference or live')
@@ -113,7 +115,8 @@ def run_manifest(args, out):
     if not live_started: raise ValueError('manifest contains no live audit frames')
     ctrl.save(out / 'checkpoint'); write_cloud(out / 'live_map.ply', store)
     (out / 'summary.json').write_text(json.dumps(dict(states={k: t.state for k, t in ctrl.tracks.items()},
-        events=ctrl.events, ground_truth_used=False, probability_calibrated=False), indent=2))
+        events=ctrl.events, reference_skips=ctrl.reference_skips,
+        frontend=vars(ctrl.frontend_options), ground_truth_used=False, probability_calibrated=False), indent=2))
 
 
 def main():
