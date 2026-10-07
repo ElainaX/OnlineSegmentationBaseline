@@ -10,12 +10,15 @@ from Dataset.dataset import get_dataset
 from tool.config import load_config
 from submap_disjoint.geometry import GeometryScene
 from submap_disjoint.sparse_owner import SparseDisjointSubmapManager
+from submap_disjoint.factor_owner import FactorSubmapManager
 
 p=argparse.ArgumentParser()
 for flag in ['config','dataset','instance_dir','output_dir','seq_name']:
     p.add_argument('--'+flag,required=True)
 p.add_argument('--merge_selection',choices=['disjoint_pairs','baseline_components'],required=True)
 p.add_argument('--device',default='cuda:0')
+p.add_argument('--aabb',type=int,choices=[0,1],default=0)
+p.add_argument('--depth-shrink',type=int,choices=[0,1],default=0)
 a=p.parse_args()
 out=Path(a.output_dir)/a.seq_name; out.mkdir(parents=True,exist_ok=True)
 assert not (out/'ckpt_final.npz').exists()
@@ -25,13 +28,17 @@ cfg=load_config(a.config)
 # Representation and experiment controls; baseline semantic/numeric parameters
 # are read unchanged from the archived baseline config above.
 cfg['ig_submap']={'merge_selection':a.merge_selection,'final_merge':False}
+cfg['ig_submap']['carving_aabb']={'enabled':bool(a.aabb),'strength':0.15,'band':0.10}
 cfg['sparse_candidate']={'enabled':True,'verify':False}
 cfg['visibility_storage']='bool'
-cfg.setdefault('seg',{}).setdefault('depth_shrink',{})['enabled']=False
+cfg.setdefault('seg',{})['depth_shrink']={'enabled':bool(a.depth_shrink),
+    'front_quantile':0.20,'margin_m':0.08,'min_pixels':25,
+    'min_keep_ratio':0.70,'remove_unknown':False}
 cfg['fcgf_diagnostics']={'enabled':False,'use_in_merge':True,'export_high_similarity_pairs':False}
 data=get_dataset(a.dataset,a.instance_dir,cfg,a.device)
 geometry=GeometryScene(cfg,a,data,a.device)
-owner=SparseDisjointSubmapManager(cfg,a,data,geometry,a.device)
+owner_class=FactorSubmapManager if a.aabb or a.depth_shrink else SparseDisjointSubmapManager
+owner=owner_class(cfg,a,data,geometry,a.device)
 assert not hasattr(geometry,'maskGraph')
 run_metadata=dict(method='IG-Submap-v1',merge_selection=a.merge_selection,config=cfg,
     baseline_config_path=a.config,baseline_config_sha256=hashlib.sha256(Path(a.config).read_bytes()).hexdigest(),

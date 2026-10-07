@@ -104,6 +104,9 @@ def sparse_scores(owner,pairs,use_overlap=True):
             ab=values.new_tensor([owner.edges[i,j] for i,j in part])
             ba=values.new_tensor([owner.edges[j,i] for i,j in part])
             values=values+(ab+ba)/2
+            adjust = getattr(owner, 'adjust_candidate_scores', None)
+            if adjust is not None:
+                values = adjust(values, ij, ab, ba)
         results.append(values.detach().cpu().numpy())
     return np.concatenate(results)
 
