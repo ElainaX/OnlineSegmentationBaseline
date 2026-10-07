@@ -9,9 +9,18 @@ import open3d as o3d
 from submap_disjoint.it_adapter import (group_observations,resolve_fragment,
                                        coalesce_surfaces,InstanceTSDFAdapter)
 from submap_disjoint.independent_tsdf import IndependentTSDFStore
+from submap_disjoint.independent_tsdf import LocalTSDF,TSDFOptions
 
 
 class AdapterTests(unittest.TestCase):
+    def test_single_observation_requires_strict_threshold_below_one(self):
+        volume=LocalTSDF(TSDFOptions(voxel_m=.025,block_resolution=4,device='CUDA:0'))
+        rgb=np.ones((64,64,3),np.uint8)*100;depth=np.ones((64,64),np.float32)*2.013
+        K=np.array([[100.,0,31.5],[0,100.,31.5],[0,0,1.]])
+        volume.integrate(rgb,depth,K,np.eye(4))
+        self.assertEqual(len(volume.surface(1.)[0]),0)
+        self.assertGreater(len(volume.surface(.5)[0]),200)
+
     def test_removed_masks_do_not_become_one_identity(self):
         packets=[{'pairs':[(1,0),(2,1),(3,2)]},{'pairs':[(4,3)]}]
         groups=group_observations(packets,[-1,-1,7,7])

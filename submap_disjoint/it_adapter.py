@@ -95,7 +95,8 @@ class InstanceTSDFAdapter:
             trunc_voxels=float(cfg['scene'].get('trunc_voxel_multiplier',4.)),
             near_m=float(cfg['cam']['depth_near']), far_m=float(cfg['cam']['depth_far']),
             max_blocks=int(cfg['scene']['block_count']), device=owner.device.upper(),
-            extraction_weight=1.)
+            # Open3D uses weight > threshold; 0.5 retains >=1 observation.
+            extraction_weight=.5)
         self.K = owner.intrinsics.detach().cpu().numpy().astype(np.float64)
         self.packets = []
         self.fragments = []
@@ -221,7 +222,7 @@ class InstanceTSDFAdapter:
                     identity_links_fuse_geometry=False,geometry_fallback=False,
                     association_geometry='shared TSDF used for original overlap and FCGF only',
                     export_geometry='independent TSDF surfaces; world-voxel coalescing for point indexing',
-                    extraction_weight_note='LocalTSDF default=1; shared Open3D extract default=3; fragment observations are not pooled across volumes',
+                    extraction_weight_note='IT strict threshold=0.5 retains >=1 observation; shared Open3D default=3; weights are not pooled across volumes',
                     fragments=self.fragments,windows=self.windows,identities=dict(identities),
                     exported_instance_ids=ids,audit=self.audit)
         (output/'it_manifest.json').write_text(json.dumps(report,indent=2))
