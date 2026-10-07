@@ -28,6 +28,8 @@ class FactorSubmapManager(SparseDisjointSubmapManager):
             seg_image, stats = shrink_segmentation_by_depth(seg_image, depth_img, self.cfg)
             self.factor_seconds['depth_shrink'] += time.perf_counter()-start
             self.depth_shrink_stats.append(dict(stats, frame=int(frame_id)))
+        # Expose the exact refined labels consumed by association to IT fusion.
+        self.last_refined_seg = seg_image
         result = super().insert_seg_frame(frame_id, color_img, depth_img, pose_c2w,
                                          frustum_block_coords, seg_image, mask_features, **kwargs)
         if self.carving_enabled:

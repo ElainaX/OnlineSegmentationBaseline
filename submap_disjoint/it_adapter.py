@@ -105,12 +105,20 @@ class InstanceTSDFAdapter:
                           export_seconds=0., buffered_frames_peak=0, windows=0,
                           fragments=0, accepted_masks=0, integrated_fragment_frames=0,
                           raw_surface_points=0, peak_volume_attribute_bytes=0,
-                          volume_blocks_total=0)
+                          volume_blocks_total=0, excluded_depth_pixels=0)
 
-    def observe(self, frame_id, rgb, depth, pose, seg, pairs):
+    def observe(self, frame_id, rgb, depth, pose, seg, pairs, excluded_pixels=None):
         started = time.perf_counter()
         rgb = (rgb.detach().cpu().numpy()*255.).astype(np.uint8)
         depth = depth.detach().cpu().numpy().astype(np.float32)
+        if excluded_pixels is not None:
+            excluded = excluded_pixels.detach().cpu().numpy().astype(bool)
+            if excluded.shape != depth.shape:
+                raise ValueError('Excluded-pixel mask must match depth shape')
+            self.audit['excluded_depth_pixels'] += int(excluded.sum())
+            # Rejected mask pixels must not re-enter via residual background.
+            # Shared geometry receives the original depth; only IT is filtered.
+            depth[excluded] = 0.
         pose = pose.detach().cpu().numpy().astype(np.float64)
         labels = seg.detach().cpu().numpy().astype(np.int32) if seg is not None else np.zeros(depth.shape,np.int32)
         accepted = [(int(p['mask_id']),int(p['global_mask_id'])) for p in pairs]
@@ -218,7 +226,11 @@ class InstanceTSDFAdapter:
             if mid>=0: identities[str(mid)].append(f['key'])
         report=dict(options=vars(self.options),association='unchanged IG sparse disjoint',
                     fragment_policy='one existing merge period, causal identities at period end',
-                    correction_enabled=False,carving_aabb_enabled=False,depth_shrink_enabled=False,
+                    correction_enabled=False,
+                    carving_aabb_enabled=bool(self.cfg.get('ig_submap',{}).get('carving_aabb',{}).get('enabled',False)),
+                    depth_shrink_enabled=bool(self.cfg.get('seg',{}).get('depth_shrink',{}).get('enabled',False)),
+                    depth_shrink_geometry_policy='exclude rejected pixels from both instance and background IT fusion',
+                    carving_geometry_policy='association score only; no direct TSDF point deletion',
                     identity_links_fuse_geometry=False,geometry_fallback=False,
                     association_geometry='shared TSDF used for original overlap and FCGF only',
                     export_geometry='independent TSDF surfaces; world-voxel coalescing for point indexing',

@@ -10,6 +10,7 @@ from Dataset.dataset import get_dataset
 from tool.config import load_config
 from submap_disjoint.geometry import GeometryScene
 from submap_disjoint.sparse_owner import SparseDisjointSubmapManager
+from submap_disjoint.factor_owner import FactorSubmapManager
 from submap_disjoint.it_adapter import InstanceTSDFAdapter
 
 p=argparse.ArgumentParser()
@@ -21,7 +22,7 @@ p.add_argument('--aabb',type=int,choices=[0,1],default=0)
 p.add_argument('--depth-shrink',type=int,choices=[0,1],default=0)
 p.add_argument('--smoke-frames',type=int,default=0,help='Truncated wiring check only; never a reported benchmark')
 a=p.parse_args()
-assert a.merge_selection=='disjoint_pairs' and a.aabb==0 and a.depth_shrink==0
+assert a.merge_selection=='disjoint_pairs'
 out=Path(a.output_dir)/a.seq_name; out.mkdir(parents=True,exist_ok=True)
 assert not (out/'ckpt_final.npz').exists()
 start=time.perf_counter()
@@ -39,7 +40,8 @@ cfg.setdefault('seg',{})['depth_shrink']={'enabled':bool(a.depth_shrink),
 cfg['fcgf_diagnostics']={'enabled':False,'use_in_merge':True,'export_high_similarity_pairs':False}
 data=get_dataset(a.dataset,a.instance_dir,cfg,a.device)
 geometry=GeometryScene(cfg,a,data,a.device)
-owner=SparseDisjointSubmapManager(cfg,a,data,geometry,a.device)
+Owner=FactorSubmapManager if (a.aabb or a.depth_shrink) else SparseDisjointSubmapManager
+owner=Owner(cfg,a,data,geometry,a.device)
 it=InstanceTSDFAdapter(cfg,owner,out/'it_fragments')
 assert not hasattr(geometry,'maskGraph')
 run_metadata=dict(method='ITSubmap-v1',smoke_frames=a.smoke_frames,correction_enabled=False,merge_selection=a.merge_selection,config=cfg,
@@ -73,7 +75,10 @@ for frame_id,(rgb,depth,pose,seg,features,flag) in tqdm(enumerate(DataLoader(dat
             blocks,_=geometry.integrate_frame(frame_id,rgb[0],depth[0],torch.inverse(pose[0])); integrated+=1
             if flag[0] and frame_id % cfg['seg']['seg_add_interval']==0:
                 owner.observe(frame_id,rgb[0],depth[0],pose[0],blocks,seg,features); observed+=1
-                it.observe(frame_id,rgb[0],depth[0],pose[0],seg,owner.last_inserted_mask_pairs)
+                refined=owner.last_refined_seg if a.depth_shrink else seg
+                rejected=(seg > 0) & (refined == 0) if a.depth_shrink else None
+                it.observe(frame_id,rgb[0],depth[0],pose[0],refined,owner.last_inserted_mask_pairs,
+                           excluded_pixels=rejected)
             else:
                 it.observe(frame_id,rgb[0],depth[0],pose[0],None,[])
     if cfg['save']['ckpt_interval']>0 and frame_id>0 and frame_id%cfg['save']['ckpt_interval']==0:
