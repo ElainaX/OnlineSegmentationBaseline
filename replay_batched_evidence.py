@@ -1,5 +1,6 @@
 """Causal replay: frozen candidates and RGB-D evidence; no mapping or GT inputs."""
 import hashlib
+import argparse
 import json
 import time
 from pathlib import Path
@@ -9,7 +10,9 @@ from submap_disjoint.local_clear_only import LocalClearCandidate
 from submap_disjoint.readonly_detection_core import Candidate
 
 SOURCE = Path('/root/autodl-tmp/output/ig_fixed_candidates_20261008')
-OUT = Path('/root/autodl-tmp/output/ig_batched_evidence_20261008')
+parser=argparse.ArgumentParser()
+parser.add_argument('--output-dir',default='/root/autodl-tmp/output/ig_batched_evidence_20261008')
+OUT=Path(parser.parse_args().output_dir)
 OUT.mkdir(exist_ok=True)
 if (OUT/'replay.json').exists():raise FileExistsError('Do not overwrite an existing replay')
 scenes=[]

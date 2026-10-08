@@ -41,6 +41,26 @@ class BatchedCandidate:
         reliable = (codes == SUPPORT) | (codes == CONTRADICTION)
         if not reliable.any():
             return 'paused_no_reliable_points', {}
+        # A small view must never consume the eligibility of a later full view.
+        # Full observations use the original candidate's committed-view clock.
+        # On acceptance they supersede the uncommitted small-view packet.
+        if int(reliable.sum()) >= cfg['min_reference_tested_points']:
+            reason, stats = self.inner.observe(frame, pose, codes, sources, cfg)
+            if reason in ('support', 'cancelled', 'contradiction', 'would_remove'):
+                self.last_input_pose = np.asarray(pose).copy()
+                self.last_input_frame = int(frame)
+                self.accepted_input_frames.append(int(frame))
+                self.ever_tested |= reliable
+                self.packet_events.append(dict(frame=int(frame), first_evidence_frame=int(frame),
+                    last_evidence_frame=int(frame), distinct_source_frames=1,
+                    distinct_points=int(reliable.sum()), reason=reason,
+                    contradiction=int(stats['contradiction']), support=int(stats['support']),
+                    contradiction_ratio=float(stats['contradiction_ratio']),
+                    candidate_hits=int(self.inner.hits), kind='full_frame'))
+                self.pending_codes.fill(UNKNOWN)
+                self.pending_sources.fill(0)
+                self.pending_frames.fill(-1)
+            return reason, stats
         if not independent_observation(pose, self.last_input_pose, frame, self.last_input_frame, cfg):
             self.rejected_correlated_frames += 1
             return 'paused_correlated_input', {}
@@ -70,7 +90,7 @@ class BatchedCandidate:
             distinct_points=count, reason=reason,
             contradiction=int(stats['contradiction']), support=int(stats['support']),
             contradiction_ratio=float(stats['contradiction_ratio']),
-            candidate_hits=int(self.inner.hits)))
+            candidate_hits=int(self.inner.hits), kind='small_views_packet'))
         self.pending_codes.fill(UNKNOWN)
         self.pending_sources.fill(0)
         self.pending_frames.fill(-1)

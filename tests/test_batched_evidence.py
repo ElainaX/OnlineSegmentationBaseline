@@ -79,5 +79,13 @@ class TestBatchedEvidence(unittest.TestCase):
         self.assertEqual(c.state,'suspected')
         self.assertEqual(c.hits,1)
 
+    def test_small_view_cannot_block_following_full_observation(self):
+        c=make();observe(c,0,slice(0,100))
+        observe(c,5,slice(0,1))
+        observe(c,8,slice(0,100))
+        self.assertEqual(c.state,'would_remove')
+        self.assertEqual(c.packet_events[-1]['kind'],'full_frame')
+        self.assertEqual(c.packet_events[-1]['frame'],8)
+
 
 if __name__=='__main__':unittest.main()
