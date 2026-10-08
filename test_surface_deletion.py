@@ -92,5 +92,8 @@ class SurfaceDeletionTests(unittest.TestCase):
             self.assertEqual(owner.merged_mask_size,[1])
             self.assertEqual(int(grid.attribute('weight').reshape((-1,))[core.Tensor([int(ids[-1])])].item()),10)
             self.assertEqual(controller.save()['unique_erased_world_voxels'],8)
+            import json
+            from pathlib import Path
+            self.assertEqual(json.loads((Path(tmp)/'executor/summary.json').read_text())['voxel_erasure_operations'],8)
 
 if __name__=='__main__':unittest.main()

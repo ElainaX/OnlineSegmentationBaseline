@@ -186,7 +186,12 @@ class IGSurfaceDeletion:
             np.savez_compressed(self.out/f'evidence_{frame:06d}.npz',surface_ids=ids,
                 points=b.points[ids],streak=b.streak[ids],support=b.support[ids],
                 created_frame=b.created_frame[ids],last_conflict_frame=b.last_conflict_frame[ids],authorized_xyz=xyz)
-            result=self.executor.erase(frame,[(int(p),xyz) for p in [-1]])
+            erase_started=time.perf_counter()
+            result=self.executor.erase(frame,[(-1,xyz)])
+            erase_seconds=time.perf_counter()-erase_started
+            self.executor.seconds+=erase_seconds
+            self.executor.frames+=1
+            self.executor.events.append(dict(frame=int(frame),seconds=erase_seconds,**result))
             if result['voxels']:
                 # erase() prunes memberships and source-mask clouds, invalidates
                 # features, removes empty rows and rebuilds containment edges.
@@ -223,6 +228,7 @@ class IGSurfaceDeletion:
             if len(coords):assert not torch.isin(o.voxel_hash_table.voxel_coords2voxel_indices(coords),tid).any()
 
     def save(self):
+        if self.executor:self.executor.save()
         report=dict(method='IG local surface retirement v1',enabled=self.enabled,GT_used=False,
             whole_instance_deletion=False,independent_TSDF_deactivation=False,options=asdict(self.options),
             seconds=self.seconds,frames=len(self.events),deletion_frames=sum(r['voxels']>0 for r in self.events),
