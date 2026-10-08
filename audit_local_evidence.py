@@ -39,8 +39,10 @@ for run in json.loads((ROOT / 'results.json').read_text()):
     tree = cKDTree(points)
     present = set((labels[labels > 0] % 1000).tolist())
     variants = {}
+    variant_points = {}
     old = json.loads((folder / 'remove_detection/summary.json').read_text())
     pred = []
+    old_points = []
     for c in old['instances']:
         if c['state'] != 'would_remove':
             continue
@@ -48,15 +50,19 @@ for run in json.loads((ROOT / 'results.json').read_text()):
         p = saved['reference_points'][saved['depth_contradicted']]
         pred.append(dict(candidate_id=c['candidate_id'], phase='rescan' if c['confirmed_frame'] >= cut else 'reference',
                          **association(p, tree, labels)))
+        old_points.append(p)
     variants['original'] = pred
+    variant_points['original'] = old_points
     arrays = np.load(folder / 'local_evidence/final.npz')
     # Score states stay reversible; include currently confirmed cells only.
     # Compare confirmations in rescan, not static reference alerts counted as changes.
     for limit in (20, 100):
         active = np.flatnonzero(arrays['confirmed'] & (arrays['last_confirmed'] >= cut))
         regions = connected_regions(arrays['keys'], active)
+        chosen = [(i, ids) for i, ids in enumerate(regions) if len(ids) >= limit]
         variants[f'local_ge{limit}'] = [dict(region_id=i, phase='rescan',
-            **association(arrays['points'][ids], tree, labels)) for i, ids in enumerate(regions) if len(ids) >= limit]
+            **association(arrays['points'][ids], tree, labels)) for i, ids in chosen]
+        variant_points[f'local_ge{limit}'] = [arrays['points'][ids] for _, ids in chosen]
     static = np.load(folder / 'local_evidence/reference_end.npz')
     static_regions = connected_regions(static['keys'], np.flatnonzero(static['confirmed']))
     static_stats = dict(confirmed_cells=int(static['confirmed'].sum()),
@@ -65,13 +71,23 @@ for run in json.loads((ROOT / 'results.json').read_text()):
     for name, rows in variants.items():
         rr = [r for r in rows if r['phase'] == 'rescan']
         ids = {r['majority_id'] for r in rr if r['majority_id'] is not None}
+        coverage = {}
+        for gid in sorted(ids & removed):
+            evidence = np.concatenate([p for row, p in zip(rows, variant_points[name])
+                                       if row['phase'] == 'rescan' and row['majority_id'] == gid])
+            gt = points[(labels > 0) & (labels % 1000 == gid)]
+            distance, _ = cKDTree(evidence).query(gt)
+            coverage[gid] = dict(reference_gt_vertices=len(gt), evidence_points=len(evidence),
+                                gt_vertices_within_5cm=int((distance <= .05).sum()),
+                                gt_vertex_coverage_5cm=float((distance <= .05).mean()))
         summaries[name] = dict(regions_or_candidates=len(rr),
             removed_hits=sorted(ids & removed), removed_recall=len(ids & removed) / len(removed & present),
             any_changed_hits=sorted(ids & changed),
             no_change_annotation_ids=sorted(ids - changed),
             unknown_or_mixed=sum(r['majority_id'] is None for r in rr),
             majority_changed_regions=sum(r['majority_id'] in changed for r in rr),
-            reference_confirmed_candidates=sum(r['phase'] == 'reference' for r in rows))
+            reference_confirmed_candidates=sum(r['phase'] == 'reference' for r in rows),
+            removed_gt_evidence_coverage=coverage)
     results.append(dict(seq=seq, official_removed=sorted(removed), verifiable_removed=sorted(removed & present),
         summaries=summaries, original_static_candidates=old['would_remove']-sum(r['phase']=='rescan' for r in pred),
         local_static_alerts=static_stats, predictions=variants,

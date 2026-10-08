@@ -1,0 +1,3318 @@
+{
+  "protocol": "Paired same-map read-only; reference GT majority within 5 cm; rescan confirmations only; deduplicated GT. No-change annotation is not proven false positive. Regions are not object identities.",
+  "scenes": [
+    {
+      "seq": "pair_01_0cac767c_19f1a892",
+      "official_removed": [
+        2,
+        3,
+        6,
+        7,
+        8,
+        9,
+        19,
+        20,
+        21,
+        27,
+        31,
+        33,
+        39,
+        300,
+        360
+      ],
+      "verifiable_removed": [
+        2,
+        3,
+        7,
+        8,
+        9,
+        19,
+        20,
+        21,
+        27,
+        31,
+        33,
+        39,
+        300,
+        360
+      ],
+      "summaries": {
+        "original": {
+          "regions_or_candidates": 2,
+          "removed_hits": [
+            3
+          ],
+          "removed_recall": 0.07142857142857142,
+          "any_changed_hits": [
+            3,
+            24
+          ],
+          "no_change_annotation_ids": [],
+          "unknown_or_mixed": 0,
+          "majority_changed_regions": 2,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "3": {
+              "reference_gt_vertices": 1300,
+              "evidence_points": 272,
+              "gt_vertices_within_5cm": 198,
+              "gt_vertex_coverage_5cm": 0.1523076923076923
+            }
+          }
+        },
+        "local_ge20": {
+          "regions_or_candidates": 29,
+          "removed_hits": [
+            2,
+            3,
+            7,
+            19,
+            20,
+            21
+          ],
+          "removed_recall": 0.42857142857142855,
+          "any_changed_hits": [
+            2,
+            3,
+            4,
+            5,
+            7,
+            19,
+            20,
+            21,
+            24,
+            35
+          ],
+          "no_change_annotation_ids": [
+            14,
+            15,
+            18,
+            23,
+            25,
+            38,
+            361
+          ],
+          "unknown_or_mixed": 6,
+          "majority_changed_regions": 13,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "2": {
+              "reference_gt_vertices": 294,
+              "evidence_points": 220,
+              "gt_vertices_within_5cm": 93,
+              "gt_vertex_coverage_5cm": 0.3163265306122449
+            },
+            "3": {
+              "reference_gt_vertices": 1300,
+              "evidence_points": 1161,
+              "gt_vertices_within_5cm": 342,
+              "gt_vertex_coverage_5cm": 0.2630769230769231
+            },
+            "7": {
+              "reference_gt_vertices": 71,
+              "evidence_points": 31,
+              "gt_vertices_within_5cm": 12,
+              "gt_vertex_coverage_5cm": 0.16901408450704225
+            },
+            "19": {
+              "reference_gt_vertices": 162,
+              "evidence_points": 609,
+              "gt_vertices_within_5cm": 115,
+              "gt_vertex_coverage_5cm": 0.7098765432098766
+            },
+            "20": {
+              "reference_gt_vertices": 356,
+              "evidence_points": 99,
+              "gt_vertices_within_5cm": 77,
+              "gt_vertex_coverage_5cm": 0.21629213483146068
+            },
+            "21": {
+              "reference_gt_vertices": 203,
+              "evidence_points": 195,
+              "gt_vertices_within_5cm": 89,
+              "gt_vertex_coverage_5cm": 0.43842364532019706
+            }
+          }
+        },
+        "local_ge100": {
+          "regions_or_candidates": 12,
+          "removed_hits": [
+            2,
+            3,
+            19,
+            21
+          ],
+          "removed_recall": 0.2857142857142857,
+          "any_changed_hits": [
+            2,
+            3,
+            4,
+            5,
+            19,
+            21,
+            24,
+            35
+          ],
+          "no_change_annotation_ids": [
+            14,
+            15,
+            25
+          ],
+          "unknown_or_mixed": 0,
+          "majority_changed_regions": 8,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "2": {
+              "reference_gt_vertices": 294,
+              "evidence_points": 220,
+              "gt_vertices_within_5cm": 93,
+              "gt_vertex_coverage_5cm": 0.3163265306122449
+            },
+            "3": {
+              "reference_gt_vertices": 1300,
+              "evidence_points": 1098,
+              "gt_vertices_within_5cm": 291,
+              "gt_vertex_coverage_5cm": 0.22384615384615383
+            },
+            "19": {
+              "reference_gt_vertices": 162,
+              "evidence_points": 609,
+              "gt_vertices_within_5cm": 115,
+              "gt_vertex_coverage_5cm": 0.7098765432098766
+            },
+            "21": {
+              "reference_gt_vertices": 203,
+              "evidence_points": 195,
+              "gt_vertices_within_5cm": 89,
+              "gt_vertex_coverage_5cm": 0.43842364532019706
+            }
+          }
+        }
+      },
+      "original_static_candidates": 0,
+      "local_static_alerts": {
+        "confirmed_cells": 11,
+        "regions_ge20": 0,
+        "regions_ge100": 0
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 2,
+            "phase": "rescan",
+            "majority_id": 3,
+            "majority_fraction": 0.9522058823529411,
+            "points": 272,
+            "counts": {
+              "3": 259
+            }
+          },
+          {
+            "candidate_id": 3,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 0.982532751091703,
+            "points": 229,
+            "counts": {
+              "24": 225,
+              "35": 3
+            }
+          }
+        ],
+        "local_ge20": [
+          {
+            "region_id": 0,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 22,
+            "counts": {}
+          },
+          {
+            "region_id": 2,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 1.0,
+            "points": 55,
+            "counts": {
+              "15": 55
+            }
+          },
+          {
+            "region_id": 3,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.9426229508196722,
+            "points": 366,
+            "counts": {
+              "15": 345,
+              "5": 7
+            }
+          },
+          {
+            "region_id": 6,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.9354838709677419,
+            "points": 31,
+            "counts": {
+              "5": 29
+            }
+          },
+          {
+            "region_id": 10,
+            "phase": "rescan",
+            "majority_id": 35,
+            "majority_fraction": 0.7790368271954674,
+            "points": 353,
+            "counts": {
+              "5": 78,
+              "35": 275
+            }
+          },
+          {
+            "region_id": 17,
+            "phase": "rescan",
+            "majority_id": 14,
+            "majority_fraction": 0.9963235294117647,
+            "points": 272,
+            "counts": {
+              "14": 271
+            }
+          },
+          {
+            "region_id": 19,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 90,
+            "counts": {}
+          },
+          {
+            "region_id": 21,
+            "phase": "rescan",
+            "majority_id": 2,
+            "majority_fraction": 0.9772727272727273,
+            "points": 220,
+            "counts": {
+              "2": 215
+            }
+          },
+          {
+            "region_id": 22,
+            "phase": "rescan",
+            "majority_id": 3,
+            "majority_fraction": 0.8888888888888888,
+            "points": 63,
+            "counts": {
+              "3": 56
+            }
+          },
+          {
+            "region_id": 30,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.755656108597285,
+            "points": 442,
+            "counts": {
+              "4": 334
+            }
+          },
+          {
+            "region_id": 51,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 0.9474375821287779,
+            "points": 761,
+            "counts": {
+              "24": 721,
+              "5": 5,
+              "35": 17
+            }
+          },
+          {
+            "region_id": 53,
+            "phase": "rescan",
+            "majority_id": 25,
+            "majority_fraction": 0.7984496124031008,
+            "points": 129,
+            "counts": {
+              "25": 103,
+              "35": 20,
+              "5": 4
+            }
+          },
+          {
+            "region_id": 54,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.5173745173745173,
+            "points": 259,
+            "counts": {
+              "5": 134
+            }
+          },
+          {
+            "region_id": 58,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 32,
+            "counts": {}
+          },
+          {
+            "region_id": 65,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.7636363636363637,
+            "points": 110,
+            "counts": {
+              "15": 84,
+              "14": 20
+            }
+          },
+          {
+            "region_id": 67,
+            "phase": "rescan",
+            "majority_id": 35,
+            "majority_fraction": 0.975609756097561,
+            "points": 41,
+            "counts": {
+              "35": 40
+            }
+          },
+          {
+            "region_id": 84,
+            "phase": "rescan",
+            "majority_id": 7,
+            "majority_fraction": 0.7419354838709677,
+            "points": 31,
+            "counts": {
+              "7": 23,
+              "8": 2,
+              "360": 1
+            }
+          },
+          {
+            "region_id": 93,
+            "phase": "rescan",
+            "majority_id": 3,
+            "majority_fraction": 0.9608378870673953,
+            "points": 1098,
+            "counts": {
+              "3": 1055
+            }
+          },
+          {
+            "region_id": 96,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 1.0,
+            "points": 58,
+            "counts": {
+              "18": 58
+            }
+          },
+          {
+            "region_id": 112,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 21,
+            "counts": {}
+          },
+          {
+            "region_id": 118,
+            "phase": "rescan",
+            "majority_id": 14,
+            "majority_fraction": 1.0,
+            "points": 38,
+            "counts": {
+              "14": 38
+            }
+          },
+          {
+            "region_id": 122,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 27,
+            "counts": {}
+          },
+          {
+            "region_id": 133,
+            "phase": "rescan",
+            "majority_id": 361,
+            "majority_fraction": 0.85,
+            "points": 80,
+            "counts": {
+              "361": 68
+            }
+          },
+          {
+            "region_id": 136,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.15,
+            "points": 20,
+            "counts": {
+              "3": 3
+            }
+          },
+          {
+            "region_id": 137,
+            "phase": "rescan",
+            "majority_id": 19,
+            "majority_fraction": 0.5779967159277504,
+            "points": 609,
+            "counts": {
+              "19": 352,
+              "33": 154,
+              "3": 1
+            }
+          },
+          {
+            "region_id": 139,
+            "phase": "rescan",
+            "majority_id": 23,
+            "majority_fraction": 0.6428571428571429,
+            "points": 42,
+            "counts": {
+              "23": 27
+            }
+          },
+          {
+            "region_id": 140,
+            "phase": "rescan",
+            "majority_id": 21,
+            "majority_fraction": 0.9025641025641026,
+            "points": 195,
+            "counts": {
+              "21": 176
+            }
+          },
+          {
+            "region_id": 141,
+            "phase": "rescan",
+            "majority_id": 20,
+            "majority_fraction": 0.6767676767676768,
+            "points": 99,
+            "counts": {
+              "20": 67
+            }
+          },
+          {
+            "region_id": 142,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.5411764705882353,
+            "points": 85,
+            "counts": {
+              "38": 46
+            }
+          }
+        ],
+        "local_ge100": [
+          {
+            "region_id": 3,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.9426229508196722,
+            "points": 366,
+            "counts": {
+              "15": 345,
+              "5": 7
+            }
+          },
+          {
+            "region_id": 10,
+            "phase": "rescan",
+            "majority_id": 35,
+            "majority_fraction": 0.7790368271954674,
+            "points": 353,
+            "counts": {
+              "5": 78,
+              "35": 275
+            }
+          },
+          {
+            "region_id": 17,
+            "phase": "rescan",
+            "majority_id": 14,
+            "majority_fraction": 0.9963235294117647,
+            "points": 272,
+            "counts": {
+              "14": 271
+            }
+          },
+          {
+            "region_id": 21,
+            "phase": "rescan",
+            "majority_id": 2,
+            "majority_fraction": 0.9772727272727273,
+            "points": 220,
+            "counts": {
+              "2": 215
+            }
+          },
+          {
+            "region_id": 30,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.755656108597285,
+            "points": 442,
+            "counts": {
+              "4": 334
+            }
+          },
+          {
+            "region_id": 51,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 0.9474375821287779,
+            "points": 761,
+            "counts": {
+              "24": 721,
+              "5": 5,
+              "35": 17
+            }
+          },
+          {
+            "region_id": 53,
+            "phase": "rescan",
+            "majority_id": 25,
+            "majority_fraction": 0.7984496124031008,
+            "points": 129,
+            "counts": {
+              "25": 103,
+              "35": 20,
+              "5": 4
+            }
+          },
+          {
+            "region_id": 54,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.5173745173745173,
+            "points": 259,
+            "counts": {
+              "5": 134
+            }
+          },
+          {
+            "region_id": 65,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.7636363636363637,
+            "points": 110,
+            "counts": {
+              "15": 84,
+              "14": 20
+            }
+          },
+          {
+            "region_id": 93,
+            "phase": "rescan",
+            "majority_id": 3,
+            "majority_fraction": 0.9608378870673953,
+            "points": 1098,
+            "counts": {
+              "3": 1055
+            }
+          },
+          {
+            "region_id": 137,
+            "phase": "rescan",
+            "majority_id": 19,
+            "majority_fraction": 0.5779967159277504,
+            "points": 609,
+            "counts": {
+              "19": 352,
+              "33": 154,
+              "3": 1
+            }
+          },
+          {
+            "region_id": 140,
+            "phase": "rescan",
+            "majority_id": 21,
+            "majority_fraction": 0.9025641025641026,
+            "points": 195,
+            "counts": {
+              "21": 176
+            }
+          }
+        ]
+      },
+      "runtime": {
+        "original_seconds": 48.61576762981713,
+        "local_seconds": 4.074822695925832,
+        "main_loop_seconds": 141.22630700888112,
+        "sampled_frames": 267
+      },
+      "bank": {
+        "completed": true,
+        "evaluated_frames": 267,
+        "seconds": 4.074822695925832,
+        "cells": 12898,
+        "capacity_rejected_new_cells": 0,
+        "transitions": {
+          "confirmed": 6343,
+          "revoked": 224
+        },
+        "skipped_frames": {},
+        "memory_array_bytes": 46000000,
+        "reference_boundary_snapshot": true,
+        "actual_deletions": 0,
+        "confirmed_cells": 6119,
+        "regions_ge20": 29,
+        "regions_ge100": 12
+      }
+    },
+    {
+      "seq": "pair_02_751a55a1_751a557f",
+      "official_removed": [
+        22
+      ],
+      "verifiable_removed": [
+        22
+      ],
+      "summaries": {
+        "original": {
+          "regions_or_candidates": 8,
+          "removed_hits": [],
+          "removed_recall": 0.0,
+          "any_changed_hits": [
+            4,
+            15,
+            38
+          ],
+          "no_change_annotation_ids": [
+            7,
+            18,
+            23
+          ],
+          "unknown_or_mixed": 0,
+          "majority_changed_regions": 5,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {}
+        },
+        "local_ge20": {
+          "regions_or_candidates": 64,
+          "removed_hits": [],
+          "removed_recall": 0.0,
+          "any_changed_hits": [
+            4,
+            15,
+            20,
+            33,
+            36,
+            37,
+            38,
+            40,
+            44,
+            45
+          ],
+          "no_change_annotation_ids": [
+            5,
+            6,
+            7,
+            10,
+            16,
+            18,
+            23,
+            24,
+            26,
+            27,
+            28
+          ],
+          "unknown_or_mixed": 15,
+          "majority_changed_regions": 24,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {}
+        },
+        "local_ge100": {
+          "regions_or_candidates": 26,
+          "removed_hits": [],
+          "removed_recall": 0.0,
+          "any_changed_hits": [
+            4,
+            15,
+            20,
+            38,
+            45
+          ],
+          "no_change_annotation_ids": [
+            5,
+            6,
+            7,
+            10,
+            16,
+            18,
+            24
+          ],
+          "unknown_or_mixed": 7,
+          "majority_changed_regions": 8,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {}
+        }
+      },
+      "original_static_candidates": 0,
+      "local_static_alerts": {
+        "confirmed_cells": 1382,
+        "regions_ge20": 15,
+        "regions_ge100": 4
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 4,
+            "phase": "rescan",
+            "majority_id": 7,
+            "majority_fraction": 0.9036697247706422,
+            "points": 218,
+            "counts": {
+              "7": 197
+            }
+          },
+          {
+            "candidate_id": 6,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.7862679955703211,
+            "points": 903,
+            "counts": {
+              "15": 710,
+              "10": 172
+            }
+          },
+          {
+            "candidate_id": 7,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.9894179894179894,
+            "points": 189,
+            "counts": {
+              "4": 187
+            }
+          },
+          {
+            "candidate_id": 9,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.8180535966149506,
+            "points": 709,
+            "counts": {
+              "38": 580
+            }
+          },
+          {
+            "candidate_id": 12,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.625,
+            "points": 16,
+            "counts": {
+              "21": 6,
+              "18": 10
+            }
+          },
+          {
+            "candidate_id": 13,
+            "phase": "rescan",
+            "majority_id": 23,
+            "majority_fraction": 0.9890710382513661,
+            "points": 183,
+            "counts": {
+              "23": 181
+            }
+          },
+          {
+            "candidate_id": 16,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9928057553956835,
+            "points": 417,
+            "counts": {
+              "38": 414
+            }
+          },
+          {
+            "candidate_id": 17,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9132947976878613,
+            "points": 346,
+            "counts": {
+              "38": 316
+            }
+          }
+        ],
+        "local_ge20": [
+          {
+            "region_id": 0,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.16635773864689526,
+            "points": 2158,
+            "counts": {
+              "3": 359
+            }
+          },
+          {
+            "region_id": 4,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 344,
+            "counts": {}
+          },
+          {
+            "region_id": 13,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.9661538461538461,
+            "points": 650,
+            "counts": {
+              "4": 628,
+              "5": 15
+            }
+          },
+          {
+            "region_id": 14,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.8375,
+            "points": 240,
+            "counts": {
+              "5": 201
+            }
+          },
+          {
+            "region_id": 18,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.011904761904761904,
+            "points": 84,
+            "counts": {
+              "34": 1
+            }
+          },
+          {
+            "region_id": 21,
+            "phase": "rescan",
+            "majority_id": 33,
+            "majority_fraction": 1.0,
+            "points": 63,
+            "counts": {
+              "33": 63
+            }
+          },
+          {
+            "region_id": 25,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9555555555555556,
+            "points": 45,
+            "counts": {
+              "38": 43
+            }
+          },
+          {
+            "region_id": 26,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9934102141680395,
+            "points": 607,
+            "counts": {
+              "38": 603
+            }
+          },
+          {
+            "region_id": 27,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9183673469387755,
+            "points": 343,
+            "counts": {
+              "38": 315
+            }
+          },
+          {
+            "region_id": 30,
+            "phase": "rescan",
+            "majority_id": 37,
+            "majority_fraction": 0.6153846153846154,
+            "points": 78,
+            "counts": {
+              "33": 27,
+              "37": 48
+            }
+          },
+          {
+            "region_id": 33,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.38461538461538464,
+            "points": 91,
+            "counts": {
+              "38": 35
+            }
+          },
+          {
+            "region_id": 34,
+            "phase": "rescan",
+            "majority_id": 36,
+            "majority_fraction": 0.8863636363636364,
+            "points": 88,
+            "counts": {
+              "36": 78
+            }
+          },
+          {
+            "region_id": 36,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.2107843137254902,
+            "points": 204,
+            "counts": {
+              "38": 43
+            }
+          },
+          {
+            "region_id": 39,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.721830985915493,
+            "points": 568,
+            "counts": {
+              "38": 410
+            }
+          },
+          {
+            "region_id": 43,
+            "phase": "rescan",
+            "majority_id": 33,
+            "majority_fraction": 1.0,
+            "points": 89,
+            "counts": {
+              "33": 89
+            }
+          },
+          {
+            "region_id": 45,
+            "phase": "rescan",
+            "majority_id": 33,
+            "majority_fraction": 1.0,
+            "points": 24,
+            "counts": {
+              "33": 24
+            }
+          },
+          {
+            "region_id": 59,
+            "phase": "rescan",
+            "majority_id": 40,
+            "majority_fraction": 1.0,
+            "points": 21,
+            "counts": {
+              "40": 21
+            }
+          },
+          {
+            "region_id": 84,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 1.0,
+            "points": 28,
+            "counts": {
+              "38": 28
+            }
+          },
+          {
+            "region_id": 85,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.48172757475083056,
+            "points": 301,
+            "counts": {
+              "38": 145
+            }
+          },
+          {
+            "region_id": 92,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9583333333333334,
+            "points": 48,
+            "counts": {
+              "38": 46
+            }
+          },
+          {
+            "region_id": 108,
+            "phase": "rescan",
+            "majority_id": 28,
+            "majority_fraction": 0.967741935483871,
+            "points": 31,
+            "counts": {
+              "28": 30
+            }
+          },
+          {
+            "region_id": 112,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 418,
+            "counts": {}
+          },
+          {
+            "region_id": 116,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 1.0,
+            "points": 73,
+            "counts": {
+              "18": 73
+            }
+          },
+          {
+            "region_id": 117,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 0.9301310043668122,
+            "points": 916,
+            "counts": {
+              "6": 852
+            }
+          },
+          {
+            "region_id": 124,
+            "phase": "rescan",
+            "majority_id": 26,
+            "majority_fraction": 1.0,
+            "points": 56,
+            "counts": {
+              "26": 56
+            }
+          },
+          {
+            "region_id": 125,
+            "phase": "rescan",
+            "majority_id": 27,
+            "majority_fraction": 0.78125,
+            "points": 64,
+            "counts": {
+              "27": 50
+            }
+          },
+          {
+            "region_id": 133,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.6623376623376623,
+            "points": 385,
+            "counts": {
+              "18": 255,
+              "22": 8,
+              "23": 110
+            }
+          },
+          {
+            "region_id": 134,
+            "phase": "rescan",
+            "majority_id": 45,
+            "majority_fraction": 0.9899665551839465,
+            "points": 598,
+            "counts": {
+              "45": 592
+            }
+          },
+          {
+            "region_id": 135,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.9666666666666667,
+            "points": 90,
+            "counts": {
+              "18": 87
+            }
+          },
+          {
+            "region_id": 140,
+            "phase": "rescan",
+            "majority_id": 20,
+            "majority_fraction": 0.9859154929577465,
+            "points": 213,
+            "counts": {
+              "20": 210
+            }
+          },
+          {
+            "region_id": 141,
+            "phase": "rescan",
+            "majority_id": 20,
+            "majority_fraction": 0.9375,
+            "points": 32,
+            "counts": {
+              "20": 30,
+              "18": 2
+            }
+          },
+          {
+            "region_id": 143,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.65625,
+            "points": 32,
+            "counts": {
+              "18": 21,
+              "19": 11
+            }
+          },
+          {
+            "region_id": 146,
+            "phase": "rescan",
+            "majority_id": 40,
+            "majority_fraction": 0.7619047619047619,
+            "points": 42,
+            "counts": {
+              "40": 32
+            }
+          },
+          {
+            "region_id": 160,
+            "phase": "rescan",
+            "majority_id": 45,
+            "majority_fraction": 0.9767441860465116,
+            "points": 43,
+            "counts": {
+              "45": 42
+            }
+          },
+          {
+            "region_id": 162,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 1.0,
+            "points": 112,
+            "counts": {
+              "24": 112
+            }
+          },
+          {
+            "region_id": 164,
+            "phase": "rescan",
+            "majority_id": 23,
+            "majority_fraction": 1.0,
+            "points": 22,
+            "counts": {
+              "23": 22
+            }
+          },
+          {
+            "region_id": 165,
+            "phase": "rescan",
+            "majority_id": 23,
+            "majority_fraction": 1.0,
+            "points": 31,
+            "counts": {
+              "23": 31
+            }
+          },
+          {
+            "region_id": 166,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.9583333333333334,
+            "points": 24,
+            "counts": {
+              "18": 23
+            }
+          },
+          {
+            "region_id": 192,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.5514018691588785,
+            "points": 107,
+            "counts": {
+              "18": 59,
+              "22": 44
+            }
+          },
+          {
+            "region_id": 194,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 1.0,
+            "points": 89,
+            "counts": {
+              "18": 89
+            }
+          },
+          {
+            "region_id": 201,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.958904109589041,
+            "points": 146,
+            "counts": {
+              "18": 140
+            }
+          },
+          {
+            "region_id": 202,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.7017543859649122,
+            "points": 57,
+            "counts": {
+              "18": 40
+            }
+          },
+          {
+            "region_id": 215,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.524077868852459,
+            "points": 1952,
+            "counts": {
+              "10": 501,
+              "15": 1023,
+              "11": 327,
+              "12": 63
+            }
+          },
+          {
+            "region_id": 216,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 50,
+            "counts": {}
+          },
+          {
+            "region_id": 217,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 69,
+            "counts": {}
+          },
+          {
+            "region_id": 218,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 48,
+            "counts": {}
+          },
+          {
+            "region_id": 219,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 152,
+            "counts": {}
+          },
+          {
+            "region_id": 220,
+            "phase": "rescan",
+            "majority_id": 44,
+            "majority_fraction": 0.9545454545454546,
+            "points": 22,
+            "counts": {
+              "44": 21
+            }
+          },
+          {
+            "region_id": 225,
+            "phase": "rescan",
+            "majority_id": 44,
+            "majority_fraction": 1.0,
+            "points": 49,
+            "counts": {
+              "44": 49
+            }
+          },
+          {
+            "region_id": 229,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.4489795918367347,
+            "points": 49,
+            "counts": {
+              "44": 22
+            }
+          },
+          {
+            "region_id": 256,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.945054945054945,
+            "points": 91,
+            "counts": {
+              "5": 86
+            }
+          },
+          {
+            "region_id": 262,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.6024844720496895,
+            "points": 161,
+            "counts": {
+              "5": 97
+            }
+          },
+          {
+            "region_id": 265,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.9523809523809523,
+            "points": 42,
+            "counts": {
+              "5": 40
+            }
+          },
+          {
+            "region_id": 266,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 1.0,
+            "points": 59,
+            "counts": {
+              "15": 59
+            }
+          },
+          {
+            "region_id": 267,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.6148148148148148,
+            "points": 405,
+            "counts": {
+              "13": 155,
+              "15": 249
+            }
+          },
+          {
+            "region_id": 268,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 1.0,
+            "points": 74,
+            "counts": {
+              "15": 74
+            }
+          },
+          {
+            "region_id": 280,
+            "phase": "rescan",
+            "majority_id": 10,
+            "majority_fraction": 1.0,
+            "points": 101,
+            "counts": {
+              "10": 101
+            }
+          },
+          {
+            "region_id": 299,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.43137254901960786,
+            "points": 51,
+            "counts": {
+              "6": 22
+            }
+          },
+          {
+            "region_id": 302,
+            "phase": "rescan",
+            "majority_id": 7,
+            "majority_fraction": 0.7199281867145422,
+            "points": 557,
+            "counts": {
+              "7": 401
+            }
+          },
+          {
+            "region_id": 305,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.8378378378378378,
+            "points": 37,
+            "counts": {
+              "16": 31
+            }
+          },
+          {
+            "region_id": 306,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.5123456790123457,
+            "points": 162,
+            "counts": {
+              "16": 83,
+              "10": 1
+            }
+          },
+          {
+            "region_id": 307,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 60,
+            "counts": {}
+          },
+          {
+            "region_id": 308,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.2857142857142857,
+            "points": 826,
+            "counts": {
+              "16": 236,
+              "10": 9
+            }
+          },
+          {
+            "region_id": 310,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.9447852760736196,
+            "points": 163,
+            "counts": {
+              "16": 154,
+              "10": 9
+            }
+          }
+        ],
+        "local_ge100": [
+          {
+            "region_id": 0,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.16635773864689526,
+            "points": 2158,
+            "counts": {
+              "3": 359
+            }
+          },
+          {
+            "region_id": 4,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 344,
+            "counts": {}
+          },
+          {
+            "region_id": 13,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.9661538461538461,
+            "points": 650,
+            "counts": {
+              "4": 628,
+              "5": 15
+            }
+          },
+          {
+            "region_id": 14,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.8375,
+            "points": 240,
+            "counts": {
+              "5": 201
+            }
+          },
+          {
+            "region_id": 26,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9934102141680395,
+            "points": 607,
+            "counts": {
+              "38": 603
+            }
+          },
+          {
+            "region_id": 27,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.9183673469387755,
+            "points": 343,
+            "counts": {
+              "38": 315
+            }
+          },
+          {
+            "region_id": 36,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.2107843137254902,
+            "points": 204,
+            "counts": {
+              "38": 43
+            }
+          },
+          {
+            "region_id": 39,
+            "phase": "rescan",
+            "majority_id": 38,
+            "majority_fraction": 0.721830985915493,
+            "points": 568,
+            "counts": {
+              "38": 410
+            }
+          },
+          {
+            "region_id": 85,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.48172757475083056,
+            "points": 301,
+            "counts": {
+              "38": 145
+            }
+          },
+          {
+            "region_id": 112,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 418,
+            "counts": {}
+          },
+          {
+            "region_id": 117,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 0.9301310043668122,
+            "points": 916,
+            "counts": {
+              "6": 852
+            }
+          },
+          {
+            "region_id": 133,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.6623376623376623,
+            "points": 385,
+            "counts": {
+              "18": 255,
+              "22": 8,
+              "23": 110
+            }
+          },
+          {
+            "region_id": 134,
+            "phase": "rescan",
+            "majority_id": 45,
+            "majority_fraction": 0.9899665551839465,
+            "points": 598,
+            "counts": {
+              "45": 592
+            }
+          },
+          {
+            "region_id": 140,
+            "phase": "rescan",
+            "majority_id": 20,
+            "majority_fraction": 0.9859154929577465,
+            "points": 213,
+            "counts": {
+              "20": 210
+            }
+          },
+          {
+            "region_id": 162,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 1.0,
+            "points": 112,
+            "counts": {
+              "24": 112
+            }
+          },
+          {
+            "region_id": 192,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.5514018691588785,
+            "points": 107,
+            "counts": {
+              "18": 59,
+              "22": 44
+            }
+          },
+          {
+            "region_id": 201,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.958904109589041,
+            "points": 146,
+            "counts": {
+              "18": 140
+            }
+          },
+          {
+            "region_id": 215,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.524077868852459,
+            "points": 1952,
+            "counts": {
+              "10": 501,
+              "15": 1023,
+              "11": 327,
+              "12": 63
+            }
+          },
+          {
+            "region_id": 219,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 152,
+            "counts": {}
+          },
+          {
+            "region_id": 262,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.6024844720496895,
+            "points": 161,
+            "counts": {
+              "5": 97
+            }
+          },
+          {
+            "region_id": 267,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.6148148148148148,
+            "points": 405,
+            "counts": {
+              "13": 155,
+              "15": 249
+            }
+          },
+          {
+            "region_id": 280,
+            "phase": "rescan",
+            "majority_id": 10,
+            "majority_fraction": 1.0,
+            "points": 101,
+            "counts": {
+              "10": 101
+            }
+          },
+          {
+            "region_id": 302,
+            "phase": "rescan",
+            "majority_id": 7,
+            "majority_fraction": 0.7199281867145422,
+            "points": 557,
+            "counts": {
+              "7": 401
+            }
+          },
+          {
+            "region_id": 306,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.5123456790123457,
+            "points": 162,
+            "counts": {
+              "16": 83,
+              "10": 1
+            }
+          },
+          {
+            "region_id": 308,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.2857142857142857,
+            "points": 826,
+            "counts": {
+              "16": 236,
+              "10": 9
+            }
+          },
+          {
+            "region_id": 310,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.9447852760736196,
+            "points": 163,
+            "counts": {
+              "16": 154,
+              "10": 9
+            }
+          }
+        ]
+      },
+      "runtime": {
+        "original_seconds": 99.45180494431406,
+        "local_seconds": 4.685924497433007,
+        "main_loop_seconds": 292.78154858900234,
+        "sampled_frames": 315
+      },
+      "bank": {
+        "completed": true,
+        "evaluated_frames": 308,
+        "seconds": 4.685924497433007,
+        "cells": 38015,
+        "capacity_rejected_new_cells": 0,
+        "transitions": {
+          "confirmed": 19106,
+          "revoked": 1954
+        },
+        "skipped_frames": {
+          "widespread_depth_conflict": 7
+        },
+        "memory_array_bytes": 46000000,
+        "reference_boundary_snapshot": true,
+        "actual_deletions": 0,
+        "confirmed_cells": 17152,
+        "regions_ge20": 73,
+        "regions_ge100": 29
+      }
+    },
+    {
+      "seq": "pair_03_f62fd5f8_20c9939d",
+      "official_removed": [
+        12,
+        22,
+        35,
+        36,
+        45,
+        46,
+        100
+      ],
+      "verifiable_removed": [
+        12,
+        22,
+        35,
+        36,
+        45,
+        46
+      ],
+      "summaries": {
+        "original": {
+          "regions_or_candidates": 6,
+          "removed_hits": [
+            22,
+            35
+          ],
+          "removed_recall": 0.3333333333333333,
+          "any_changed_hits": [
+            9,
+            10,
+            11,
+            22,
+            35
+          ],
+          "no_change_annotation_ids": [
+            28
+          ],
+          "unknown_or_mixed": 0,
+          "majority_changed_regions": 5,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "22": {
+              "reference_gt_vertices": 585,
+              "evidence_points": 197,
+              "gt_vertices_within_5cm": 170,
+              "gt_vertex_coverage_5cm": 0.2905982905982906
+            },
+            "35": {
+              "reference_gt_vertices": 638,
+              "evidence_points": 333,
+              "gt_vertices_within_5cm": 404,
+              "gt_vertex_coverage_5cm": 0.6332288401253918
+            }
+          }
+        },
+        "local_ge20": {
+          "regions_or_candidates": 52,
+          "removed_hits": [
+            12,
+            22,
+            35,
+            45,
+            46
+          ],
+          "removed_recall": 0.8333333333333334,
+          "any_changed_hits": [
+            9,
+            10,
+            11,
+            12,
+            20,
+            22,
+            24,
+            32,
+            35,
+            45,
+            46
+          ],
+          "no_change_annotation_ids": [
+            8,
+            14,
+            15,
+            16,
+            17,
+            28,
+            40,
+            41,
+            43
+          ],
+          "unknown_or_mixed": 4,
+          "majority_changed_regions": 26,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "12": {
+              "reference_gt_vertices": 1338,
+              "evidence_points": 137,
+              "gt_vertices_within_5cm": 38,
+              "gt_vertex_coverage_5cm": 0.028400597907324365
+            },
+            "22": {
+              "reference_gt_vertices": 585,
+              "evidence_points": 287,
+              "gt_vertices_within_5cm": 169,
+              "gt_vertex_coverage_5cm": 0.28888888888888886
+            },
+            "35": {
+              "reference_gt_vertices": 638,
+              "evidence_points": 901,
+              "gt_vertices_within_5cm": 421,
+              "gt_vertex_coverage_5cm": 0.6598746081504702
+            },
+            "45": {
+              "reference_gt_vertices": 3781,
+              "evidence_points": 255,
+              "gt_vertices_within_5cm": 196,
+              "gt_vertex_coverage_5cm": 0.05183813805871462
+            },
+            "46": {
+              "reference_gt_vertices": 3692,
+              "evidence_points": 715,
+              "gt_vertices_within_5cm": 483,
+              "gt_vertex_coverage_5cm": 0.1308234019501625
+            }
+          }
+        },
+        "local_ge100": {
+          "regions_or_candidates": 19,
+          "removed_hits": [
+            12,
+            22,
+            35,
+            45,
+            46
+          ],
+          "removed_recall": 0.8333333333333334,
+          "any_changed_hits": [
+            9,
+            10,
+            11,
+            12,
+            22,
+            24,
+            32,
+            35,
+            45,
+            46
+          ],
+          "no_change_annotation_ids": [
+            8,
+            14,
+            15,
+            16,
+            28,
+            41,
+            43
+          ],
+          "unknown_or_mixed": 0,
+          "majority_changed_regions": 12,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "12": {
+              "reference_gt_vertices": 1338,
+              "evidence_points": 137,
+              "gt_vertices_within_5cm": 38,
+              "gt_vertex_coverage_5cm": 0.028400597907324365
+            },
+            "22": {
+              "reference_gt_vertices": 585,
+              "evidence_points": 173,
+              "gt_vertices_within_5cm": 79,
+              "gt_vertex_coverage_5cm": 0.13504273504273503
+            },
+            "35": {
+              "reference_gt_vertices": 638,
+              "evidence_points": 901,
+              "gt_vertices_within_5cm": 421,
+              "gt_vertex_coverage_5cm": 0.6598746081504702
+            },
+            "45": {
+              "reference_gt_vertices": 3781,
+              "evidence_points": 255,
+              "gt_vertices_within_5cm": 196,
+              "gt_vertex_coverage_5cm": 0.05183813805871462
+            },
+            "46": {
+              "reference_gt_vertices": 3692,
+              "evidence_points": 454,
+              "gt_vertices_within_5cm": 275,
+              "gt_vertex_coverage_5cm": 0.07448537378114843
+            }
+          }
+        }
+      },
+      "original_static_candidates": 0,
+      "local_static_alerts": {
+        "confirmed_cells": 90,
+        "regions_ge20": 1,
+        "regions_ge100": 0
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 1,
+            "phase": "rescan",
+            "majority_id": 28,
+            "majority_fraction": 0.99609375,
+            "points": 256,
+            "counts": {
+              "28": 255
+            }
+          },
+          {
+            "candidate_id": 5,
+            "phase": "rescan",
+            "majority_id": 35,
+            "majority_fraction": 0.8918918918918919,
+            "points": 333,
+            "counts": {
+              "35": 297
+            }
+          },
+          {
+            "candidate_id": 7,
+            "phase": "rescan",
+            "majority_id": 11,
+            "majority_fraction": 0.9759036144578314,
+            "points": 249,
+            "counts": {
+              "11": 243
+            }
+          },
+          {
+            "candidate_id": 9,
+            "phase": "rescan",
+            "majority_id": 9,
+            "majority_fraction": 0.6988847583643123,
+            "points": 269,
+            "counts": {
+              "9": 188,
+              "8": 58
+            }
+          },
+          {
+            "candidate_id": 10,
+            "phase": "rescan",
+            "majority_id": 10,
+            "majority_fraction": 0.7458100558659218,
+            "points": 358,
+            "counts": {
+              "10": 267,
+              "8": 71,
+              "11": 6
+            }
+          },
+          {
+            "candidate_id": 12,
+            "phase": "rescan",
+            "majority_id": 22,
+            "majority_fraction": 0.9593908629441624,
+            "points": 197,
+            "counts": {
+              "22": 189
+            }
+          }
+        ],
+        "local_ge20": [
+          {
+            "region_id": 0,
+            "phase": "rescan",
+            "majority_id": 14,
+            "majority_fraction": 0.9319727891156463,
+            "points": 147,
+            "counts": {
+              "14": 137,
+              "15": 1
+            }
+          },
+          {
+            "region_id": 2,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 0.8918918918918919,
+            "points": 111,
+            "counts": {
+              "24": 99
+            }
+          },
+          {
+            "region_id": 3,
+            "phase": "rescan",
+            "majority_id": 32,
+            "majority_fraction": 1.0,
+            "points": 31,
+            "counts": {
+              "32": 31
+            }
+          },
+          {
+            "region_id": 4,
+            "phase": "rescan",
+            "majority_id": 32,
+            "majority_fraction": 0.9197860962566845,
+            "points": 187,
+            "counts": {
+              "32": 172
+            }
+          },
+          {
+            "region_id": 5,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 0.9835728952772074,
+            "points": 487,
+            "counts": {
+              "24": 479
+            }
+          },
+          {
+            "region_id": 24,
+            "phase": "rescan",
+            "majority_id": 22,
+            "majority_fraction": 1.0,
+            "points": 22,
+            "counts": {
+              "22": 22
+            }
+          },
+          {
+            "region_id": 25,
+            "phase": "rescan",
+            "majority_id": 22,
+            "majority_fraction": 0.9838709677419355,
+            "points": 62,
+            "counts": {
+              "22": 61
+            }
+          },
+          {
+            "region_id": 30,
+            "phase": "rescan",
+            "majority_id": 35,
+            "majority_fraction": 0.9145394006659268,
+            "points": 901,
+            "counts": {
+              "35": 824
+            }
+          },
+          {
+            "region_id": 31,
+            "phase": "rescan",
+            "majority_id": 22,
+            "majority_fraction": 0.8666666666666667,
+            "points": 30,
+            "counts": {
+              "22": 26
+            }
+          },
+          {
+            "region_id": 33,
+            "phase": "rescan",
+            "majority_id": 22,
+            "majority_fraction": 0.9017341040462428,
+            "points": 173,
+            "counts": {
+              "22": 156
+            }
+          },
+          {
+            "region_id": 35,
+            "phase": "rescan",
+            "majority_id": 11,
+            "majority_fraction": 0.9048006509357202,
+            "points": 1229,
+            "counts": {
+              "11": 1112,
+              "8": 15
+            }
+          },
+          {
+            "region_id": 36,
+            "phase": "rescan",
+            "majority_id": 10,
+            "majority_fraction": 0.9475,
+            "points": 400,
+            "counts": {
+              "10": 379
+            }
+          },
+          {
+            "region_id": 45,
+            "phase": "rescan",
+            "majority_id": 43,
+            "majority_fraction": 0.9629629629629629,
+            "points": 243,
+            "counts": {
+              "43": 234
+            }
+          },
+          {
+            "region_id": 48,
+            "phase": "rescan",
+            "majority_id": 11,
+            "majority_fraction": 0.7407407407407407,
+            "points": 54,
+            "counts": {
+              "8": 11,
+              "11": 40
+            }
+          },
+          {
+            "region_id": 51,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.9761904761904762,
+            "points": 42,
+            "counts": {
+              "8": 41
+            }
+          },
+          {
+            "region_id": 52,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.921875,
+            "points": 64,
+            "counts": {
+              "8": 59
+            }
+          },
+          {
+            "region_id": 54,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.8716577540106952,
+            "points": 187,
+            "counts": {
+              "8": 163
+            }
+          },
+          {
+            "region_id": 57,
+            "phase": "rescan",
+            "majority_id": 11,
+            "majority_fraction": 0.9142857142857143,
+            "points": 35,
+            "counts": {
+              "11": 32,
+              "10": 3
+            }
+          },
+          {
+            "region_id": 59,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.7659574468085106,
+            "points": 47,
+            "counts": {
+              "8": 36,
+              "9": 5
+            }
+          },
+          {
+            "region_id": 61,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.8043478260869565,
+            "points": 46,
+            "counts": {
+              "8": 37,
+              "9": 2
+            }
+          },
+          {
+            "region_id": 65,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.6216216216216216,
+            "points": 37,
+            "counts": {
+              "8": 23
+            }
+          },
+          {
+            "region_id": 66,
+            "phase": "rescan",
+            "majority_id": 9,
+            "majority_fraction": 0.8978102189781022,
+            "points": 137,
+            "counts": {
+              "8": 3,
+              "9": 123
+            }
+          },
+          {
+            "region_id": 67,
+            "phase": "rescan",
+            "majority_id": 9,
+            "majority_fraction": 0.967741935483871,
+            "points": 31,
+            "counts": {
+              "9": 30
+            }
+          },
+          {
+            "region_id": 68,
+            "phase": "rescan",
+            "majority_id": 11,
+            "majority_fraction": 0.5945945945945946,
+            "points": 37,
+            "counts": {
+              "11": 22,
+              "10": 6
+            }
+          },
+          {
+            "region_id": 74,
+            "phase": "rescan",
+            "majority_id": 12,
+            "majority_fraction": 0.9854014598540146,
+            "points": 137,
+            "counts": {
+              "12": 135
+            }
+          },
+          {
+            "region_id": 80,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.9743589743589743,
+            "points": 39,
+            "counts": {
+              "8": 38
+            }
+          },
+          {
+            "region_id": 81,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.17777777777777778,
+            "points": 45,
+            "counts": {
+              "8": 8
+            }
+          },
+          {
+            "region_id": 88,
+            "phase": "rescan",
+            "majority_id": 20,
+            "majority_fraction": 0.7272727272727273,
+            "points": 22,
+            "counts": {
+              "20": 16
+            }
+          },
+          {
+            "region_id": 91,
+            "phase": "rescan",
+            "majority_id": 17,
+            "majority_fraction": 0.8648648648648649,
+            "points": 37,
+            "counts": {
+              "17": 32,
+              "19": 4
+            }
+          },
+          {
+            "region_id": 93,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 21,
+            "counts": {}
+          },
+          {
+            "region_id": 108,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 1.0,
+            "points": 54,
+            "counts": {
+              "15": 54
+            }
+          },
+          {
+            "region_id": 109,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.9814814814814815,
+            "points": 108,
+            "counts": {
+              "15": 106
+            }
+          },
+          {
+            "region_id": 110,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.9642857142857143,
+            "points": 56,
+            "counts": {
+              "15": 54
+            }
+          },
+          {
+            "region_id": 121,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.5454545454545454,
+            "points": 44,
+            "counts": {
+              "16": 24,
+              "14": 17
+            }
+          },
+          {
+            "region_id": 124,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 1.0,
+            "points": 23,
+            "counts": {
+              "16": 23
+            }
+          },
+          {
+            "region_id": 127,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.7027027027027027,
+            "points": 37,
+            "counts": {
+              "16": 26
+            }
+          },
+          {
+            "region_id": 129,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.8174603174603174,
+            "points": 126,
+            "counts": {
+              "16": 103
+            }
+          },
+          {
+            "region_id": 142,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 1.0,
+            "points": 32,
+            "counts": {
+              "16": 32
+            }
+          },
+          {
+            "region_id": 156,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 32,
+            "counts": {}
+          },
+          {
+            "region_id": 158,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 0.9962264150943396,
+            "points": 265,
+            "counts": {
+              "46": 264
+            }
+          },
+          {
+            "region_id": 159,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 0.9696969696969697,
+            "points": 33,
+            "counts": {
+              "46": 32
+            }
+          },
+          {
+            "region_id": 160,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 0.8,
+            "points": 65,
+            "counts": {
+              "46": 52
+            }
+          },
+          {
+            "region_id": 161,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 0.9470899470899471,
+            "points": 189,
+            "counts": {
+              "46": 179
+            }
+          },
+          {
+            "region_id": 163,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 1.0,
+            "points": 82,
+            "counts": {
+              "46": 82
+            }
+          },
+          {
+            "region_id": 164,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 1.0,
+            "points": 50,
+            "counts": {
+              "46": 50
+            }
+          },
+          {
+            "region_id": 174,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 1.0,
+            "points": 31,
+            "counts": {
+              "46": 31
+            }
+          },
+          {
+            "region_id": 175,
+            "phase": "rescan",
+            "majority_id": 41,
+            "majority_fraction": 0.7245508982035929,
+            "points": 167,
+            "counts": {
+              "41": 121,
+              "40": 46
+            }
+          },
+          {
+            "region_id": 177,
+            "phase": "rescan",
+            "majority_id": 40,
+            "majority_fraction": 1.0,
+            "points": 21,
+            "counts": {
+              "40": 21
+            }
+          },
+          {
+            "region_id": 178,
+            "phase": "rescan",
+            "majority_id": 40,
+            "majority_fraction": 1.0,
+            "points": 49,
+            "counts": {
+              "40": 49
+            }
+          },
+          {
+            "region_id": 180,
+            "phase": "rescan",
+            "majority_id": 45,
+            "majority_fraction": 0.8705882352941177,
+            "points": 255,
+            "counts": {
+              "45": 222
+            }
+          },
+          {
+            "region_id": 181,
+            "phase": "rescan",
+            "majority_id": 28,
+            "majority_fraction": 0.9963503649635036,
+            "points": 274,
+            "counts": {
+              "28": 273
+            }
+          },
+          {
+            "region_id": 182,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.03333333333333333,
+            "points": 30,
+            "counts": {
+              "45": 1
+            }
+          }
+        ],
+        "local_ge100": [
+          {
+            "region_id": 0,
+            "phase": "rescan",
+            "majority_id": 14,
+            "majority_fraction": 0.9319727891156463,
+            "points": 147,
+            "counts": {
+              "14": 137,
+              "15": 1
+            }
+          },
+          {
+            "region_id": 2,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 0.8918918918918919,
+            "points": 111,
+            "counts": {
+              "24": 99
+            }
+          },
+          {
+            "region_id": 4,
+            "phase": "rescan",
+            "majority_id": 32,
+            "majority_fraction": 0.9197860962566845,
+            "points": 187,
+            "counts": {
+              "32": 172
+            }
+          },
+          {
+            "region_id": 5,
+            "phase": "rescan",
+            "majority_id": 24,
+            "majority_fraction": 0.9835728952772074,
+            "points": 487,
+            "counts": {
+              "24": 479
+            }
+          },
+          {
+            "region_id": 30,
+            "phase": "rescan",
+            "majority_id": 35,
+            "majority_fraction": 0.9145394006659268,
+            "points": 901,
+            "counts": {
+              "35": 824
+            }
+          },
+          {
+            "region_id": 33,
+            "phase": "rescan",
+            "majority_id": 22,
+            "majority_fraction": 0.9017341040462428,
+            "points": 173,
+            "counts": {
+              "22": 156
+            }
+          },
+          {
+            "region_id": 35,
+            "phase": "rescan",
+            "majority_id": 11,
+            "majority_fraction": 0.9048006509357202,
+            "points": 1229,
+            "counts": {
+              "11": 1112,
+              "8": 15
+            }
+          },
+          {
+            "region_id": 36,
+            "phase": "rescan",
+            "majority_id": 10,
+            "majority_fraction": 0.9475,
+            "points": 400,
+            "counts": {
+              "10": 379
+            }
+          },
+          {
+            "region_id": 45,
+            "phase": "rescan",
+            "majority_id": 43,
+            "majority_fraction": 0.9629629629629629,
+            "points": 243,
+            "counts": {
+              "43": 234
+            }
+          },
+          {
+            "region_id": 54,
+            "phase": "rescan",
+            "majority_id": 8,
+            "majority_fraction": 0.8716577540106952,
+            "points": 187,
+            "counts": {
+              "8": 163
+            }
+          },
+          {
+            "region_id": 66,
+            "phase": "rescan",
+            "majority_id": 9,
+            "majority_fraction": 0.8978102189781022,
+            "points": 137,
+            "counts": {
+              "8": 3,
+              "9": 123
+            }
+          },
+          {
+            "region_id": 74,
+            "phase": "rescan",
+            "majority_id": 12,
+            "majority_fraction": 0.9854014598540146,
+            "points": 137,
+            "counts": {
+              "12": 135
+            }
+          },
+          {
+            "region_id": 109,
+            "phase": "rescan",
+            "majority_id": 15,
+            "majority_fraction": 0.9814814814814815,
+            "points": 108,
+            "counts": {
+              "15": 106
+            }
+          },
+          {
+            "region_id": 129,
+            "phase": "rescan",
+            "majority_id": 16,
+            "majority_fraction": 0.8174603174603174,
+            "points": 126,
+            "counts": {
+              "16": 103
+            }
+          },
+          {
+            "region_id": 158,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 0.9962264150943396,
+            "points": 265,
+            "counts": {
+              "46": 264
+            }
+          },
+          {
+            "region_id": 161,
+            "phase": "rescan",
+            "majority_id": 46,
+            "majority_fraction": 0.9470899470899471,
+            "points": 189,
+            "counts": {
+              "46": 179
+            }
+          },
+          {
+            "region_id": 175,
+            "phase": "rescan",
+            "majority_id": 41,
+            "majority_fraction": 0.7245508982035929,
+            "points": 167,
+            "counts": {
+              "41": 121,
+              "40": 46
+            }
+          },
+          {
+            "region_id": 180,
+            "phase": "rescan",
+            "majority_id": 45,
+            "majority_fraction": 0.8705882352941177,
+            "points": 255,
+            "counts": {
+              "45": 222
+            }
+          },
+          {
+            "region_id": 181,
+            "phase": "rescan",
+            "majority_id": 28,
+            "majority_fraction": 0.9963503649635036,
+            "points": 274,
+            "counts": {
+              "28": 273
+            }
+          }
+        ]
+      },
+      "runtime": {
+        "original_seconds": 78.02135512512177,
+        "local_seconds": 4.290519875474274,
+        "main_loop_seconds": 233.00032661110163,
+        "sampled_frames": 292
+      },
+      "bank": {
+        "completed": true,
+        "evaluated_frames": 291,
+        "seconds": 4.290519875474274,
+        "cells": 16858,
+        "capacity_rejected_new_cells": 0,
+        "transitions": {
+          "confirmed": 7823,
+          "revoked": 26
+        },
+        "skipped_frames": {
+          "widespread_depth_conflict": 1
+        },
+        "memory_array_bytes": 46000000,
+        "reference_boundary_snapshot": true,
+        "actual_deletions": 0,
+        "confirmed_cells": 7797,
+        "regions_ge20": 53,
+        "regions_ge100": 19
+      }
+    },
+    {
+      "seq": "pair_04_752cc595_55551083",
+      "official_removed": [
+        7,
+        19,
+        29,
+        35,
+        36
+      ],
+      "verifiable_removed": [
+        7,
+        19,
+        29,
+        35,
+        36
+      ],
+      "summaries": {
+        "original": {
+          "regions_or_candidates": 5,
+          "removed_hits": [
+            29
+          ],
+          "removed_recall": 0.2,
+          "any_changed_hits": [
+            4,
+            5,
+            17,
+            29,
+            40
+          ],
+          "no_change_annotation_ids": [],
+          "unknown_or_mixed": 0,
+          "majority_changed_regions": 5,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "29": {
+              "reference_gt_vertices": 987,
+              "evidence_points": 199,
+              "gt_vertices_within_5cm": 100,
+              "gt_vertex_coverage_5cm": 0.10131712259371833
+            }
+          }
+        },
+        "local_ge20": {
+          "regions_or_candidates": 22,
+          "removed_hits": [
+            29,
+            35,
+            36
+          ],
+          "removed_recall": 0.6,
+          "any_changed_hits": [
+            4,
+            5,
+            6,
+            17,
+            18,
+            20,
+            29,
+            30,
+            35,
+            36,
+            40
+          ],
+          "no_change_annotation_ids": [
+            13,
+            26
+          ],
+          "unknown_or_mixed": 3,
+          "majority_changed_regions": 17,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "29": {
+              "reference_gt_vertices": 987,
+              "evidence_points": 191,
+              "gt_vertices_within_5cm": 62,
+              "gt_vertex_coverage_5cm": 0.06281661600810537
+            },
+            "35": {
+              "reference_gt_vertices": 948,
+              "evidence_points": 54,
+              "gt_vertices_within_5cm": 122,
+              "gt_vertex_coverage_5cm": 0.12869198312236288
+            },
+            "36": {
+              "reference_gt_vertices": 491,
+              "evidence_points": 40,
+              "gt_vertices_within_5cm": 41,
+              "gt_vertex_coverage_5cm": 0.0835030549898167
+            }
+          }
+        },
+        "local_ge100": {
+          "regions_or_candidates": 8,
+          "removed_hits": [
+            29
+          ],
+          "removed_recall": 0.2,
+          "any_changed_hits": [
+            4,
+            6,
+            17,
+            18,
+            29,
+            40
+          ],
+          "no_change_annotation_ids": [],
+          "unknown_or_mixed": 2,
+          "majority_changed_regions": 6,
+          "reference_confirmed_candidates": 0,
+          "removed_gt_evidence_coverage": {
+            "29": {
+              "reference_gt_vertices": 987,
+              "evidence_points": 191,
+              "gt_vertices_within_5cm": 62,
+              "gt_vertex_coverage_5cm": 0.06281661600810537
+            }
+          }
+        }
+      },
+      "original_static_candidates": 0,
+      "local_static_alerts": {
+        "confirmed_cells": 214,
+        "regions_ge20": 1,
+        "regions_ge100": 1
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 4,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.9857142857142858,
+            "points": 560,
+            "counts": {
+              "4": 552
+            }
+          },
+          {
+            "candidate_id": 6,
+            "phase": "rescan",
+            "majority_id": 40,
+            "majority_fraction": 0.9919028340080972,
+            "points": 247,
+            "counts": {
+              "40": 245
+            }
+          },
+          {
+            "candidate_id": 7,
+            "phase": "rescan",
+            "majority_id": 29,
+            "majority_fraction": 0.9547738693467337,
+            "points": 199,
+            "counts": {
+              "29": 190
+            }
+          },
+          {
+            "candidate_id": 9,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.9465648854961832,
+            "points": 393,
+            "counts": {
+              "4": 10,
+              "5": 372
+            }
+          },
+          {
+            "candidate_id": 12,
+            "phase": "rescan",
+            "majority_id": 17,
+            "majority_fraction": 0.9855072463768116,
+            "points": 345,
+            "counts": {
+              "17": 340
+            }
+          }
+        ],
+        "local_ge20": [
+          {
+            "region_id": 2,
+            "phase": "rescan",
+            "majority_id": 26,
+            "majority_fraction": 0.9565217391304348,
+            "points": 46,
+            "counts": {
+              "26": 44
+            }
+          },
+          {
+            "region_id": 3,
+            "phase": "rescan",
+            "majority_id": 17,
+            "majority_fraction": 0.962882096069869,
+            "points": 458,
+            "counts": {
+              "17": 441
+            }
+          },
+          {
+            "region_id": 4,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.7520510483135825,
+            "points": 3291,
+            "counts": {
+              "4": 2475,
+              "5": 675
+            }
+          },
+          {
+            "region_id": 12,
+            "phase": "rescan",
+            "majority_id": 5,
+            "majority_fraction": 0.967741935483871,
+            "points": 31,
+            "counts": {
+              "5": 30
+            }
+          },
+          {
+            "region_id": 13,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 35,
+            "counts": {}
+          },
+          {
+            "region_id": 16,
+            "phase": "rescan",
+            "majority_id": 29,
+            "majority_fraction": 0.9424083769633508,
+            "points": 191,
+            "counts": {
+              "29": 180
+            }
+          },
+          {
+            "region_id": 36,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.9863325740318907,
+            "points": 878,
+            "counts": {
+              "18": 866
+            }
+          },
+          {
+            "region_id": 39,
+            "phase": "rescan",
+            "majority_id": 17,
+            "majority_fraction": 1.0,
+            "points": 20,
+            "counts": {
+              "17": 20
+            }
+          },
+          {
+            "region_id": 51,
+            "phase": "rescan",
+            "majority_id": 35,
+            "majority_fraction": 0.6111111111111112,
+            "points": 54,
+            "counts": {
+              "35": 33,
+              "16": 2
+            }
+          },
+          {
+            "region_id": 57,
+            "phase": "rescan",
+            "majority_id": 13,
+            "majority_fraction": 0.9782608695652174,
+            "points": 46,
+            "counts": {
+              "13": 45,
+              "12": 1
+            }
+          },
+          {
+            "region_id": 58,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.20125786163522014,
+            "points": 159,
+            "counts": {
+              "16": 32,
+              "20": 26
+            }
+          },
+          {
+            "region_id": 63,
+            "phase": "rescan",
+            "majority_id": 20,
+            "majority_fraction": 1.0,
+            "points": 40,
+            "counts": {
+              "20": 40
+            }
+          },
+          {
+            "region_id": 72,
+            "phase": "rescan",
+            "majority_id": 20,
+            "majority_fraction": 1.0,
+            "points": 72,
+            "counts": {
+              "20": 72
+            }
+          },
+          {
+            "region_id": 79,
+            "phase": "rescan",
+            "majority_id": 36,
+            "majority_fraction": 1.0,
+            "points": 40,
+            "counts": {
+              "36": 40
+            }
+          },
+          {
+            "region_id": 93,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 191,
+            "counts": {}
+          },
+          {
+            "region_id": 132,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 0.9473684210526315,
+            "points": 57,
+            "counts": {
+              "6": 54
+            }
+          },
+          {
+            "region_id": 140,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 0.8878504672897196,
+            "points": 107,
+            "counts": {
+              "6": 95
+            }
+          },
+          {
+            "region_id": 141,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 0.75,
+            "points": 32,
+            "counts": {
+              "41": 8,
+              "6": 24
+            }
+          },
+          {
+            "region_id": 144,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 1.0,
+            "points": 27,
+            "counts": {
+              "6": 27
+            }
+          },
+          {
+            "region_id": 146,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 0.9117647058823529,
+            "points": 34,
+            "counts": {
+              "6": 31
+            }
+          },
+          {
+            "region_id": 169,
+            "phase": "rescan",
+            "majority_id": 40,
+            "majority_fraction": 0.9928571428571429,
+            "points": 280,
+            "counts": {
+              "40": 278
+            }
+          },
+          {
+            "region_id": 181,
+            "phase": "rescan",
+            "majority_id": 30,
+            "majority_fraction": 1.0,
+            "points": 45,
+            "counts": {
+              "30": 45
+            }
+          }
+        ],
+        "local_ge100": [
+          {
+            "region_id": 3,
+            "phase": "rescan",
+            "majority_id": 17,
+            "majority_fraction": 0.962882096069869,
+            "points": 458,
+            "counts": {
+              "17": 441
+            }
+          },
+          {
+            "region_id": 4,
+            "phase": "rescan",
+            "majority_id": 4,
+            "majority_fraction": 0.7520510483135825,
+            "points": 3291,
+            "counts": {
+              "4": 2475,
+              "5": 675
+            }
+          },
+          {
+            "region_id": 16,
+            "phase": "rescan",
+            "majority_id": 29,
+            "majority_fraction": 0.9424083769633508,
+            "points": 191,
+            "counts": {
+              "29": 180
+            }
+          },
+          {
+            "region_id": 36,
+            "phase": "rescan",
+            "majority_id": 18,
+            "majority_fraction": 0.9863325740318907,
+            "points": 878,
+            "counts": {
+              "18": 866
+            }
+          },
+          {
+            "region_id": 58,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.20125786163522014,
+            "points": 159,
+            "counts": {
+              "16": 32,
+              "20": 26
+            }
+          },
+          {
+            "region_id": 93,
+            "phase": "rescan",
+            "majority_id": null,
+            "majority_fraction": 0.0,
+            "points": 191,
+            "counts": {}
+          },
+          {
+            "region_id": 140,
+            "phase": "rescan",
+            "majority_id": 6,
+            "majority_fraction": 0.8878504672897196,
+            "points": 107,
+            "counts": {
+              "6": 95
+            }
+          },
+          {
+            "region_id": 169,
+            "phase": "rescan",
+            "majority_id": 40,
+            "majority_fraction": 0.9928571428571429,
+            "points": 280,
+            "counts": {
+              "40": 278
+            }
+          }
+        ]
+      },
+      "runtime": {
+        "original_seconds": 81.82270351750776,
+        "local_seconds": 4.548489450011402,
+        "main_loop_seconds": 225.46605678088963,
+        "sampled_frames": 293
+      },
+      "bank": {
+        "completed": true,
+        "evaluated_frames": 293,
+        "seconds": 4.548489450011402,
+        "cells": 18259,
+        "capacity_rejected_new_cells": 0,
+        "transitions": {
+          "confirmed": 7173,
+          "revoked": 62
+        },
+        "skipped_frames": {},
+        "memory_array_bytes": 46000000,
+        "reference_boundary_snapshot": true,
+        "actual_deletions": 0,
+        "confirmed_cells": 7111,
+        "regions_ge20": 23,
+        "regions_ge100": 8
+      }
+    }
+  ]
+}
