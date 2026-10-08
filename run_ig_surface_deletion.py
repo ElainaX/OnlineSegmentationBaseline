@@ -26,6 +26,8 @@ p.add_argument('--detection-config',default='config/ig_readonly_onlineSeg.yaml')
 p.add_argument('--verify-readonly',action='store_true')
 p.add_argument('--detector-schedule-json')
 p.add_argument('--verify-erasure',action='store_true')
+p.add_argument('--whole-instance',choices=['off','audit','on'],default='off')
+p.add_argument('--instance-retirement-config',help='Optional JSON of RetirementOptions; saved in metadata')
 p.add_argument('--smoke-stop',type=int,default=0)
 a=p.parse_args()
 out=Path(a.output_dir)/a.seq_name; out.mkdir(parents=True,exist_ok=True)
@@ -54,6 +56,14 @@ assert not hasattr(geometry,'maskGraph')
 detector=IGSurfaceDetector(owner,cfg,out/'surface_detection') if a.detection=='on' else None
 if a.deletion=='on' and not detector: raise ValueError('Deletion requires detection')
 controller=IGSurfaceDeletion(owner,detector,out/'surface_deletion',options=DeletionOptions(verify_state=a.verify_erasure),enabled=a.deletion=='on') if detector else None
+whole=None
+if a.whole_instance!='off':
+    from submap_disjoint.instance_retirement import IGInstanceRetirement, RetirementOptions
+    if detector is None: raise ValueError('Whole-instance retirement requires detection')
+    if a.whole_instance=='on' and a.deletion!='on': raise ValueError('Hybrid whole-instance mode requires local deletion on')
+    whole_options=json.loads(Path(a.instance_retirement_config).read_text()) if a.instance_retirement_config else {}
+    whole_options['verify_state']=a.verify_erasure
+    whole=IGInstanceRetirement(owner,detector,out/'instance_retirement',RetirementOptions(**whole_options),enabled=a.whole_instance=='on')
 run_metadata=dict(method='IG-Submap-v1',merge_selection=a.merge_selection,config=cfg,
     baseline_config_path=a.config,baseline_config_sha256=hashlib.sha256(Path(a.config).read_bytes()).hexdigest(),
     mapping_frame_interval=cfg['mapping']['keyframe_freq'],segmentation_frame_interval=cfg['seg']['seg_add_interval'],
@@ -73,6 +83,7 @@ if boundary.exists():
     b=json.loads(boundary.read_text()); cut=b['rescan_start_frame']
     run_metadata.update(reference_sampled_frames=sum(i<cut for i in selected),rescan_sampled_frames=sum(i>=cut for i in selected))
 run_metadata.update(detection_mode=a.detection,deletion_enabled=a.deletion=='on',smoke_stop=a.smoke_stop,
+    whole_instance_mode=a.whole_instance,
     detection_config_path=a.detection_config,
     detector_provenance={'surface_bank_sha256':hashlib.sha256(Path('submap_disjoint/surface_bank.py').read_bytes()).hexdigest(),'implementation':'strict surface bank; original confirmation unchanged'},
     detection_input_shape=[cfg['cam']['img_h'],cfg['cam']['img_w']],
@@ -96,6 +107,7 @@ for frame_id,(rgb,depth,pose,seg,features,flag) in tqdm(enumerate(DataLoader(dat
     if detector and frame_id in detector_set:
         with torch.no_grad():
             if detector.step(frame_id,rgb[0],depth[0],pose[0],valid_pose):
+                if whole: whole.step(frame_id,depth[0],pose[0])
                 controller.step(frame_id,depth[0],pose[0])
     if frame_id % cfg['mapping']['keyframe_freq']==0:
         with torch.no_grad():
@@ -109,6 +121,7 @@ torch.cuda.synchronize(); loop_seconds=time.perf_counter()-loop_start
 owner.save_outputs(last_frame,str(out))
 detector_report=detector.finalize() if detector else None
 deletion_report=controller.save() if controller else None
+whole_report=whole.save() if whole else None
 torch.cuda.synchronize()
 assert all(x['frame']%owner.merge_frame_interval==0 for x in trace),'unexpected off-schedule merge'
 run_metadata.update(status='smoke_complete' if a.smoke_stop else 'complete',last_processed_frame=last_frame,integrated_frames=integrated,segmented_frames=observed,
@@ -117,6 +130,7 @@ run_metadata.update(status='smoke_complete' if a.smoke_stop else 'complete',last
                     torch_peak_reserved_bytes=torch.cuda.max_memory_reserved(),
                     merge_audit=owner.migration_audit,export_points=len(owner.points),
                     surface_detection_seconds=detector.seconds if detector else 0.,
+                    instance_retirement_summary=whole_report,
                     deletion_summary=deletion_report)
 (out/'run_metadata.json').write_text(json.dumps(run_metadata,indent=2))
 (out/'merge_trace.json').write_text(json.dumps(trace,indent=2))
