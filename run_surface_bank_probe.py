@@ -11,6 +11,7 @@ from submap_disjoint.detection_alignment import refine_detection_pose
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--output-dir',required=True)
+parser.add_argument('--schedule-json',help='Optional precomputed seq -> selected frame IDs; no GT is passed to detection')
 parser.add_argument('--require-color',action='store_true')
 parser.add_argument('--view-gate',choices=['camera','ray'],default='camera')
 parser.add_argument('--refine-pose',action='store_true')
@@ -20,6 +21,7 @@ args=parser.parse_args()
 OUT=Path(args.output_dir);OUT.mkdir(exist_ok=False)
 source=Path('/root/autodl-tmp/output/ig_fixed_candidates_20261008')
 schedules={r['seq']:r for r in json.loads(Path('/root/autodl-tmp/output/ig_correction_20261008/sources.json').read_text())}
+override=json.loads(Path(args.schedule_json).read_text()) if args.schedule_json else None
 scenes=[]
 for run in json.loads((source/'selected_results.json').read_text()):
     seq=run['seq'];cmd=run['command'];target=OUT/seq;target.mkdir()
@@ -29,7 +31,10 @@ for run in json.loads((source/'selected_results.json').read_text()):
     cam=config['pipeline_config']['cam'];assert cam['h_crop']==cam['w_crop']==0
     k=np.loadtxt(data/'intrinsic/intrinsic_depth.txt')[:3,:3].astype(np.float32)
     bank=SurfaceBank(config['pipeline_config']['scene']['voxel_size'],cfg,require_color=args.require_color,view_gate=args.view_gate,surface_support=args.surface_support,strict_history_support=args.strict_history_support)
-    selected=schedules[seq]['sampling']['selected_frame_ids'];frames=[];start=time.perf_counter();poses=[];original_poses=[]
+    selected=(override[seq] if override is not None else schedules[seq]['sampling']['selected_frame_ids'])
+    if not selected or any(type(f) is not int or f<0 for f in selected) or selected!=sorted(set(selected)):
+        raise ValueError('Frame schedule must be nonempty, unique, increasing nonnegative integer IDs')
+    frames=[];start=time.perf_counter();poses=[];original_poses=[]
     for j,f in enumerate(selected):
         raw=cv2.imread(str(data/'depth'/f'{f}.png'),cv2.IMREAD_UNCHANGED)
         if raw is None:raise FileNotFoundError(data/'depth'/f'{f}.png')
@@ -70,7 +75,7 @@ for run in json.loads((source/'selected_results.json').read_text()):
         cfg=cfg,seed_stride=bank.seed_stride,require_color=args.require_color,view_gate=args.view_gate,refine_pose=args.refine_pose,surface_support=args.surface_support,strict_history_support=args.strict_history_support,wall_seconds=time.perf_counter()-start,
         array_memory_bytes=sum(a.nbytes for a in arrays.values()),GT_used=False,actual_deletions=0,
         scope='experimental raw-depth local change proposals; not whole-instance deletion',
-        source_config=str(cfg_file))
+        source_config=str(cfg_file),schedule_override=args.schedule_json)
     (target/'summary.json').write_text(json.dumps(report,indent=2))
     scenes.append({k:report[k] for k in ['seq','wall_seconds','array_memory_bytes','voxel_size']})
     print(seq,'done',report['wall_seconds'],'active',int(bank.active.sum()),flush=True)
