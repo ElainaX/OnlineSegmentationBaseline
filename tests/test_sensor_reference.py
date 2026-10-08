@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from submap_disjoint.sensor_reference import sensor_projection, PointViewVotes
+from submap_disjoint.sensor_reference import sensor_projection, PointViewVotes, SurfaceMemory
 
 CFG=dict(depth_epsilon_m=.08,depth_relative_epsilon=.01,
          min_observation_gap=5,min_translation_m=.02,min_rotation_deg=3.)
@@ -27,6 +27,33 @@ class TestSensorReference(unittest.TestCase):
         p.observe(10,pose,np.array([1,3,0]),CFG)
         np.testing.assert_array_equal(p.support,[1,0,0])
         self.assertEqual(p.conflict.sum(),0)
+
+    def test_small_patch_repeats_confirm_but_other_part_support_does_not_clear_it(self):
+        cfg=dict(CFG,confirm_observations=2,min_contradicted_fraction=.2,min_cumulative_tested_fraction=.12)
+        m=SurfaceMemory(200);pose=np.eye(4)
+        code=np.zeros(200,np.uint8);code[:40]=2
+        m.observe(0,pose,code,cfg)
+        self.assertEqual(m.state,'suspected')
+        pose=pose.copy();pose[0,3]=.03
+        m.observe(5,pose,code,cfg)
+        self.assertEqual(m.state,'would_remove')
+        code[:40]=0;code[100:]=1;pose[0,3]=.06
+        m.observe(10,pose,code,cfg)
+        self.assertEqual(m.state,'would_remove')
+        code[:40]=1;pose[0,3]=.09
+        m.observe(15,pose,code,cfg)
+        self.assertEqual(m.state,'suspected')
+        self.assertIsNone(m.confirmed_frame)
+
+    def test_disjoint_one_time_conflicts_cannot_create_stable_surface(self):
+        cfg=dict(CFG,confirm_observations=2,min_contradicted_fraction=.2,min_cumulative_tested_fraction=.12)
+        m=SurfaceMemory(200)
+        for f,section in [(0,slice(0,100)),(5,slice(100,200))]:
+            pose=np.eye(4);pose[0,3]=f*.01
+            code=np.zeros(200,np.uint8);code[section]=2
+            m.observe(f,pose,code,cfg)
+        self.assertEqual(m.stable.sum(),0)
+        self.assertEqual(m.state,'suspected')
 
 
 if __name__=='__main__':unittest.main()
