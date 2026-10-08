@@ -1,4 +1,4 @@
-"""IG-Submap with baseline-matched schedule; only merge selection differs."""
+"""Existing IG schedule with optional, faithful onlineSeg read-only diagnostics."""
 import argparse, json, os, sys, time, random, subprocess, hashlib
 from pathlib import Path
 import numpy as np

@@ -1,0 +1,247 @@
+[
+  {
+    "seq": "pair_01_0cac767c_19f1a892",
+    "status": "complete",
+    "artifact_directory": "/root/autodl-tmp/output/ig_readonly_20261008/full/pair_01_0cac767c_19f1a892",
+    "attempt_history": [
+      {
+        "status": "complete",
+        "directory": "/root/autodl-tmp/output/ig_readonly_20261008/full/pair_01_0cac767c_19f1a892",
+        "error": null,
+        "gpu": 4
+      }
+    ],
+    "interval": 2,
+    "voxel_mm": 25.0,
+    "selected_frames": 267,
+    "evaluated_frames": 247,
+    "skipped_frames": {
+      "empty_history": 1,
+      "insufficient_historical_render": 19
+    },
+    "candidates": 6,
+    "would_remove": 2,
+    "cancelled": 1,
+    "suspected": 3,
+    "diagnostic_seconds": 48.912753771524876,
+    "main_loop_seconds": 157.21082585304976,
+    "source_counts": {
+      "depth_and_rgb": 1,
+      "depth_only": 1
+    },
+    "by_phase": {
+      "reference": {
+        "evaluated_frames": 65
+      },
+      "rescan": {
+        "evaluated_frames": 182,
+        "created": 6,
+        "would_remove": 2,
+        "cancelled": 1
+      },
+      "unknown": {}
+    },
+    "candidate_rejection_counts": {
+      "low_pixel_contradiction_ratio": 266,
+      "insufficient_reference_evidence": 19,
+      "insufficient_pixel_count": 40,
+      "existing_candidate_or_cooldown": 34
+    },
+    "actual_tsdf_deletions": 0,
+    "final_geometry_comparison": {
+      "reference": "prior IG off run",
+      "points": 101162,
+      "reference_points": 101162,
+      "sorted_coordinates_identical": true,
+      "maximum_coordinate_difference_m": 0.0
+    }
+  },
+  {
+    "seq": "pair_02_751a55a1_751a557f",
+    "status": "complete",
+    "artifact_directory": "/root/autodl-tmp/output/ig_readonly_20261008/full/pair_02_751a55a1_751a557f",
+    "attempt_history": [
+      {
+        "status": "complete",
+        "directory": "/root/autodl-tmp/output/ig_readonly_20261008/full/pair_02_751a55a1_751a557f",
+        "error": null,
+        "gpu": 7
+      }
+    ],
+    "interval": 5,
+    "voxel_mm": 25.0,
+    "selected_frames": 315,
+    "evaluated_frames": 281,
+    "skipped_frames": {
+      "empty_history": 1,
+      "insufficient_historical_render": 26,
+      "widespread_conflict": 7
+    },
+    "candidates": 22,
+    "would_remove": 7,
+    "cancelled": 8,
+    "suspected": 7,
+    "diagnostic_seconds": 97.81132052838802,
+    "main_loop_seconds": 335.2819767696783,
+    "source_counts": {
+      "depth_and_rgb": 4,
+      "depth_only": 3
+    },
+    "by_phase": {
+      "reference": {
+        "evaluated_frames": 187,
+        "created": 4,
+        "cancelled": 2
+      },
+      "rescan": {
+        "evaluated_frames": 94,
+        "created": 18,
+        "would_remove": 7,
+        "cancelled": 6
+      },
+      "unknown": {}
+    },
+    "candidate_rejection_counts": {
+      "low_pixel_contradiction_ratio": 385,
+      "insufficient_pixel_count": 84,
+      "insufficient_reference_evidence": 25,
+      "existing_candidate_or_cooldown": 32,
+      "insufficient_reference_surface": 7
+    },
+    "actual_tsdf_deletions": 0,
+    "final_geometry_comparison": {
+      "reference": "prior IG off run",
+      "points": 250782,
+      "reference_points": 250782,
+      "sorted_coordinates_identical": true,
+      "maximum_coordinate_difference_m": 0.0
+    }
+  },
+  {
+    "seq": "pair_03_f62fd5f8_20c9939d",
+    "status": "complete",
+    "artifact_directory": "/root/autodl-tmp/output/ig_readonly_20261008/full/pair_03_f62fd5f8_20c9939d",
+    "attempt_history": [
+      {
+        "status": "complete",
+        "directory": "/root/autodl-tmp/output/ig_readonly_20261008/full/pair_03_f62fd5f8_20c9939d",
+        "error": null,
+        "gpu": 4
+      }
+    ],
+    "interval": 2,
+    "voxel_mm": 25.0,
+    "selected_frames": 292,
+    "evaluated_frames": 283,
+    "skipped_frames": {
+      "empty_history": 1,
+      "insufficient_historical_render": 6,
+      "widespread_conflict": 2
+    },
+    "candidates": 15,
+    "would_remove": 6,
+    "cancelled": 2,
+    "suspected": 7,
+    "diagnostic_seconds": 77.67521326383576,
+    "main_loop_seconds": 216.2499187909998,
+    "source_counts": {
+      "depth_and_rgb": 4,
+      "depth_only": 2
+    },
+    "by_phase": {
+      "reference": {
+        "evaluated_frames": 140,
+        "created": 1
+      },
+      "rescan": {
+        "evaluated_frames": 143,
+        "created": 14,
+        "would_remove": 6,
+        "cancelled": 2
+      },
+      "unknown": {}
+    },
+    "candidate_rejection_counts": {
+      "low_pixel_contradiction_ratio": 388,
+      "insufficient_pixel_count": 93,
+      "insufficient_reference_evidence": 31,
+      "existing_candidate_or_cooldown": 39,
+      "insufficient_reference_surface": 1
+    },
+    "actual_tsdf_deletions": 0,
+    "final_geometry_comparison": {
+      "reference": "prior IG off run",
+      "points": 165369,
+      "reference_points": 165369,
+      "sorted_coordinates_identical": true,
+      "maximum_coordinate_difference_m": 0.0
+    }
+  },
+  {
+    "seq": "pair_04_752cc595_55551083",
+    "status": "complete",
+    "artifact_directory": "/root/autodl-tmp/output/ig_readonly_20261008/trace_retry/pair_04_752cc595_55551083",
+    "attempt_history": [
+      {
+        "status": "failed",
+        "directory": "/root/autodl-tmp/output/ig_readonly_20261008/full/pair_04_752cc595_55551083",
+        "error": "Traceback (most recent call last):\n  File \"/root/OnlineSegmentationBaseline_ig_readonly/run_ig_readonly_suite.py\", line 51, in job\n    if rc: raise RuntimeError('Read-only run failed; retained log, no automatic parameter changes')\nRuntimeError: Read-only run failed; retained log, no automatic parameter changes\n",
+        "gpu": 7
+      },
+      {
+        "status": "complete",
+        "directory": "/root/autodl-tmp/output/ig_readonly_20261008/trace_retry/pair_04_752cc595_55551083",
+        "error": null,
+        "gpu": 4
+      }
+    ],
+    "interval": 2,
+    "voxel_mm": 25.0,
+    "selected_frames": 293,
+    "evaluated_frames": 287,
+    "skipped_frames": {
+      "empty_history": 1,
+      "insufficient_historical_render": 4,
+      "widespread_conflict": 1
+    },
+    "candidates": 18,
+    "would_remove": 5,
+    "cancelled": 4,
+    "suspected": 9,
+    "diagnostic_seconds": 81.44860597280785,
+    "main_loop_seconds": 206.0035616401583,
+    "source_counts": {
+      "depth_only": 3,
+      "depth_and_rgb": 2
+    },
+    "by_phase": {
+      "reference": {
+        "evaluated_frames": 199,
+        "created": 2,
+        "cancelled": 2
+      },
+      "rescan": {
+        "created": 16,
+        "evaluated_frames": 88,
+        "would_remove": 5,
+        "cancelled": 2
+      },
+      "unknown": {}
+    },
+    "candidate_rejection_counts": {
+      "low_pixel_contradiction_ratio": 357,
+      "insufficient_reference_evidence": 33,
+      "insufficient_pixel_count": 63,
+      "existing_candidate_or_cooldown": 36,
+      "insufficient_reference_surface": 2
+    },
+    "actual_tsdf_deletions": 0,
+    "final_geometry_comparison": {
+      "reference": "prior IG off run",
+      "points": 191229,
+      "reference_points": 191229,
+      "sorted_coordinates_identical": true,
+      "maximum_coordinate_difference_m": 0.0
+    }
+  }
+]
