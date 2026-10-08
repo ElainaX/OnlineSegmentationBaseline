@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from submap_disjoint.surface_bank import SurfaceBank, voxel_keys
+from submap_disjoint.surface_bank import SurfaceBank, voxel_keys, independent_rays
 
 CFG=dict(depth_epsilon_m=.08,depth_relative_epsilon=.01,
     min_observation_gap=5,min_translation_m=0.,min_rotation_deg=0.,confirm_observations=2)
@@ -48,6 +48,13 @@ class TestSurfaceBank(unittest.TestCase):
         bank.step(15,np.eye(4),k,depth*2,valid,.1,5,blue)
         bank.step(20,np.eye(4),k,depth*2,valid,.1,5,blue)
         self.assertTrue(bank.active[:n].all())
+
+    def test_rotation_in_place_is_not_new_ray_but_lateral_translation_is(self):
+        cfg=dict(CFG,min_translation_m=.02,min_rotation_deg=3.)
+        points=np.array([[0,0,2.]],float);origins=np.zeros((1,3));frames=np.array([0])
+        self.assertFalse(independent_rays(points,origins,np.zeros(3),frames,10,cfg)[0])
+        self.assertTrue(independent_rays(points,origins,np.array([.2,0,0]),frames,10,cfg)[0])
+        self.assertFalse(independent_rays(points,origins,np.array([0,0,.2]),frames,10,cfg)[0])
 
 
 if __name__=='__main__':unittest.main()

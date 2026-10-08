@@ -16,10 +16,23 @@ def voxel_keys(points, voxel_size):
     return (q[:,0] << 42) | (q[:,1] << 21) | q[:,2]
 
 
+def independent_rays(points, old_centers, new_center, old_frames, frame, cfg):
+    """An optical-axis rotation is not a new ray to a fixed world point."""
+    old=points-old_centers;new=points-new_center
+    denominator=np.linalg.norm(old,axis=1)*np.linalg.norm(new,axis=1)
+    cosine=np.sum(old*new,axis=1)/np.maximum(denominator,1e-12)
+    angle=np.degrees(np.arccos(np.clip(cosine,-1,1)))
+    shift=np.linalg.norm(old_centers-new_center,axis=1)
+    return ((frame-old_frames>=cfg['min_observation_gap'])
+            &(angle>=cfg['min_rotation_deg'])&(shift>=cfg['min_translation_m']))
+
+
 class SurfaceBank:
-    def __init__(self, voxel_size, cfg, seed_stride=2, require_color=False):
+    def __init__(self, voxel_size, cfg, seed_stride=2, require_color=False, view_gate='camera'):
         self.voxel_size, self.cfg, self.seed_stride = voxel_size, cfg, seed_stride
         self.require_color = require_color
+        if view_gate not in ('camera','ray'):raise ValueError(view_gate)
+        self.view_gate=view_gate
         self.points = np.empty((0,3),np.float32)
         self.colors = np.empty((0,3),np.float32)
         self.keys = np.empty(0,np.int64)
@@ -83,9 +96,15 @@ class SurfaceBank:
                 stats.update(color_threshold=float(threshold),depth_free_before_color=int(raw_free.sum()),
                              depth_free_after_color=int((codes==CONTRADICTION).sum()))
             good=(codes==SUPPORT)|(codes==CONTRADICTION)
-            independent=np.array([independent_observation(pose,oldpose,frame,oldframe,self.cfg)
-                                  for oldframe,oldpose in self.views],bool)
-            accepted=good & independent[self.last_vote[ids]]
+            if self.view_gate=='camera':
+                independent=np.array([independent_observation(pose,oldpose,frame,oldframe,self.cfg)
+                                      for oldframe,oldpose in self.views],bool)
+                accepted=good & independent[self.last_vote[ids]]
+            else:
+                centers=np.array([p[:3,3] for _,p in self.views])
+                frames=np.array([f for f,_ in self.views])
+                old=self.last_vote[ids]
+                accepted=good&independent_rays(self.points[ids],centers[old],pose[:3,3],frames[old],frame,self.cfg)
             support_ids=ids[accepted & (codes==SUPPORT)]
             free_ids=ids[accepted & (codes==CONTRADICTION)]
             free_ids=free_ids[self.support[free_ids]>=self.cfg['confirm_observations']]

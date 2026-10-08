@@ -11,6 +11,7 @@ from submap_disjoint.readonly_detection_core import interior_mask
 parser=argparse.ArgumentParser()
 parser.add_argument('--output-dir',required=True)
 parser.add_argument('--require-color',action='store_true')
+parser.add_argument('--view-gate',choices=['camera','ray'],default='camera')
 args=parser.parse_args()
 OUT=Path(args.output_dir);OUT.mkdir(exist_ok=False)
 source=Path('/root/autodl-tmp/output/ig_fixed_candidates_20261008')
@@ -23,7 +24,7 @@ for run in json.loads((source/'selected_results.json').read_text()):
     config=json.loads(cfg_file.read_text());cfg=config['effective_settings']
     cam=config['pipeline_config']['cam'];assert cam['h_crop']==cam['w_crop']==0
     k=np.loadtxt(data/'intrinsic/intrinsic_depth.txt')[:3,:3].astype(np.float32)
-    bank=SurfaceBank(config['pipeline_config']['scene']['voxel_size'],cfg,require_color=args.require_color)
+    bank=SurfaceBank(config['pipeline_config']['scene']['voxel_size'],cfg,require_color=args.require_color,view_gate=args.view_gate)
     selected=schedules[seq]['sampling']['selected_frame_ids'];frames=[];start=time.perf_counter()
     for j,f in enumerate(selected):
         raw=cv2.imread(str(data/'depth'/f'{f}.png'),cv2.IMREAD_UNCHANGED)
@@ -45,7 +46,7 @@ for run in json.loads((source/'selected_results.json').read_text()):
         if j%100==0:print(seq,j,len(selected),'points',len(bank.points),flush=True)
     arrays=bank.arrays();np.savez_compressed(target/'bank.npz',**arrays)
     report=dict(seq=seq,frames=frames,selected_frame_ids=selected,voxel_size=bank.voxel_size,
-        cfg=cfg,seed_stride=bank.seed_stride,require_color=args.require_color,wall_seconds=time.perf_counter()-start,
+        cfg=cfg,seed_stride=bank.seed_stride,require_color=args.require_color,view_gate=args.view_gate,wall_seconds=time.perf_counter()-start,
         array_memory_bytes=sum(a.nbytes for a in arrays.values()),GT_used=False,actual_deletions=0,
         scope='experimental raw-depth local change proposals; not whole-instance deletion',
         source_config=str(cfg_file))
