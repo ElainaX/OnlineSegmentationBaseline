@@ -27,6 +27,21 @@ class DeletionTests(unittest.TestCase):
         self.assertFalse(eligible_lineage(None,{0,1},[4,4,4]))
         self.assertFalse(eligible_lineage({0},{0,1},[-1,4,4]))
 
+    def test_no_free_corners_never_queries_empty_hashmap(self):
+        # The owner deliberately has no VBG: an occluded confirmed candidate
+        # must exit before touching any map or GPU hash lookup.
+        cfg=dict(depth_epsilon_m=.08,depth_relative_epsilon=.01,
+            edge_threshold_m=.08,boundary_margin_px=1)
+        candidate=NS(state='would_remove',points=np.array([[0.,0,2.]]),
+            depth_contradicted=np.array([True]),candidate_id=0)
+        d=NS(frames_processed=1,candidates=[candidate],near=.1,far=5.,cfg=cfg,
+            intrinsic=np.array([[20,0,10],[0,20,10],[0,0,1.]]))
+        owner=NS(cfg=dict(scene=dict(voxel_size=.025,block_resolution=4)))
+        with tempfile.TemporaryDirectory() as td:
+            ctrl=IGDeletion(owner,NS(detector=d),td)
+            ctrl.step(10,np.ones((21,21)),np.eye(4))
+            self.assertEqual(ctrl.events[-1]['voxels'],0)
+
     def test_real_cuda_erasure_preserves_neighbors_and_cleans_indices(self):
         device=core.Device('CUDA:0')
         grid=o3d.t.geometry.VoxelBlockGrid(('tsdf','weight','color'),(core.float32,)*3,

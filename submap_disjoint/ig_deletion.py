@@ -64,6 +64,10 @@ class IGDeletion:
             xyz = np.unique(np.rint(corners(pts, self.voxel).reshape(-1, 3)/self.voxel).astype(np.int64), axis=0)*self.voxel
             count = len(xyz)
             xyz = xyz[currently_free(xyz, depth, d.intrinsic, pose, d.cfg, d.near, d.far)]
+            if not len(xyz):
+                diagnostics.append(dict(candidate=c.candidate_id, depth_reference_points=len(pts),
+                    proposed_corners=count, current_free_existing_corners=0, lineage_allowed=0))
+                continue
             ids, exists = lattice_indices(self.owner.voxel_block_grids, xyz, self.voxel, self.res, self.owner.device_o3c)
             ids, xyz = ids[exists], xyz[exists]
             allowed = np.array([eligible_lineage(self.owner.voxel_hash_table.hash_table[int(i)],
