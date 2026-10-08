@@ -28,6 +28,7 @@ p.add_argument('--detector-schedule-json')
 p.add_argument('--verify-erasure',action='store_true')
 p.add_argument('--whole-instance',choices=['off','audit','on'],default='off')
 p.add_argument('--instance-retirement-config',help='Optional JSON of RetirementOptions; saved in metadata')
+p.add_argument('--retirement-evidence',choices=['v1','persistent'],default='v1')
 p.add_argument('--smoke-stop',type=int,default=0)
 a=p.parse_args()
 out=Path(a.output_dir)/a.seq_name; out.mkdir(parents=True,exist_ok=True)
@@ -63,7 +64,11 @@ if a.whole_instance!='off':
     if a.whole_instance=='on' and a.deletion!='on': raise ValueError('Hybrid whole-instance mode requires local deletion on')
     whole_options=json.loads(Path(a.instance_retirement_config).read_text()) if a.instance_retirement_config else {}
     whole_options['verify_state']=a.verify_erasure
-    whole=IGInstanceRetirement(owner,detector,out/'instance_retirement',RetirementOptions(**whole_options),enabled=a.whole_instance=='on')
+    whole_class=IGInstanceRetirement
+    if a.retirement_evidence=='persistent':
+        from submap_disjoint.persistent_retirement import PersistentIGInstanceRetirement
+        whole_class=PersistentIGInstanceRetirement
+    whole=whole_class(owner,detector,out/'instance_retirement',RetirementOptions(**whole_options),enabled=a.whole_instance=='on')
 run_metadata=dict(method='IG-Submap-v1',merge_selection=a.merge_selection,config=cfg,
     baseline_config_path=a.config,baseline_config_sha256=hashlib.sha256(Path(a.config).read_bytes()).hexdigest(),
     mapping_frame_interval=cfg['mapping']['keyframe_freq'],segmentation_frame_interval=cfg['seg']['seg_add_interval'],
@@ -84,6 +89,7 @@ if boundary.exists():
     run_metadata.update(reference_sampled_frames=sum(i<cut for i in selected),rescan_sampled_frames=sum(i>=cut for i in selected))
 run_metadata.update(detection_mode=a.detection,deletion_enabled=a.deletion=='on',smoke_stop=a.smoke_stop,
     whole_instance_mode=a.whole_instance,
+    retirement_evidence=a.retirement_evidence,
     detection_config_path=a.detection_config,
     detector_provenance={'surface_bank_sha256':hashlib.sha256(Path('submap_disjoint/surface_bank.py').read_bytes()).hexdigest(),'implementation':'strict surface bank; original confirmation unchanged'},
     detection_input_shape=[cfg['cam']['img_h'],cfg['cam']['img_w']],

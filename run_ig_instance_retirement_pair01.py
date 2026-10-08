@@ -11,17 +11,20 @@ import traceback
 import numpy as np
 
 p=argparse.ArgumentParser();p.add_argument('--gpu',required=True)
-p.add_argument('--mode',choices=['hybrid','local_control'],default='hybrid');a=p.parse_args()
+p.add_argument('--mode',choices=['hybrid','local_control'],default='hybrid')
+p.add_argument('--output-root',type=Path)
+p.add_argument('--retirement-evidence',choices=['v1','persistent'],default='v1');a=p.parse_args()
 REPO=Path(__file__).resolve().parent
 ROOT=Path('/root/autodl-tmp/output/ig_whole_instance_20261008')
 if a.mode=='local_control': ROOT=ROOT/'local_control_run'
+if a.output_root is not None:ROOT=a.output_root
 OLD=Path('/root/autodl-tmp/output/ig_surface_deletion_20261008')
 SEQ='pair_01_0cac767c_19f1a892'
-ROOT.mkdir(exist_ok=True)
+ROOT.mkdir(parents=True,exist_ok=True)
 if (ROOT/'result.json').exists(): raise FileExistsError('Preserve previous result')
 ref=next(r for r in json.loads(Path('/root/autodl-tmp/output/ig_correction_20261008/sources.json').read_text()) if r['seq']==SEQ)
 env=dict(os.environ,CUDA_VISIBLE_DEVICES=a.gpu,OMP_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',MKL_NUM_THREADS='1',PYTHONUNBUFFERED='1',PYTHONPATH=str(REPO))
-result=dict(status='running',seq=SEQ,gpu=a.gpu,started=time.time())
+result=dict(status='running',seq=SEQ,gpu=a.gpu,started=time.time(),retirement_evidence=a.retirement_evidence)
 def save(): (ROOT/'result.json').write_text(json.dumps(result,indent=2))
 save()
 try:
@@ -31,6 +34,7 @@ try:
          '--merge_selection','disjoint_pairs','--detection','on','--deletion','on',
          '--whole-instance','on' if a.mode=='hybrid' else 'off','--verify-erasure','--detector-schedule-json',
          '/root/autodl-tmp/output/ig_rescan_dense_20261008/schedules.json']
+    cmd.extend(['--retirement-evidence',a.retirement_evidence])
     result['mapping_command']=cmd;save()
     with (ROOT/'mapping.log').open('w') as f:
         subprocess.run(cmd,cwd=REPO,env=env,stdout=f,stderr=subprocess.STDOUT,check=True,timeout=1200)
