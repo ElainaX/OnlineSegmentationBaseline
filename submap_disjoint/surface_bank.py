@@ -28,12 +28,13 @@ def independent_rays(points, old_centers, new_center, old_frames, frame, cfg):
 
 
 class SurfaceBank:
-    def __init__(self, voxel_size, cfg, seed_stride=2, require_color=False, view_gate='camera', surface_support=False):
+    def __init__(self, voxel_size, cfg, seed_stride=2, require_color=False, view_gate='camera', surface_support=False, strict_history_support=False):
         self.voxel_size, self.cfg, self.seed_stride = voxel_size, cfg, seed_stride
         self.require_color = require_color
         if view_gate not in ('camera','ray'):raise ValueError(view_gate)
         self.view_gate=view_gate
         self.surface_support=surface_support
+        self.strict_history_support=strict_history_support
         self.points = np.empty((0,3),np.float32)
         self.colors = np.empty((0,3),np.float32)
         self.keys = np.empty(0,np.int64)
@@ -121,12 +122,19 @@ class SurfaceBank:
                 old=self.last_vote[ids]
                 accepted=good&independent_rays(self.points[ids],centers[old],pose[:3,3],frames[old],frame,self.cfg)
             support_ids=ids[accepted & (codes==SUPPORT)]
+            verified_support=accepted & (codes==SUPPORT)
+            if self.strict_history_support:
+                # A loose no-change tolerance cannot certify the location of an
+                # old surface precisely. Verify existence within one voxel;
+                # broader nearby support can still revoke a disappearance vote.
+                verified_support &= np.abs(depth[y,x]-z[ids])<=self.voxel_size
+            verified_ids=ids[verified_support]
             free_ids=ids[accepted & (codes==CONTRADICTION)]
             free_ids=free_ids[self.support[free_ids]>=self.cfg['confirm_observations']]
-            self.support[support_ids]+=1
+            self.support[verified_ids]+=1
             self.streak[support_ids]=0
             self.streak[free_ids]+=1
-            self.last_vote[support_ids]=view_index
+            self.last_vote[verified_ids]=view_index
             self.last_vote[free_ids]=view_index
             self.last_conflict_frame[free_ids]=frame
             after=self.active; changed=np.flatnonzero(before!=after)

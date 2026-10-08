@@ -70,5 +70,18 @@ class TestSurfaceBank(unittest.TestCase):
         self.assertTrue(plain.active.any())
         self.assertFalse(checked.active.any())
 
+    def test_loose_no_change_band_is_not_precise_historical_surface_support(self):
+        k=np.array([[100,0,2],[0,100,2],[0,0,1]],float)
+        depth=np.ones((5,5));valid=np.ones((5,5),bool)
+        plain=SurfaceBank(.025,CFG,seed_stride=1)
+        strict=SurfaceBank(.025,CFG,seed_stride=1,strict_history_support=True)
+        for bank in [plain,strict]:
+            bank.step(0,np.eye(4),k,depth,valid,.1,5)
+            bank.step(5,np.eye(4),k,depth+.06,valid,.1,5)
+            bank.step(10,np.eye(4),k,depth*2,valid,.1,5)
+            bank.step(15,np.eye(4),k,depth*2,valid,.1,5)
+        self.assertTrue(plain.active.any())
+        self.assertFalse(strict.active.any())
+
 
 if __name__=='__main__':unittest.main()

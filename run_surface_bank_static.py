@@ -9,7 +9,8 @@ from submap_disjoint.surface_bank import SurfaceBank
 from submap_disjoint.readonly_detection_core import interior_mask
 
 parser=argparse.ArgumentParser();parser.add_argument('--output-dir',required=True)
-parser.add_argument('--surface-support',action='store_true');args=parser.parse_args()
+parser.add_argument('--surface-support',action='store_true')
+parser.add_argument('--strict-history-support',action='store_true');args=parser.parse_args()
 OUT=Path(args.output_dir);OUT.mkdir(exist_ok=False)
 config_path=Path('/root/autodl-tmp/output/a100_baseline_default_s5_20261007/scannet_default.yaml')
 config=yaml.safe_load(config_path.read_text());cam=config['cam']
@@ -21,7 +22,7 @@ for seq in ['scene0050_00','scene0549_00']:
     hc,wc=cam['h_crop'],cam['w_crop'];k[0,2]-=wc;k[1,2]-=hc
     files={int(p.stem):p for p in (data/'depth').glob('*.png') if p.stem.isdigit()}
     selected=[f for f in sorted(files) if f%10==0]
-    bank=SurfaceBank(config['scene']['voxel_size'],cfg,require_color=True,view_gate='ray',surface_support=args.surface_support)
+    bank=SurfaceBank(config['scene']['voxel_size'],cfg,require_color=True,view_gate='ray',surface_support=args.surface_support,strict_history_support=args.strict_history_support)
     stats=[];start=time.perf_counter()
     for i,f in enumerate(selected):
         depth=cv2.imread(str(files[f]),cv2.IMREAD_UNCHANGED).astype(np.float32)/cam['depth_scale']
@@ -46,7 +47,7 @@ for seq in ['scene0050_00','scene0549_00']:
         _,labels=connected_components(graph,directed=False);sizes=np.bincount(labels)
     else:sizes=np.empty(0,int)
     result=dict(seq=seq,selected_frames=len(selected),valid_frames=len(stats),frame_interval=10,
-        voxel_size=bank.voxel_size,config_path=str(config_path),cam=cam,cfg=cfg,GT_used=False,surface_support=args.surface_support,
+        voxel_size=bank.voxel_size,config_path=str(config_path),cam=cam,cfg=cfg,GT_used=False,surface_support=args.surface_support,strict_history_support=args.strict_history_support,
         confirmed_points=len(points),regions20=int((sizes>=20).sum()),regions100=int((sizes>=100).sum()),
         wall_seconds=time.perf_counter()-start,mean_step_seconds=float(np.mean([r['seconds'] for r in stats])),
         max_active_points=max(r['confirmed_points'] for r in stats),frames=stats,
