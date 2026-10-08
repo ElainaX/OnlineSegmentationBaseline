@@ -163,6 +163,9 @@ class DirectIGInstanceRetirement(PersistentIGInstanceRetirement):
             self.log(dict(frame=frame,event='direct_receipts_attached',candidate=c['id'],samples=len(new)))
             self.archive_candidate(c,frame)
 
+    def decide_candidate(self,c,confirmed,recent,codes,mature,sample,frame,pose):
+        return decision(confirmed[sample],recent[sample],codes[sample]==CONTRADICTION,mature[sample],self.options)
+
     def step(self,frame,depth,pose):
         if frame!=self.bank.last_frame or frame<=self.last_frame:raise ValueError('Must follow detector step')
         self.last_frame=frame;start=time.perf_counter();b=self.bank;o=self.owner;opt=self.options
@@ -196,7 +199,7 @@ class DirectIGInstanceRetirement(PersistentIGInstanceRetirement):
             anchored=c['anchors']>=0
             mature=anchored.copy();mature[anchored]&=b.support[c['anchors'][anchored]]>=self.detector.cfg['confirm_observations']
             n=len(codes);sample=np.linspace(0,n-1,min(n,opt.max_reference_points)).astype(int)
-            accept,stats=decision(confirmed[sample],recent[sample],codes[sample]==CONTRADICTION,mature[sample],opt)
+            accept,stats=self.decide_candidate(c,confirmed,recent,codes,mature,sample,frame,as_numpy(pose))
             stats.update(full_reference_points=n,full_confirmed_points=int(confirmed.sum()),
                          registered_receipt_points=int(authorized.sum()),candidate_age=frame-c['created'])
             c['last_stats']=stats;stats_rows.append(dict(candidate=c['id'],**stats))

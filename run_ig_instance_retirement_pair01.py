@@ -13,7 +13,7 @@ import numpy as np
 p=argparse.ArgumentParser();p.add_argument('--gpu',required=True)
 p.add_argument('--mode',choices=['hybrid','local_control'],default='hybrid')
 p.add_argument('--output-root',type=Path)
-p.add_argument('--retirement-evidence',choices=['v1','persistent','direct'],default='v1');a=p.parse_args()
+p.add_argument('--retirement-evidence',choices=['v1','persistent','direct','instance_views'],default='v1');a=p.parse_args()
 REPO=Path(__file__).resolve().parent
 ROOT=Path('/root/autodl-tmp/output/ig_whole_instance_20261008')
 if a.mode=='local_control': ROOT=ROOT/'local_control_run'
