@@ -10,6 +10,9 @@ from .readonly_detection_core import (
 )
 
 
+from .batched_evidence import BatchedCandidate
+
+
 ACCEPTED = {'support', 'cancelled', 'contradiction', 'would_remove'}
 
 
@@ -97,9 +100,12 @@ The latter is reported separately, never credited to the strict common test.
             original = Candidate(cid, candidate.source_raw_ids, candidate.source_slot,
                                  candidate.first_frame, candidate.points, candidate.colors)
             self.records[cid] = dict(original=original,
+                batched=BatchedCandidate(cid, candidate.source_raw_ids, candidate.source_slot,
+                                         candidate.first_frame, candidate.points, candidate.colors),
                 common=PointMemory(len(candidate.points)), extended=PointMemory(len(candidate.points)),
                 frames=[], poses=[], codes=[], sources=[], common_frames=[], original_accepted=[])
         r = self.records[cid]
+        r['batched'].observe(frame, pose, codes, sources, self.cfg)
         common = candidate.state == 'suspected'
         r['frames'].append(frame)
         r['poses'].append(pose.copy())
@@ -153,14 +159,17 @@ The latter is reported separately, never credited to the strict common test.
                 arrays[name+'_rgb_score'] = m.rgb_score
                 arrays[name+'_tested'] = m.tested
             assert np.array_equal(np.array(r['common'].accepted_frames), np.array(r['frames'])[r['original_accepted']])
+            arrays['batched_depth_contradicted'] = r['batched'].depth_contradicted
+            arrays['batched_rgb_contradicted'] = r['batched'].rgb_contradicted
+            arrays['batched_pending_codes'] = r['batched'].pending_codes
             np.savez_compressed(self.out / f'{cid:04d}.npz', **arrays)
             records.append(dict(candidate_id=cid, first_frame=candidate.first_frame,
                 source_raw_ids=sorted(candidate.source_raw_ids),
                 point_sha256=hashlib.sha256(candidate.points.tobytes()).hexdigest(),
-                original=candidate.metadata(), **variants))
+                original=candidate.metadata(), batched=r['batched'].metadata(), **variants))
         summary = dict(completed=True, candidates=len(records), original_replay_checks=self.replay_checks,
             common_frame_checks=self.common_frame_checks, observation_sets_identical=True,
             accumulator_seconds=self.seconds, actual_deletions=0, records=records,
-            protocol='original proposals only; common exact accepted observations; extended future observations separately; same RGB/depth/occlusion/gates')
+            protocol='original proposals only; common exact accepted observations; extended future observations separately; same RGB/depth/occlusion/gates; batched variant collects small views into 100-point packets')
         (self.out / 'summary.json').write_text(json.dumps(summary, indent=2))
         return summary
