@@ -10,9 +10,11 @@ import time
 import traceback
 import numpy as np
 
-p=argparse.ArgumentParser();p.add_argument('--gpu',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--gpu',required=True)
+p.add_argument('--mode',choices=['hybrid','local_control'],default='hybrid');a=p.parse_args()
 REPO=Path(__file__).resolve().parent
 ROOT=Path('/root/autodl-tmp/output/ig_whole_instance_20261008')
+if a.mode=='local_control': ROOT=ROOT/'local_control_run'
 OLD=Path('/root/autodl-tmp/output/ig_surface_deletion_20261008')
 SEQ='pair_01_0cac767c_19f1a892'
 ROOT.mkdir(exist_ok=True)
@@ -27,7 +29,7 @@ try:
     cmd=[sys.executable,'run_ig_surface_deletion.py','--config',ref['config'],'--dataset',ref['frames'],
          '--instance_dir',ref['masks'],'--output_dir',str(ROOT/'hybrid'),'--seq_name',SEQ,
          '--merge_selection','disjoint_pairs','--detection','on','--deletion','on',
-         '--whole-instance','on','--verify-erasure','--detector-schedule-json',
+         '--whole-instance','on' if a.mode=='hybrid' else 'off','--verify-erasure','--detector-schedule-json',
          '/root/autodl-tmp/output/ig_rescan_dense_20261008/schedules.json']
     result['mapping_command']=cmd;save()
     with (ROOT/'mapping.log').open('w') as f:

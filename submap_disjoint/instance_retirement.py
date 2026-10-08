@@ -148,7 +148,7 @@ def retire_track(owner, executor, source, frame, context, archive_dir, max_share
     coords=np.unique(np.vstack(clouds),axis=0)
     ids,exists=lattice_indices(owner.voxel_block_grids,coords,voxel,res,owner.device_o3c)
     ids,coords=ids[exists],coords[exists]
-    shared=np.array([bool(active_lineage(owner.voxel_hash_table.hash_table[int(i)],owner.global2merged_mask_id)-source) for i in ids])
+    shared=np.array([bool(active_lineage(owner.voxel_hash_table.hash_table[int(i)],owner.global2merged_mask_id)-source) for i in ids],dtype=bool)
     if len(shared) and float(shared.mean())>max_shared_fraction:
         return dict(retired=False,reason='shared_geometry_fraction',shared_fraction=float(shared.mean()))
     codes=context.classify(coords)
