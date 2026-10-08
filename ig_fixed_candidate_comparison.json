@@ -1,0 +1,3939 @@
+{
+  "protocol": "Original candidate entry frozen. common uses exact original accepted observations. extended adds later observations separately. Majority of depth-evidence points within 5 cm; GT IDs deduplicated.",
+  "scenes": [
+    {
+      "seq": "pair_01_0cac767c_19f1a892",
+      "official_removed": [
+        2,
+        3,
+        6,
+        7,
+        8,
+        9,
+        19,
+        20,
+        21,
+        27,
+        31,
+        33,
+        39,
+        300,
+        360
+      ],
+      "verifiable_removed": [
+        2,
+        3,
+        7,
+        8,
+        9,
+        19,
+        20,
+        21,
+        27,
+        31,
+        33,
+        39,
+        300,
+        360
+      ],
+      "candidates": 6,
+      "candidate_pool_removed_gt": [
+        2,
+        3
+      ],
+      "checks": {
+        "original_replay_checks": 270,
+        "common_frame_checks": 264,
+        "observation_sets_identical": true
+      },
+      "metrics": {
+        "original": {
+          "confirmed_rescan_candidates": 2,
+          "removed_hits": [
+            3
+          ],
+          "any_changed_hits": [
+            3,
+            24
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            3
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "local_clear_only": {
+          "confirmed_rescan_candidates": 2,
+          "removed_hits": [
+            3
+          ],
+          "any_changed_hits": [
+            3,
+            24
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            3
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "common": {
+          "confirmed_rescan_candidates": 0,
+          "removed_hits": [],
+          "any_changed_hits": [],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [],
+          "reference_confirmed_candidates": 0
+        },
+        "extended": {
+          "confirmed_rescan_candidates": 1,
+          "removed_hits": [
+            3
+          ],
+          "any_changed_hits": [
+            3
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            3
+          ],
+          "reference_confirmed_candidates": 0
+        }
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 2,
+            "gt_vertex_coverage_5cm": 0.5,
+            "gt_id": 2,
+            "purity": 0.9620853080568721,
+            "points": 211
+          },
+          {
+            "candidate_id": 2,
+            "state": "would_remove",
+            "confirmed_frame": 288,
+            "phase": "rescan",
+            "fixed_reference_gt": 3,
+            "gt_vertex_coverage_5cm": 0.1523076923076923,
+            "gt_id": 3,
+            "purity": 0.9522058823529411,
+            "points": 272
+          },
+          {
+            "candidate_id": 3,
+            "state": "would_remove",
+            "confirmed_frame": 374,
+            "phase": "rescan",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": 0.22765598650927488,
+            "gt_id": 24,
+            "purity": 0.9824561403508771,
+            "points": 228
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": 0.0933852140077821,
+            "gt_id": 25,
+            "purity": 1.0,
+            "points": 21
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          }
+        ],
+        "local_clear_only": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 249
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 2,
+            "gt_vertex_coverage_5cm": 0.5,
+            "gt_id": 2,
+            "purity": 0.9620853080568721,
+            "points": 211
+          },
+          {
+            "candidate_id": 2,
+            "state": "would_remove",
+            "confirmed_frame": 288,
+            "phase": "rescan",
+            "fixed_reference_gt": 3,
+            "gt_vertex_coverage_5cm": 0.1523076923076923,
+            "gt_id": 3,
+            "purity": 0.9522058823529411,
+            "points": 272
+          },
+          {
+            "candidate_id": 3,
+            "state": "would_remove",
+            "confirmed_frame": 374,
+            "phase": "rescan",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": 0.22765598650927488,
+            "gt_id": 24,
+            "purity": 0.9824561403508771,
+            "points": 228
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": 0.0933852140077821,
+            "gt_id": 25,
+            "purity": 1.0,
+            "points": 21
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          }
+        ],
+        "common": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 1
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 2,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 3,
+            "gt_vertex_coverage_5cm": 0.0823076923076923,
+            "gt_id": 3,
+            "purity": 0.9824561403508771,
+            "points": 114
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": 0.0893760539629005,
+            "gt_id": 24,
+            "purity": 0.984375,
+            "points": 64
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          }
+        ],
+        "extended": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 1
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 2,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 2,
+            "state": "would_remove",
+            "confirmed_frame": 476,
+            "phase": "rescan",
+            "fixed_reference_gt": 3,
+            "gt_vertex_coverage_5cm": 0.12538461538461537,
+            "gt_id": 3,
+            "purity": 0.9842931937172775,
+            "points": 191
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": 0.15345699831365936,
+            "gt_id": 24,
+            "purity": 0.9914529914529915,
+            "points": 117
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          }
+        ]
+      },
+      "candidate_pool": [
+        {
+          "candidate_id": 0,
+          "gt_id": null,
+          "purity": 0.00041288191577208916,
+          "points": 2422,
+          "local_clear_support_events": [
+            {
+              "frame": 276,
+              "state": "suspected",
+              "retained_contradiction_points": 275,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 330,
+              "state": "cancelled",
+              "retained_contradiction_points": 275,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 1,
+          "gt_id": 2,
+          "purity": 0.961864406779661,
+          "points": 236,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 2,
+          "gt_id": 3,
+          "purity": 0.7916102841677943,
+          "points": 739,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 3,
+          "gt_id": 24,
+          "purity": 0.5810502283105022,
+          "points": 876,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 4,
+          "gt_id": null,
+          "purity": 0.38618925831202044,
+          "points": 782,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 5,
+          "gt_id": null,
+          "purity": 0.10046728971962617,
+          "points": 428,
+          "local_clear_support_events": []
+        }
+      ],
+      "pending_diagnostics": [
+        {
+          "candidate_id": 1,
+          "gt_id": 2,
+          "accepted_contradiction_observations": 1,
+          "reference_points": 236,
+          "reason_counts": {
+            "paused_correlated_observation": 1,
+            "paused_insufficient_reference_points": 124
+          },
+          "max_cumulative_contradicted_fraction": 0.8940677966101694
+        }
+      ],
+      "main_loop_seconds": 217.8847030592151,
+      "accumulator_seconds": 0.050617603585124016
+    },
+    {
+      "seq": "pair_02_751a55a1_751a557f",
+      "official_removed": [
+        22
+      ],
+      "verifiable_removed": [
+        22
+      ],
+      "candidates": 22,
+      "candidate_pool_removed_gt": [],
+      "checks": {
+        "original_replay_checks": 678,
+        "common_frame_checks": 656,
+        "observation_sets_identical": true
+      },
+      "metrics": {
+        "original": {
+          "confirmed_rescan_candidates": 7,
+          "removed_hits": [],
+          "any_changed_hits": [
+            4,
+            15,
+            38
+          ],
+          "no_change_annotation_ids": [
+            7,
+            23
+          ],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [],
+          "reference_confirmed_candidates": 0
+        },
+        "local_clear_only": {
+          "confirmed_rescan_candidates": 8,
+          "removed_hits": [],
+          "any_changed_hits": [
+            4,
+            15,
+            38
+          ],
+          "no_change_annotation_ids": [
+            7,
+            23,
+            27
+          ],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [],
+          "reference_confirmed_candidates": 0
+        },
+        "common": {
+          "confirmed_rescan_candidates": 1,
+          "removed_hits": [],
+          "any_changed_hits": [
+            4
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [],
+          "reference_confirmed_candidates": 0
+        },
+        "extended": {
+          "confirmed_rescan_candidates": 4,
+          "removed_hits": [],
+          "any_changed_hits": [
+            4,
+            15,
+            38
+          ],
+          "no_change_annotation_ids": [
+            7
+          ],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [],
+          "reference_confirmed_candidates": 0
+        }
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 18,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 2,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 27,
+            "gt_vertex_coverage_5cm": 0.10076726342710997,
+            "gt_id": 27,
+            "purity": 0.9634146341463414,
+            "points": 82
+          },
+          {
+            "candidate_id": 4,
+            "state": "would_remove",
+            "confirmed_frame": 1085,
+            "phase": "rescan",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": 0.08470124753775443,
+            "gt_id": 7,
+            "purity": 0.908675799086758,
+            "points": 219
+          },
+          {
+            "candidate_id": 5,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 6,
+            "state": "would_remove",
+            "confirmed_frame": 1155,
+            "phase": "rescan",
+            "fixed_reference_gt": 15,
+            "gt_vertex_coverage_5cm": 0.5346103613408794,
+            "gt_id": 15,
+            "purity": 0.786504424778761,
+            "points": 904
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 1535,
+            "phase": "rescan",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.1635598316295851,
+            "gt_id": 4,
+            "purity": 0.9842931937172775,
+            "points": 191
+          },
+          {
+            "candidate_id": 8,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 1445,
+            "phase": "rescan",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.04612801264322402,
+            "gt_id": 38,
+            "purity": 0.8169014084507042,
+            "points": 710
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 44,
+            "gt_vertex_coverage_5cm": 0.2345415778251599,
+            "gt_id": 44,
+            "purity": 0.9877300613496932,
+            "points": 163
+          },
+          {
+            "candidate_id": 11,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 1325,
+            "phase": "rescan",
+            "fixed_reference_gt": 23,
+            "gt_vertex_coverage_5cm": 0.48333333333333334,
+            "gt_id": 23,
+            "purity": 0.9891891891891892,
+            "points": 185
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 46,
+            "gt_vertex_coverage_5cm": 0.08017334777898158,
+            "gt_id": 46,
+            "purity": 1.0,
+            "points": 33
+          },
+          {
+            "candidate_id": 14,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 15,
+            "state": "would_remove",
+            "confirmed_frame": 1450,
+            "phase": "rescan",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.018306334782036086,
+            "gt_id": 38,
+            "purity": 0.9904761904761905,
+            "points": 420
+          },
+          {
+            "candidate_id": 16,
+            "state": "would_remove",
+            "confirmed_frame": 1480,
+            "phase": "rescan",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.02107204003687607,
+            "gt_id": 38,
+            "purity": 0.9137931034482759,
+            "points": 348
+          },
+          {
+            "candidate_id": 17,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": 0.30140597539543057,
+            "gt_id": 40,
+            "purity": 0.9733333333333334,
+            "points": 75
+          },
+          {
+            "candidate_id": 18,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": 0.31204819277108437,
+            "gt_id": 35,
+            "purity": 0.8163265306122449,
+            "points": 98
+          },
+          {
+            "candidate_id": 19,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 34,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.32038834951456313,
+            "points": 103
+          },
+          {
+            "candidate_id": 20,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 21,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 764
+          }
+        ],
+        "local_clear_only": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 18,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.005398110661268556,
+            "points": 741
+          },
+          {
+            "candidate_id": 2,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 3,
+            "state": "would_remove",
+            "confirmed_frame": 1380,
+            "phase": "rescan",
+            "fixed_reference_gt": 27,
+            "gt_vertex_coverage_5cm": 0.10076726342710997,
+            "gt_id": 27,
+            "purity": 0.9634146341463414,
+            "points": 82
+          },
+          {
+            "candidate_id": 4,
+            "state": "would_remove",
+            "confirmed_frame": 1085,
+            "phase": "rescan",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": 0.08470124753775443,
+            "gt_id": 7,
+            "purity": 0.908675799086758,
+            "points": 219
+          },
+          {
+            "candidate_id": 5,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.04533658983361319,
+            "gt_id": 6,
+            "purity": 0.9545454545454546,
+            "points": 264
+          },
+          {
+            "candidate_id": 6,
+            "state": "would_remove",
+            "confirmed_frame": 1155,
+            "phase": "rescan",
+            "fixed_reference_gt": 15,
+            "gt_vertex_coverage_5cm": 0.5633434915106661,
+            "gt_id": 15,
+            "purity": 0.797071129707113,
+            "points": 956
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 1535,
+            "phase": "rescan",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.1635598316295851,
+            "gt_id": 4,
+            "purity": 0.9842931937172775,
+            "points": 191
+          },
+          {
+            "candidate_id": 8,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 483
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 1445,
+            "phase": "rescan",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.04612801264322402,
+            "gt_id": 38,
+            "purity": 0.8169014084507042,
+            "points": 710
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 44,
+            "gt_vertex_coverage_5cm": 0.2345415778251599,
+            "gt_id": 44,
+            "purity": 0.9877300613496932,
+            "points": 163
+          },
+          {
+            "candidate_id": 11,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": 0.16223679668622712,
+            "gt_id": 45,
+            "purity": 1.0,
+            "points": 179
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 1325,
+            "phase": "rescan",
+            "fixed_reference_gt": 23,
+            "gt_vertex_coverage_5cm": 0.48333333333333334,
+            "gt_id": 23,
+            "purity": 0.9891891891891892,
+            "points": 185
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 46,
+            "gt_vertex_coverage_5cm": 0.08017334777898158,
+            "gt_id": 46,
+            "purity": 1.0,
+            "points": 33
+          },
+          {
+            "candidate_id": 14,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.06121202869790872,
+            "gt_id": 6,
+            "purity": 0.985981308411215,
+            "points": 214
+          },
+          {
+            "candidate_id": 15,
+            "state": "would_remove",
+            "confirmed_frame": 1450,
+            "phase": "rescan",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.018306334782036086,
+            "gt_id": 38,
+            "purity": 0.9904761904761905,
+            "points": 420
+          },
+          {
+            "candidate_id": 16,
+            "state": "would_remove",
+            "confirmed_frame": 1480,
+            "phase": "rescan",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.02107204003687607,
+            "gt_id": 38,
+            "purity": 0.9137931034482759,
+            "points": 348
+          },
+          {
+            "candidate_id": 17,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": 0.30140597539543057,
+            "gt_id": 40,
+            "purity": 0.9733333333333334,
+            "points": 75
+          },
+          {
+            "candidate_id": 18,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": 0.31204819277108437,
+            "gt_id": 35,
+            "purity": 0.8163265306122449,
+            "points": 98
+          },
+          {
+            "candidate_id": 19,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 34,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.32038834951456313,
+            "points": 103
+          },
+          {
+            "candidate_id": 20,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.1965065502183406,
+            "points": 229
+          },
+          {
+            "candidate_id": 21,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 764
+          }
+        ],
+        "common": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 18,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.2,
+            "points": 5
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 27,
+            "gt_vertex_coverage_5cm": 0.06751918158567775,
+            "gt_id": 27,
+            "purity": 0.9310344827586207,
+            "points": 29
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": 0.066973079448457,
+            "gt_id": 7,
+            "purity": 0.900709219858156,
+            "points": 141
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.021218134635933444,
+            "gt_id": 6,
+            "purity": 0.9428571428571428,
+            "points": 70
+          },
+          {
+            "candidate_id": 6,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 15,
+            "gt_vertex_coverage_5cm": 0.3169351327818894,
+            "gt_id": 15,
+            "purity": 0.8705583756345178,
+            "points": 394
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 1535,
+            "phase": "rescan",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.08779314491882141,
+            "gt_id": 4,
+            "purity": 0.9882352941176471,
+            "points": 85
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 195
+          },
+          {
+            "candidate_id": 9,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.2,
+            "points": 5
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 44,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": 0.014497756299620296,
+            "gt_id": 45,
+            "purity": 1.0,
+            "points": 6
+          },
+          {
+            "candidate_id": 12,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 23,
+            "gt_vertex_coverage_5cm": 0.2574074074074074,
+            "gt_id": 23,
+            "purity": 1.0,
+            "points": 76
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 46,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.008243016333384217,
+            "gt_id": 6,
+            "purity": 1.0,
+            "points": 32
+          },
+          {
+            "candidate_id": 15,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.004181482944817595,
+            "gt_id": 38,
+            "purity": 1.0,
+            "points": 89
+          },
+          {
+            "candidate_id": 16,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.004280258132490452,
+            "gt_id": 38,
+            "purity": 1.0,
+            "points": 52
+          },
+          {
+            "candidate_id": 17,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 18,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 19,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 34,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 20,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.203125,
+            "points": 64
+          },
+          {
+            "candidate_id": 21,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 250
+          }
+        ],
+        "extended": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 18,
+            "gt_vertex_coverage_5cm": 0.0519884009942005,
+            "gt_id": 18,
+            "purity": 0.8458333333333333,
+            "points": 240
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.03409090909090909,
+            "points": 176
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 27,
+            "gt_vertex_coverage_5cm": 0.06751918158567775,
+            "gt_id": 27,
+            "purity": 0.9310344827586207,
+            "points": 29
+          },
+          {
+            "candidate_id": 4,
+            "state": "would_remove",
+            "confirmed_frame": 1090,
+            "phase": "rescan",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": 0.07419566644780039,
+            "gt_id": 7,
+            "purity": 0.8362068965517241,
+            "points": 232
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.0757136315066402,
+            "gt_id": 6,
+            "purity": 0.9455445544554455,
+            "points": 404
+          },
+          {
+            "candidate_id": 6,
+            "state": "would_remove",
+            "confirmed_frame": 1545,
+            "phase": "rescan",
+            "fixed_reference_gt": 15,
+            "gt_vertex_coverage_5cm": 0.4592947322594689,
+            "gt_id": 15,
+            "purity": 0.9038461538461539,
+            "points": 624
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 1535,
+            "phase": "rescan",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.08779314491882141,
+            "gt_id": 4,
+            "purity": 0.9882352941176471,
+            "points": 85
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.056179775280898875,
+            "points": 267
+          },
+          {
+            "candidate_id": 9,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.02449624654286843,
+            "gt_id": 38,
+            "purity": 0.8187702265372169,
+            "points": 309
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 44,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": 0.10424577148774594,
+            "gt_id": 45,
+            "purity": 1.0,
+            "points": 116
+          },
+          {
+            "candidate_id": 12,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 23,
+            "gt_vertex_coverage_5cm": 0.2574074074074074,
+            "gt_id": 23,
+            "purity": 1.0,
+            "points": 76
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 46,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.03556708899404671,
+            "gt_id": 6,
+            "purity": 0.9854014598540146,
+            "points": 137
+          },
+          {
+            "candidate_id": 15,
+            "state": "would_remove",
+            "confirmed_frame": 1485,
+            "phase": "rescan",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.011523771895166601,
+            "gt_id": 38,
+            "purity": 1.0,
+            "points": 377
+          },
+          {
+            "candidate_id": 16,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 38,
+            "gt_vertex_coverage_5cm": 0.010206769392861846,
+            "gt_id": 38,
+            "purity": 0.95625,
+            "points": 160
+          },
+          {
+            "candidate_id": 17,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 18,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 19,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 34,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 20,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.203125,
+            "points": 64
+          },
+          {
+            "candidate_id": 21,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 250
+          }
+        ]
+      },
+      "candidate_pool": [
+        {
+          "candidate_id": 0,
+          "gt_id": 18,
+          "purity": 0.9135246670418308,
+          "points": 5331,
+          "local_clear_support_events": [
+            {
+              "frame": 580,
+              "state": "suspected",
+              "retained_contradiction_points": 10,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 815,
+              "state": "cancelled",
+              "retained_contradiction_points": 10,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 1,
+          "gt_id": null,
+          "purity": 0.002336448598130841,
+          "points": 4708,
+          "local_clear_support_events": [
+            {
+              "frame": 935,
+              "state": "suspected",
+              "retained_contradiction_points": 875,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 945,
+              "state": "cancelled",
+              "retained_contradiction_points": 866,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 2,
+          "gt_id": 38,
+          "purity": 0.9047619047619048,
+          "points": 1197,
+          "local_clear_support_events": [
+            {
+              "frame": 1430,
+              "state": "suspected",
+              "retained_contradiction_points": 36,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 1435,
+              "state": "cancelled",
+              "retained_contradiction_points": 2,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 3,
+          "gt_id": 27,
+          "purity": 0.9455252918287937,
+          "points": 1028,
+          "local_clear_support_events": [
+            {
+              "frame": 1015,
+              "state": "suspected",
+              "retained_contradiction_points": 77,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            }
+          ]
+        },
+        {
+          "candidate_id": 4,
+          "gt_id": 7,
+          "purity": 0.8218905472636816,
+          "points": 1005,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 5,
+          "gt_id": 6,
+          "purity": 0.8223333333333334,
+          "points": 6000,
+          "local_clear_support_events": [
+            {
+              "frame": 1100,
+              "state": "suspected",
+              "retained_contradiction_points": 264,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 1105,
+              "state": "cancelled",
+              "retained_contradiction_points": 264,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 6,
+          "gt_id": 15,
+          "purity": 0.698196665532494,
+          "points": 2939,
+          "local_clear_support_events": [
+            {
+              "frame": 1140,
+              "state": "suspected",
+              "retained_contradiction_points": 155,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            }
+          ]
+        },
+        {
+          "candidate_id": 7,
+          "gt_id": 4,
+          "purity": 0.9723502304147466,
+          "points": 217,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 8,
+          "gt_id": null,
+          "purity": 0.036,
+          "points": 6000,
+          "local_clear_support_events": [
+            {
+              "frame": 1455,
+              "state": "suspected",
+              "retained_contradiction_points": 534,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 1460,
+              "state": "cancelled",
+              "retained_contradiction_points": 524,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 9,
+          "gt_id": 38,
+          "purity": 0.8805473372781065,
+          "points": 2704,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 10,
+          "gt_id": 44,
+          "purity": 0.9733333333333334,
+          "points": 225,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 11,
+          "gt_id": 45,
+          "purity": 0.977796052631579,
+          "points": 1216,
+          "local_clear_support_events": [
+            {
+              "frame": 1285,
+              "state": "suspected",
+              "retained_contradiction_points": 210,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 1345,
+              "state": "cancelled",
+              "retained_contradiction_points": 210,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 12,
+          "gt_id": 23,
+          "purity": 0.9585062240663901,
+          "points": 482,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 13,
+          "gt_id": 46,
+          "purity": 0.7648514851485149,
+          "points": 404,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 14,
+          "gt_id": 6,
+          "purity": 0.7601666666666667,
+          "points": 6000,
+          "local_clear_support_events": [
+            {
+              "frame": 1530,
+              "state": "suspected",
+              "retained_contradiction_points": 215,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 1535,
+              "state": "cancelled",
+              "retained_contradiction_points": 215,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 15,
+          "gt_id": 38,
+          "purity": 0.9726224783861671,
+          "points": 694,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 16,
+          "gt_id": 38,
+          "purity": 0.9376820034944671,
+          "points": 1717,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 17,
+          "gt_id": 40,
+          "purity": 0.9898477157360406,
+          "points": 197,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 18,
+          "gt_id": 35,
+          "purity": 0.8161764705882353,
+          "points": 272,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 19,
+          "gt_id": 34,
+          "purity": 0.7134831460674157,
+          "points": 356,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 20,
+          "gt_id": null,
+          "purity": 0.034333333333333334,
+          "points": 6000,
+          "local_clear_support_events": [
+            {
+              "frame": 1540,
+              "state": "suspected",
+              "retained_contradiction_points": 313,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 1570,
+              "state": "cancelled",
+              "retained_contradiction_points": 313,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 21,
+          "gt_id": null,
+          "purity": 0.0025,
+          "points": 6000,
+          "local_clear_support_events": []
+        }
+      ],
+      "pending_diagnostics": [],
+      "main_loop_seconds": 374.21962129697204,
+      "accumulator_seconds": 0.14893820649012923
+    },
+    {
+      "seq": "pair_03_f62fd5f8_20c9939d",
+      "official_removed": [
+        12,
+        22,
+        35,
+        36,
+        45,
+        46,
+        100
+      ],
+      "verifiable_removed": [
+        12,
+        22,
+        35,
+        36,
+        45,
+        46
+      ],
+      "candidates": 15,
+      "candidate_pool_removed_gt": [
+        12,
+        22,
+        35,
+        45
+      ],
+      "checks": {
+        "original_replay_checks": 873,
+        "common_frame_checks": 858,
+        "observation_sets_identical": true
+      },
+      "metrics": {
+        "original": {
+          "confirmed_rescan_candidates": 6,
+          "removed_hits": [
+            22,
+            35
+          ],
+          "any_changed_hits": [
+            9,
+            10,
+            11,
+            22,
+            35
+          ],
+          "no_change_annotation_ids": [
+            28
+          ],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            22,
+            35
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "local_clear_only": {
+          "confirmed_rescan_candidates": 6,
+          "removed_hits": [
+            22,
+            35
+          ],
+          "any_changed_hits": [
+            9,
+            10,
+            11,
+            22,
+            35
+          ],
+          "no_change_annotation_ids": [
+            28
+          ],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            22,
+            35
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "common": {
+          "confirmed_rescan_candidates": 4,
+          "removed_hits": [
+            22,
+            35
+          ],
+          "any_changed_hits": [
+            11,
+            22,
+            35
+          ],
+          "no_change_annotation_ids": [
+            28
+          ],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            22,
+            35
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "extended": {
+          "confirmed_rescan_candidates": 4,
+          "removed_hits": [
+            22,
+            35
+          ],
+          "any_changed_hits": [
+            11,
+            22,
+            35
+          ],
+          "no_change_annotation_ids": [
+            28
+          ],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            22,
+            35
+          ],
+          "reference_confirmed_candidates": 0
+        }
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "would_remove",
+            "confirmed_frame": 570,
+            "phase": "rescan",
+            "fixed_reference_gt": 28,
+            "gt_vertex_coverage_5cm": 0.15664160401002505,
+            "gt_id": 28,
+            "purity": 0.99609375,
+            "points": 256
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": 0.047341973023009784,
+            "gt_id": 45,
+            "purity": 0.7716049382716049,
+            "points": 162
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 41,
+            "gt_vertex_coverage_5cm": 0.48735632183908045,
+            "gt_id": 41,
+            "purity": 0.9225352112676056,
+            "points": 142
+          },
+          {
+            "candidate_id": 4,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 14,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 5,
+            "state": "would_remove",
+            "confirmed_frame": 400,
+            "phase": "rescan",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": 0.6347962382445141,
+            "gt_id": 35,
+            "purity": 0.8865671641791045,
+            "points": 335
+          },
+          {
+            "candidate_id": 6,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 488,
+            "phase": "rescan",
+            "fixed_reference_gt": 11,
+            "gt_vertex_coverage_5cm": 0.07672487832808474,
+            "gt_id": 11,
+            "purity": 0.9764705882352941,
+            "points": 255
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 12,
+            "gt_vertex_coverage_5cm": 0.05680119581464873,
+            "gt_id": 12,
+            "purity": 0.9714285714285714,
+            "points": 140
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 570,
+            "phase": "rescan",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": 0.24806201550387597,
+            "gt_id": 9,
+            "purity": 0.6895306859205776,
+            "points": 277
+          },
+          {
+            "candidate_id": 10,
+            "state": "would_remove",
+            "confirmed_frame": 492,
+            "phase": "rescan",
+            "fixed_reference_gt": 10,
+            "gt_vertex_coverage_5cm": 0.3702651515151515,
+            "gt_id": 10,
+            "purity": 0.7464788732394366,
+            "points": 355
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 43,
+            "gt_vertex_coverage_5cm": 0.5994236311239193,
+            "gt_id": 43,
+            "purity": 0.9575757575757575,
+            "points": 165
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 548,
+            "phase": "rescan",
+            "fixed_reference_gt": 22,
+            "gt_vertex_coverage_5cm": 0.28888888888888886,
+            "gt_id": 22,
+            "purity": 0.9690721649484536,
+            "points": 194
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 32,
+            "gt_vertex_coverage_5cm": 0.3540856031128405,
+            "gt_id": 32,
+            "purity": 0.9841269841269841,
+            "points": 63
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": 0.047217537942664416,
+            "gt_id": 24,
+            "purity": 1.0,
+            "points": 53
+          }
+        ],
+        "local_clear_only": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "would_remove",
+            "confirmed_frame": 570,
+            "phase": "rescan",
+            "fixed_reference_gt": 28,
+            "gt_vertex_coverage_5cm": 0.15664160401002505,
+            "gt_id": 28,
+            "purity": 0.99609375,
+            "points": 256
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": 0.047341973023009784,
+            "gt_id": 45,
+            "purity": 0.7716049382716049,
+            "points": 162
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 41,
+            "gt_vertex_coverage_5cm": 0.48735632183908045,
+            "gt_id": 41,
+            "purity": 0.9225352112676056,
+            "points": 142
+          },
+          {
+            "candidate_id": 4,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 14,
+            "gt_vertex_coverage_5cm": 0.031073446327683617,
+            "gt_id": 14,
+            "purity": 0.9259259259259259,
+            "points": 27
+          },
+          {
+            "candidate_id": 5,
+            "state": "would_remove",
+            "confirmed_frame": 400,
+            "phase": "rescan",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": 0.6347962382445141,
+            "gt_id": 35,
+            "purity": 0.8865671641791045,
+            "points": 335
+          },
+          {
+            "candidate_id": 6,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 488,
+            "phase": "rescan",
+            "fixed_reference_gt": 11,
+            "gt_vertex_coverage_5cm": 0.07672487832808474,
+            "gt_id": 11,
+            "purity": 0.9764705882352941,
+            "points": 255
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 12,
+            "gt_vertex_coverage_5cm": 0.05680119581464873,
+            "gt_id": 12,
+            "purity": 0.9714285714285714,
+            "points": 140
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 570,
+            "phase": "rescan",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": 0.24806201550387597,
+            "gt_id": 9,
+            "purity": 0.6895306859205776,
+            "points": 277
+          },
+          {
+            "candidate_id": 10,
+            "state": "would_remove",
+            "confirmed_frame": 492,
+            "phase": "rescan",
+            "fixed_reference_gt": 10,
+            "gt_vertex_coverage_5cm": 0.3702651515151515,
+            "gt_id": 10,
+            "purity": 0.7464788732394366,
+            "points": 355
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 43,
+            "gt_vertex_coverage_5cm": 0.5994236311239193,
+            "gt_id": 43,
+            "purity": 0.9575757575757575,
+            "points": 165
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 548,
+            "phase": "rescan",
+            "fixed_reference_gt": 22,
+            "gt_vertex_coverage_5cm": 0.28888888888888886,
+            "gt_id": 22,
+            "purity": 0.9690721649484536,
+            "points": 194
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 32,
+            "gt_vertex_coverage_5cm": 0.3540856031128405,
+            "gt_id": 32,
+            "purity": 0.9841269841269841,
+            "points": 63
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": 0.047217537942664416,
+            "gt_id": 24,
+            "purity": 1.0,
+            "points": 53
+          }
+        ],
+        "common": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "would_remove",
+            "confirmed_frame": 570,
+            "phase": "rescan",
+            "fixed_reference_gt": 28,
+            "gt_vertex_coverage_5cm": 0.10275689223057644,
+            "gt_id": 28,
+            "purity": 1.0,
+            "points": 134
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 41,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 14,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 5,
+            "state": "would_remove",
+            "confirmed_frame": 400,
+            "phase": "rescan",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": 0.4843260188087774,
+            "gt_id": 35,
+            "purity": 0.8476190476190476,
+            "points": 210
+          },
+          {
+            "candidate_id": 6,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 488,
+            "phase": "rescan",
+            "fixed_reference_gt": 11,
+            "gt_vertex_coverage_5cm": 0.035785857429144,
+            "gt_id": 11,
+            "purity": 0.9763779527559056,
+            "points": 127
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 12,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 9,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": 0.07087486157253599,
+            "gt_id": 9,
+            "purity": 0.7575757575757576,
+            "points": 33
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 10,
+            "gt_vertex_coverage_5cm": 0.006628787878787879,
+            "gt_id": 10,
+            "purity": 1.0,
+            "points": 4
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 43,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 548,
+            "phase": "rescan",
+            "fixed_reference_gt": 22,
+            "gt_vertex_coverage_5cm": 0.1623931623931624,
+            "gt_id": 22,
+            "purity": 0.957983193277311,
+            "points": 119
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 32,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          }
+        ],
+        "extended": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 1
+          },
+          {
+            "candidate_id": 1,
+            "state": "would_remove",
+            "confirmed_frame": 570,
+            "phase": "rescan",
+            "fixed_reference_gt": 28,
+            "gt_vertex_coverage_5cm": 0.10275689223057644,
+            "gt_id": 28,
+            "purity": 1.0,
+            "points": 134
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 45,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 41,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 14,
+            "gt_vertex_coverage_5cm": 0.0211864406779661,
+            "gt_id": 14,
+            "purity": 0.9583333333333334,
+            "points": 24
+          },
+          {
+            "candidate_id": 5,
+            "state": "would_remove",
+            "confirmed_frame": 400,
+            "phase": "rescan",
+            "fixed_reference_gt": 35,
+            "gt_vertex_coverage_5cm": 0.658307210031348,
+            "gt_id": 35,
+            "purity": 0.9086161879895561,
+            "points": 383
+          },
+          {
+            "candidate_id": 6,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 488,
+            "phase": "rescan",
+            "fixed_reference_gt": 11,
+            "gt_vertex_coverage_5cm": 0.06069281419982823,
+            "gt_id": 11,
+            "purity": 0.9786096256684492,
+            "points": 187
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 12,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 9,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": 0.07087486157253599,
+            "gt_id": 9,
+            "purity": 0.7575757575757576,
+            "points": 33
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 10,
+            "gt_vertex_coverage_5cm": 0.13825757575757575,
+            "gt_id": 10,
+            "purity": 0.5625,
+            "points": 80
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 43,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 548,
+            "phase": "rescan",
+            "fixed_reference_gt": 22,
+            "gt_vertex_coverage_5cm": 0.1623931623931624,
+            "gt_id": 22,
+            "purity": 0.957983193277311,
+            "points": 119
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 32,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 24,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          }
+        ]
+      },
+      "candidate_pool": [
+        {
+          "candidate_id": 0,
+          "gt_id": null,
+          "purity": 0.018997862740441702,
+          "points": 4211,
+          "local_clear_support_events": [
+            {
+              "frame": 288,
+              "state": "suspected",
+              "retained_contradiction_points": 415,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 452,
+              "state": "cancelled",
+              "retained_contradiction_points": 255,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 1,
+          "gt_id": 28,
+          "purity": 0.9772079772079773,
+          "points": 351,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 2,
+          "gt_id": 45,
+          "purity": 0.8016194331983806,
+          "points": 247,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 3,
+          "gt_id": 41,
+          "purity": 0.8743169398907104,
+          "points": 366,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 4,
+          "gt_id": 14,
+          "purity": 0.5390469887491728,
+          "points": 3022,
+          "local_clear_support_events": [
+            {
+              "frame": 402,
+              "state": "suspected",
+              "retained_contradiction_points": 60,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 460,
+              "state": "cancelled",
+              "retained_contradiction_points": 60,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 5,
+          "gt_id": 35,
+          "purity": 0.9094650205761317,
+          "points": 486,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 6,
+          "gt_id": 17,
+          "purity": 0.8361204013377926,
+          "points": 598,
+          "local_clear_support_events": [
+            {
+              "frame": 566,
+              "state": "suspected",
+              "retained_contradiction_points": 110,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            }
+          ]
+        },
+        {
+          "candidate_id": 7,
+          "gt_id": 11,
+          "purity": 0.9827586206896551,
+          "points": 348,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 8,
+          "gt_id": 12,
+          "purity": 0.968,
+          "points": 250,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 9,
+          "gt_id": null,
+          "purity": 0.47784431137724553,
+          "points": 835,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 10,
+          "gt_id": 10,
+          "purity": 0.7020109689213894,
+          "points": 547,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 11,
+          "gt_id": 43,
+          "purity": 0.7505422993492408,
+          "points": 461,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 12,
+          "gt_id": 22,
+          "purity": 0.9754098360655737,
+          "points": 244,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 13,
+          "gt_id": 32,
+          "purity": 0.8483412322274881,
+          "points": 211,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 14,
+          "gt_id": 24,
+          "purity": 0.8699609882964889,
+          "points": 769,
+          "local_clear_support_events": []
+        }
+      ],
+      "pending_diagnostics": [
+        {
+          "candidate_id": 2,
+          "gt_id": 45,
+          "accepted_contradiction_observations": 1,
+          "reference_points": 247,
+          "reason_counts": {
+            "paused_correlated_observation": 1,
+            "paused_insufficient_reference_points": 136
+          },
+          "max_cumulative_contradicted_fraction": 0.6680161943319838
+        },
+        {
+          "candidate_id": 8,
+          "gt_id": 12,
+          "accepted_contradiction_observations": 1,
+          "reference_points": 250,
+          "reason_counts": {
+            "paused_correlated_observation": 2,
+            "paused_insufficient_reference_points": 52
+          },
+          "max_cumulative_contradicted_fraction": 0.58
+        }
+      ],
+      "main_loop_seconds": 303.4636259302497,
+      "accumulator_seconds": 0.11324054514989257
+    },
+    {
+      "seq": "pair_04_752cc595_55551083",
+      "official_removed": [
+        7,
+        19,
+        29,
+        35,
+        36
+      ],
+      "verifiable_removed": [
+        7,
+        19,
+        29,
+        35,
+        36
+      ],
+      "candidates": 18,
+      "candidate_pool_removed_gt": [
+        7,
+        29,
+        36
+      ],
+      "checks": {
+        "original_replay_checks": 692,
+        "common_frame_checks": 674,
+        "observation_sets_identical": true
+      },
+      "metrics": {
+        "original": {
+          "confirmed_rescan_candidates": 5,
+          "removed_hits": [
+            29
+          ],
+          "any_changed_hits": [
+            4,
+            5,
+            17,
+            29,
+            40
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            29
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "local_clear_only": {
+          "confirmed_rescan_candidates": 5,
+          "removed_hits": [
+            29
+          ],
+          "any_changed_hits": [
+            4,
+            5,
+            17,
+            29,
+            40
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            29
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "common": {
+          "confirmed_rescan_candidates": 3,
+          "removed_hits": [
+            29
+          ],
+          "any_changed_hits": [
+            5,
+            29,
+            40
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            29
+          ],
+          "reference_confirmed_candidates": 0
+        },
+        "extended": {
+          "confirmed_rescan_candidates": 5,
+          "removed_hits": [
+            29
+          ],
+          "any_changed_hits": [
+            4,
+            5,
+            17,
+            29,
+            40
+          ],
+          "no_change_annotation_ids": [],
+          "mixed_or_no_depth_candidates": 0,
+          "fixed_reference_removed_hits": [
+            29
+          ],
+          "reference_confirmed_candidates": 0
+        }
+      },
+      "predictions": {
+        "original": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 21,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": 0.13059701492537312,
+            "gt_id": 30,
+            "purity": 1.0,
+            "points": 132
+          },
+          {
+            "candidate_id": 4,
+            "state": "would_remove",
+            "confirmed_frame": 456,
+            "phase": "rescan",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.3318007662835249,
+            "gt_id": 4,
+            "purity": 0.985663082437276,
+            "points": 558
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": 0.15677966101694915,
+            "gt_id": 7,
+            "purity": 0.9761904761904762,
+            "points": 126
+          },
+          {
+            "candidate_id": 6,
+            "state": "would_remove",
+            "confirmed_frame": 568,
+            "phase": "rescan",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": 0.38562091503267976,
+            "gt_id": 40,
+            "purity": 0.9918032786885246,
+            "points": 244
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 456,
+            "phase": "rescan",
+            "fixed_reference_gt": 29,
+            "gt_vertex_coverage_5cm": 0.10131712259371833,
+            "gt_id": 29,
+            "purity": 0.9547738693467337,
+            "points": 199
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 540,
+            "phase": "rescan",
+            "fixed_reference_gt": 5,
+            "gt_vertex_coverage_5cm": 0.3763975155279503,
+            "gt_id": 5,
+            "purity": 0.9491094147582697,
+            "points": 393
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 20,
+            "gt_vertex_coverage_5cm": 0.07524271844660194,
+            "gt_id": 20,
+            "purity": 0.9035532994923858,
+            "points": 197
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 36,
+            "gt_vertex_coverage_5cm": 0.3665987780040733,
+            "gt_id": 36,
+            "purity": 0.9657534246575342,
+            "points": 146
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 532,
+            "phase": "rescan",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": 0.5891677675033025,
+            "gt_id": 17,
+            "purity": 0.9855072463768116,
+            "points": 345
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.14027149321266968,
+            "gt_id": 6,
+            "purity": 0.9357142857142857,
+            "points": 140
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 15,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 16,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": 0.0014978468451600825,
+            "gt_id": 16,
+            "purity": 0.6,
+            "points": 5
+          },
+          {
+            "candidate_id": 17,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 26,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          }
+        ],
+        "local_clear_only": [
+          {
+            "candidate_id": 0,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 21,
+            "gt_vertex_coverage_5cm": 0.14085072231139648,
+            "gt_id": 21,
+            "purity": 0.9408528198074277,
+            "points": 727
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": 0.13059701492537312,
+            "gt_id": 30,
+            "purity": 1.0,
+            "points": 132
+          },
+          {
+            "candidate_id": 4,
+            "state": "would_remove",
+            "confirmed_frame": 456,
+            "phase": "rescan",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.3318007662835249,
+            "gt_id": 4,
+            "purity": 0.985663082437276,
+            "points": 558
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": 0.15677966101694915,
+            "gt_id": 7,
+            "purity": 0.9761904761904762,
+            "points": 126
+          },
+          {
+            "candidate_id": 6,
+            "state": "would_remove",
+            "confirmed_frame": 568,
+            "phase": "rescan",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": 0.38562091503267976,
+            "gt_id": 40,
+            "purity": 0.9918032786885246,
+            "points": 244
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 456,
+            "phase": "rescan",
+            "fixed_reference_gt": 29,
+            "gt_vertex_coverage_5cm": 0.10131712259371833,
+            "gt_id": 29,
+            "purity": 0.9547738693467337,
+            "points": 199
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 540,
+            "phase": "rescan",
+            "fixed_reference_gt": 5,
+            "gt_vertex_coverage_5cm": 0.3763975155279503,
+            "gt_id": 5,
+            "purity": 0.9491094147582697,
+            "points": 393
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 20,
+            "gt_vertex_coverage_5cm": 0.07524271844660194,
+            "gt_id": 20,
+            "purity": 0.9035532994923858,
+            "points": 197
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 36,
+            "gt_vertex_coverage_5cm": 0.3665987780040733,
+            "gt_id": 36,
+            "purity": 0.9657534246575342,
+            "points": 146
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 532,
+            "phase": "rescan",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": 0.5891677675033025,
+            "gt_id": 17,
+            "purity": 0.9855072463768116,
+            "points": 345
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": 0.14027149321266968,
+            "gt_id": 6,
+            "purity": 0.9357142857142857,
+            "points": 140
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 15,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 16,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": 0.0014978468451600825,
+            "gt_id": 16,
+            "purity": 0.6,
+            "points": 5
+          },
+          {
+            "candidate_id": 17,
+            "state": "cancelled",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 26,
+            "gt_vertex_coverage_5cm": 0.08749121574139143,
+            "gt_id": 26,
+            "purity": 0.9857142857142858,
+            "points": 70
+          }
+        ],
+        "common": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 21,
+            "gt_vertex_coverage_5cm": 0.021669341894060994,
+            "gt_id": 21,
+            "purity": 0.9344262295081968,
+            "points": 61
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 4,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.03371647509578544,
+            "gt_id": 4,
+            "purity": 0.967741935483871,
+            "points": 62
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 6,
+            "state": "would_remove",
+            "confirmed_frame": 568,
+            "phase": "rescan",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": 0.32679738562091504,
+            "gt_id": 40,
+            "purity": 0.9949748743718593,
+            "points": 199
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 456,
+            "phase": "rescan",
+            "fixed_reference_gt": 29,
+            "gt_vertex_coverage_5cm": 0.05268490374873354,
+            "gt_id": 29,
+            "purity": 0.9519230769230769,
+            "points": 104
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 540,
+            "phase": "rescan",
+            "fixed_reference_gt": 5,
+            "gt_vertex_coverage_5cm": 0.22981366459627328,
+            "gt_id": 5,
+            "purity": 0.9624413145539906,
+            "points": 213
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 20,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 36,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 12,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": 0.27212681638044917,
+            "gt_id": 17,
+            "purity": 0.9672131147540983,
+            "points": 122
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 15,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 16,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 17,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 26,
+            "gt_vertex_coverage_5cm": 0.040758959943780745,
+            "gt_id": 26,
+            "purity": 1.0,
+            "points": 22
+          }
+        ],
+        "extended": [
+          {
+            "candidate_id": 0,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 10
+          },
+          {
+            "candidate_id": 1,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": 0.012686567164179104,
+            "gt_id": 30,
+            "purity": 1.0,
+            "points": 3
+          },
+          {
+            "candidate_id": 2,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 21,
+            "gt_vertex_coverage_5cm": 0.021669341894060994,
+            "gt_id": 21,
+            "purity": 0.9344262295081968,
+            "points": 61
+          },
+          {
+            "candidate_id": 3,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 30,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 4,
+            "state": "would_remove",
+            "confirmed_frame": 542,
+            "phase": "rescan",
+            "fixed_reference_gt": 4,
+            "gt_vertex_coverage_5cm": 0.5478927203065134,
+            "gt_id": 4,
+            "purity": 0.9894242068155111,
+            "points": 851
+          },
+          {
+            "candidate_id": 5,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 7,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 6,
+            "state": "would_remove",
+            "confirmed_frame": 568,
+            "phase": "rescan",
+            "fixed_reference_gt": 40,
+            "gt_vertex_coverage_5cm": 0.32679738562091504,
+            "gt_id": 40,
+            "purity": 0.9949748743718593,
+            "points": 199
+          },
+          {
+            "candidate_id": 7,
+            "state": "would_remove",
+            "confirmed_frame": 456,
+            "phase": "rescan",
+            "fixed_reference_gt": 29,
+            "gt_vertex_coverage_5cm": 0.05268490374873354,
+            "gt_id": 29,
+            "purity": 0.9519230769230769,
+            "points": 104
+          },
+          {
+            "candidate_id": 8,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 9,
+            "state": "would_remove",
+            "confirmed_frame": 540,
+            "phase": "rescan",
+            "fixed_reference_gt": 5,
+            "gt_vertex_coverage_5cm": 0.22981366459627328,
+            "gt_id": 5,
+            "purity": 0.9624413145539906,
+            "points": 213
+          },
+          {
+            "candidate_id": 10,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 20,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 11,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 36,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 12,
+            "state": "would_remove",
+            "confirmed_frame": 552,
+            "phase": "rescan",
+            "fixed_reference_gt": 17,
+            "gt_vertex_coverage_5cm": 0.35535006605019814,
+            "gt_id": 17,
+            "purity": 0.976878612716763,
+            "points": 173
+          },
+          {
+            "candidate_id": 13,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 6,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 14,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 15,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": null,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 16,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 16,
+            "gt_vertex_coverage_5cm": null,
+            "gt_id": null,
+            "purity": 0.0,
+            "points": 0
+          },
+          {
+            "candidate_id": 17,
+            "state": "suspected",
+            "confirmed_frame": null,
+            "phase": "reference",
+            "fixed_reference_gt": 26,
+            "gt_vertex_coverage_5cm": 0.040758959943780745,
+            "gt_id": 26,
+            "purity": 1.0,
+            "points": 22
+          }
+        ]
+      },
+      "candidate_pool": [
+        {
+          "candidate_id": 0,
+          "gt_id": null,
+          "purity": 0.003581267217630854,
+          "points": 3630,
+          "local_clear_support_events": [
+            {
+              "frame": 110,
+              "state": "suspected",
+              "retained_contradiction_points": 103,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 120,
+              "state": "cancelled",
+              "retained_contradiction_points": 103,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 1,
+          "gt_id": 30,
+          "purity": 0.9833333333333333,
+          "points": 240,
+          "local_clear_support_events": [
+            {
+              "frame": 294,
+              "state": "suspected",
+              "retained_contradiction_points": 19,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 358,
+              "state": "cancelled",
+              "retained_contradiction_points": 9,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 2,
+          "gt_id": 21,
+          "purity": 0.948055145248646,
+          "points": 4062,
+          "local_clear_support_events": [
+            {
+              "frame": 462,
+              "state": "suspected",
+              "retained_contradiction_points": 728,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            }
+          ]
+        },
+        {
+          "candidate_id": 3,
+          "gt_id": 30,
+          "purity": 0.9873417721518988,
+          "points": 395,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 4,
+          "gt_id": 4,
+          "purity": 0.9893238434163701,
+          "points": 1405,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 5,
+          "gt_id": 7,
+          "purity": 0.9586776859504132,
+          "points": 847,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 6,
+          "gt_id": 40,
+          "purity": 0.9891540130151844,
+          "points": 461,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 7,
+          "gt_id": 29,
+          "purity": 0.95703125,
+          "points": 256,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 8,
+          "gt_id": 16,
+          "purity": 0.8367567567567568,
+          "points": 925,
+          "local_clear_support_events": [
+            {
+              "frame": 534,
+              "state": "suspected",
+              "retained_contradiction_points": 234,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            }
+          ]
+        },
+        {
+          "candidate_id": 9,
+          "gt_id": 5,
+          "purity": 0.9400630914826499,
+          "points": 634,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 10,
+          "gt_id": 20,
+          "purity": 0.924924924924925,
+          "points": 333,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 11,
+          "gt_id": 36,
+          "purity": 0.9642857142857143,
+          "points": 308,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 12,
+          "gt_id": 17,
+          "purity": 0.9791425260718424,
+          "points": 863,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 13,
+          "gt_id": 6,
+          "purity": 0.7973856209150327,
+          "points": 2142,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 14,
+          "gt_id": null,
+          "purity": 0.010300782859497322,
+          "points": 2427,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 15,
+          "gt_id": null,
+          "purity": 0.005833333333333334,
+          "points": 6000,
+          "local_clear_support_events": [
+            {
+              "frame": 558,
+              "state": "suspected",
+              "retained_contradiction_points": 94,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 564,
+              "state": "cancelled",
+              "retained_contradiction_points": 94,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        },
+        {
+          "candidate_id": 16,
+          "gt_id": 16,
+          "purity": 0.7820095214232022,
+          "points": 3991,
+          "local_clear_support_events": []
+        },
+        {
+          "candidate_id": 17,
+          "gt_id": 26,
+          "purity": 0.9945872801082544,
+          "points": 739,
+          "local_clear_support_events": [
+            {
+              "frame": 578,
+              "state": "suspected",
+              "retained_contradiction_points": 141,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 1
+            },
+            {
+              "frame": 584,
+              "state": "cancelled",
+              "retained_contradiction_points": 141,
+              "original_contradiction_points": 0,
+              "hits": 0,
+              "support_hits": 2
+            }
+          ]
+        }
+      ],
+      "pending_diagnostics": [
+        {
+          "candidate_id": 5,
+          "gt_id": 7,
+          "accepted_contradiction_observations": 1,
+          "reference_points": 847,
+          "reason_counts": {
+            "paused_insufficient_reference_points": 78
+          },
+          "max_cumulative_contradicted_fraction": 0.29634002361275086
+        },
+        {
+          "candidate_id": 11,
+          "gt_id": 36,
+          "accepted_contradiction_observations": 1,
+          "reference_points": 308,
+          "reason_counts": {
+            "paused_insufficient_reference_points": 37
+          },
+          "max_cumulative_contradicted_fraction": 0.4772727272727273
+        }
+      ],
+      "main_loop_seconds": 217.08231470920146,
+      "accumulator_seconds": 0.11327998945489526
+    }
+  ]
+}

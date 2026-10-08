@@ -19,6 +19,8 @@ for r in data['scenes']:
     totals = [x+y for x,y in zip(totals,h)]
     lines.append(f"|{r['seq'].split('_')[1]}|{n}|"+'|'.join(str(x) for x in h)+'|')
 lines.append(f'|合计|{denominator}|'+'|'.join(f'{x} ({x/denominator:.1%})' for x in totals)+'|')
+if totals[0] == totals[1]:
+    lines += ['', '在本次场景和设置下，只改清零范围没有增加消失物体的检出。前一轮放宽入口后检出更多，不能归功于这一项改动。']
 lines += ['', '## 有没有额外报警', '',
     '下表是命中了没有变化标注的 GT 的数量。它们是需要检查的额外报警，不全都能认定为误报；也可能是旧重建错误或标注缺漏。', '',
     '|场景|原检测|只改清零范围|逐点计分|逐点计分＋继续观察|', '|---|---:|---:|---:|---:|']
@@ -37,7 +39,8 @@ lines += ['', '## 每个候选发生了什么', '',
     '|场景|候选|原检测状态 / GT|只改清零范围状态 / GT|逐点计分状态 / GT|继续观察状态 / GT|', '|---|---:|---|---|---|---|']
 for r in data['scenes']:
     for rows in zip(*(r['predictions'][k] for k in names)):
-        lines.append(f"|{r['seq'].split('_')[1]}|{rows[0]['candidate_id']}|"+'|'.join(f"{x['state']} / {x['gt_id']}" for x in rows)+'|')
+        states={'would_remove':'已确认','suspected':'待确认','cancelled':'已取消'}
+        lines.append(f"|{r['seq'].split('_')[1]}|{rows[0]['candidate_id']}|"+'|'.join(f"{states[x['state']]} / {x['gt_id'] if x['gt_id'] is not None else '未关联'}" for x in rows)+'|')
 lines += ['', '## 对照检查', '',
     '- 原算法负责候选名单和创建时间；新算法不能新增候选、影响合并、修改地图或触发删除。',
     '- 每次原算法更新，都用未经修改的规则再算一遍，逐项比较状态和证据记录；不一致立即报错。',
@@ -46,5 +49,7 @@ lines += ['', '## 对照检查', '',
     '- 全部逐帧证据已保存，可不重新建图就重放其他记忆规则。', '']
 for r in data['scenes']:
     lines.append(f"- {r['seq']}: 候选 {r['candidates']}，原规则复算检查 {r['checks']['original_replay_checks']} 次，帧筛选检查 {r['checks']['common_frame_checks']} 次。")
+if (ROOT/'stalled_attempt.json').exists():
+    lines += ['', '## 运行中断记录', '', 'pair04 首次在 GPU 7 上长时间停在第 541 帧，没有 OOM 或 Python 异常，具体原因未确定。已保留日志；同样参数改在 GPU 3 重跑，表中采用重跑的同图对照结果。其他三个场景未重跑。']
 (ROOT / 'RESULTS.md').write_text('\n'.join(lines)+'\n', encoding='utf-8')
 print('totals',totals,'denominator',denominator)
