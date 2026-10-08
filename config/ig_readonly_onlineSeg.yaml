@@ -1,0 +1,47 @@
+remove_detection:
+
+  # 共同：检测开关与执行频率（仅检测和标记，不实际删除）
+  enabled: true  # 启用 remove detection
+  interval: 1  # 每隔多少帧检测一次
+
+  # 深度判断：同时决定 RGB 是否允许参与；仅深度一致时检查 RGB
+  depth_epsilon_m: 0.08  # 深度容差的固定部分，单位 m
+  depth_relative_epsilon: 0.01  # 深度容差的相对部分；容差 = 固定项 + 相对项 × 较大深度
+
+  # RGB 判断：深度一致时，以 Lab 色差检测外观矛盾
+  rgb_enabled: true  # 启用 RGB 证据；关闭后仅使用深度证据
+  rgb_mad_multiplier: 4.0  # 自适应阈值 = median + 此系数 × 1.4826 × MAD
+  rgb_threshold_min: 8.0  # RGB 自适应阈值下限，单位为 Lab 色差
+  rgb_threshold_max: 50.0  # RGB 自适应阈值上限，单位为 Lab 色差
+
+  # 共同：可靠观测筛选（几何质量也影响 RGB 比较）
+  min_map_weight: 3.0  # 历史 TSDF 表面的最低融合权重
+  min_instance_weight: 5.0  # 参与检测的实例最低权重
+  edge_threshold_m: 0.08  # 深度跳变边缘阈值，单位 m；边缘不参与可靠比较
+  boundary_margin_px: 1  # 深度边缘和实例边界的排除宽度，单位像素
+  max_global_conflict_fraction: 0.75  # 全局联合矛盾比例过高时暂停检测，避免配准等问题造成误判
+
+  # 共同：像素证据汇总为实例候选（深度矛盾 OR 深度一致且 RGB 矛盾）
+  min_valid_pixels: 80  # 图像证据筛选所需的最少可测试像素数
+  contradiction_ratio: 0.5  # 可测试证据中，矛盾证据的最低比例
+  min_reference_points: 100  # 候选实例所需的最少历史参考点数
+  max_reference_points: 6000  # 每个候选最多保存的历史参考点数
+  min_reference_tested_points: 100  # 单次独立观测至少需要的可测试历史参考点数
+  min_cumulative_tested_fraction: 0.12  # 跨独立观测累计覆盖的历史参考点最低比例
+  min_contradicted_fraction: 0.20  # 参考点中累计出现矛盾的最低比例
+
+  # 共同：实例候选的多帧确认、取消与数量控制
+  confirm_observations: 2  # 确认 would_remove 所需的有效矛盾观测次数
+  min_observation_gap: 5  # 计入确认的两次观测至少间隔多少帧
+  min_translation_m: 0.02  # 独立观测的相机平移门槛，单位 m
+  min_rotation_deg: 3.0  # 独立观测的相机旋转门槛，单位度；与平移门槛满足其一即可
+  cancel_support_ratio: 0.6  # 支持历史表面的最低比例，用于取消候选
+  cancel_observations: 2  # 取消候选所需的有效支持观测次数
+  candidate_cooldown_frames: 30  # 取消后再次创建相关候选前的冷却帧数
+  max_candidates: 256  # 最多创建的候选总数
+
+  # 共同：诊断结果保存与最终可视化
+  dump_interval: 10  # 常规诊断帧的保存间隔；候选状态变化也会保存
+  max_scene_snapshot_points: 150000  # 候选场景快照的最大背景点数
+  final_match_radius_m: 0.035  # 历史候选与最终点云进行空间匹配的半径，单位 m
+  save_frame_arrays: true  # 保存逐帧 NPZ 证据数组

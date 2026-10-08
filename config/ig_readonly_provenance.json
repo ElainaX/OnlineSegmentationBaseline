@@ -1,0 +1,13 @@
+{
+  "source_commit": "e6907b8f085f116093fe789bebe6ea002d9b1796",
+  "source_repository": "E:\\Code\\github\\冯博\\onlineSeg",
+  "detector_sha256": "82b1c52cc657fb1b06a819bd43ac5e202637eb0454fcfaaa21d79b60d3739902",
+  "query_method_sha256": {
+    "lookup_voxels_safe": "7fc8fd6ba47caaa817416eb0cedf6a85d1095c6ce20b78a516012f06744f9871",
+    "raycast_history": "d456a5e4056c72c61663b6d252f9470748d51ad2b75a6fc05fd274284cf19e64",
+    "query_active_instance_memberships": "1ad43af8e96eae3ba9edf17b03365db460e3bfbc54f03e0c10e5fc80270dc87f"
+  },
+  "source_config_sha256": "0204523bcc7b2351422210b763f7f1217073c21f4b556ac6b56ef2b144c67620",
+  "detection_only": true,
+  "dataset_schedule": "Inherited from IG; not the native onlineSeg dataset adapter"
+}
