@@ -34,5 +34,20 @@ class TestSurfaceBank(unittest.TestCase):
         points=np.array([[-.01,0,0],[0,0,0],[.03,0,0],[0,-.01,0]])
         self.assertEqual(len(np.unique(voxel_keys(points,.025))),4)
 
+    def test_color_change_alone_cannot_remove_but_can_corroborate_depth(self):
+        cfg=dict(CFG,rgb_mad_multiplier=4,rgb_threshold_min=8,rgb_threshold_max=50)
+        bank=SurfaceBank(.025,cfg,seed_stride=1,require_color=True)
+        k=np.array([[100,0,2],[0,100,2],[0,0,1]],float)
+        depth=np.ones((5,5));valid=np.ones((5,5),bool)
+        red=np.zeros((5,5,3),np.uint8);red[:,:,0]=255
+        blue=red[:,:,::-1].copy()
+        bank.step(0,np.eye(4),k,depth,valid,.1,5,red);n=len(bank.points)
+        bank.step(5,np.eye(4),k,depth,valid,.1,5,red)
+        bank.step(10,np.eye(4),k,depth,valid,.1,5,blue)
+        self.assertFalse(bank.active.any())
+        bank.step(15,np.eye(4),k,depth*2,valid,.1,5,blue)
+        bank.step(20,np.eye(4),k,depth*2,valid,.1,5,blue)
+        self.assertTrue(bank.active[:n].all())
+
 
 if __name__=='__main__':unittest.main()

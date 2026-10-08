@@ -6,7 +6,7 @@ establish local absence. Never infer absence from unknown or occluded pixels.
 No session boundary, GT, appearance model, or scene mutation is used here.
 """
 import numpy as np
-from .readonly_detection_core import classify_depth, independent_observation, SUPPORT, CONTRADICTION
+from .readonly_detection_core import classify_depth, independent_observation, SUPPORT, CONTRADICTION, rgb_to_lab, normalize_rgb
 
 
 def voxel_keys(points, voxel_size):
@@ -17,9 +17,11 @@ def voxel_keys(points, voxel_size):
 
 
 class SurfaceBank:
-    def __init__(self, voxel_size, cfg, seed_stride=2):
+    def __init__(self, voxel_size, cfg, seed_stride=2, require_color=False):
         self.voxel_size, self.cfg, self.seed_stride = voxel_size, cfg, seed_stride
+        self.require_color = require_color
         self.points = np.empty((0,3),np.float32)
+        self.colors = np.empty((0,3),np.float32)
         self.keys = np.empty(0,np.int64)
         self.sorted_keys = self.keys.copy(); self.views = []
         self.support = np.empty(0,np.uint32)
@@ -34,9 +36,13 @@ class SurfaceBank:
     def active(self):
         return self.streak >= self.cfg['confirm_observations']
 
-    def step(self, frame, pose, k, depth, interior, near, far):
+    def step(self, frame, pose, k, depth, interior, near, far, rgb=None):
         if frame <= self.last_frame: raise ValueError('Input must be causal and unique')
         self.last_frame=frame
+        if self.require_color and rgb is None: raise ValueError('RGB evidence required')
+        if rgb is not None:
+            import cv2
+            rgb=cv2.GaussianBlur(normalize_rgb(rgb),(3,3),0)
         n=len(self.points); before=self.active
         stats=dict(frame=int(frame),old_points=n,tested=0,free=0,support=0,occluded=0)
         view_index=len(self.views)
@@ -54,6 +60,28 @@ class SurfaceBank:
             # foreground surface is not allowed to hide another old surface.
             codes=classify_depth(depth[y,x],z[ids],interior[y,x],
                 self.cfg['depth_epsilon_m'],self.cfg['depth_relative_epsilon'])
+            if self.require_color:
+                # Robust exposure offset/threshold use only currently depth-
+                # consistent rays. Color is corroboration, never a free-space
+                # observation by itself. Lack of color change means abstain.
+                current=rgb[y,x];reference=self.colors[ids]
+                anchors=np.flatnonzero(codes==SUPPORT)
+                if len(anchors):
+                    pixels=y[anchors]*w+x[anchors]
+                    _,unique=np.unique(pixels,return_index=True);anchors=anchors[unique]
+                    offset=np.median(reference[anchors]-current[anchors],axis=0)
+                else:offset=np.zeros(3,np.float32)
+                current=np.clip(current+offset,0,1)
+                residual=np.linalg.norm(rgb_to_lab(current)-rgb_to_lab(reference),axis=1) if len(ids) else np.empty(0)
+                if len(anchors):
+                    median=np.median(residual[anchors]);mad=np.median(np.abs(residual[anchors]-median))
+                    threshold=np.clip(median+self.cfg['rgb_mad_multiplier']*1.4826*mad,
+                                      self.cfg['rgb_threshold_min'],self.cfg['rgb_threshold_max'])
+                else:threshold=self.cfg['rgb_threshold_max']
+                raw_free=codes==CONTRADICTION
+                codes[raw_free&(residual<=threshold)]=0
+                stats.update(color_threshold=float(threshold),depth_free_before_color=int(raw_free.sum()),
+                             depth_free_after_color=int((codes==CONTRADICTION).sum()))
             good=(codes==SUPPORT)|(codes==CONTRADICTION)
             independent=np.array([independent_observation(pose,oldpose,frame,oldframe,self.cfg)
                                   for oldframe,oldpose in self.views],bool)
@@ -82,15 +110,17 @@ class SurfaceBank:
         rays=np.column_stack((x,y,np.ones(len(x)))) @ np.linalg.inv(k).T
         camera=rays*depth[y,x,None]
         points=camera @ pose[:3,:3].T + pose[:3,3]
+        colors=rgb[y,x] if rgb is not None else np.zeros((len(y),3),np.float32)
         keys=voxel_keys(points,self.voxel_size)
-        keys,first=np.unique(keys,return_index=True);points=points[first]
+        keys,first=np.unique(keys,return_index=True);points=points[first];colors=colors[first]
         if len(self.sorted_keys):
             index=np.searchsorted(self.sorted_keys,keys)
             exists=(index<len(self.sorted_keys))&(self.sorted_keys[np.minimum(index,len(self.sorted_keys)-1)]==keys)
-            keys,points=keys[~exists],points[~exists]
+            keys,points,colors=keys[~exists],points[~exists],colors[~exists]
         m=len(points)
         if m:
             self.points=np.concatenate((self.points,points.astype(np.float32)))
+            self.colors=np.concatenate((self.colors,colors.astype(np.float32)))
             self.keys=np.concatenate((self.keys,keys));self.sorted_keys=np.sort(self.keys)
             self.support=np.concatenate((self.support,np.ones(m,np.uint32)))
             self.streak=np.concatenate((self.streak,np.zeros(m,np.uint32)))
@@ -103,7 +133,7 @@ class SurfaceBank:
 
     def arrays(self):
         cat=lambda data,dtype:np.concatenate(data).astype(dtype) if data else np.empty(0,dtype)
-        return dict(points=self.points,keys=self.keys,support=self.support,streak=self.streak,
+        return dict(points=self.points,colors=self.colors,keys=self.keys,support=self.support,streak=self.streak,
             created_frame=self.created_frame,last_conflict_frame=self.last_conflict_frame,
             active=self.active,event_frames=cat(self.event_frames,np.int64),
             event_indices=cat(self.event_indices,np.int64),event_states=cat(self.event_states,bool))
