@@ -11,6 +11,7 @@ from .readonly_detection_core import (
 
 
 from .batched_evidence import BatchedCandidate
+from .sensor_reference import SurfaceMemory
 
 
 ACCEPTED = {'support', 'cancelled', 'contradiction', 'would_remove'}
@@ -106,6 +107,11 @@ The latter is reported separately, never credited to the strict common test.
                 frames=[], poses=[], codes=[], sources=[], common_frames=[], original_accepted=[])
         r = self.records[cid]
         r['batched'].observe(frame, pose, codes, sources, self.cfg)
+        if 'surface_depth' not in r:
+            r['surface_depth'] = SurfaceMemory(len(candidate.points))
+        depth_codes = np.asarray(codes, np.uint8).copy()
+        depth_codes[(np.asarray(sources) & SOURCE_RGB) != 0] = SUPPORT
+        r['surface_depth'].observe(frame, pose, depth_codes, self.cfg)
         common = candidate.state == 'suspected'
         r['frames'].append(frame)
         r['poses'].append(pose.copy())
@@ -162,11 +168,14 @@ The latter is reported separately, never credited to the strict common test.
             arrays['batched_depth_contradicted'] = r['batched'].depth_contradicted
             arrays['batched_rgb_contradicted'] = r['batched'].rgb_contradicted
             arrays['batched_pending_codes'] = r['batched'].pending_codes
+            arrays['surface_depth_stable'] = r['surface_depth'].stable
+            arrays['surface_depth_streak'] = r['surface_depth'].streak
             np.savez_compressed(self.out / f'{cid:04d}.npz', **arrays)
             records.append(dict(candidate_id=cid, first_frame=candidate.first_frame,
                 source_raw_ids=sorted(candidate.source_raw_ids),
                 point_sha256=hashlib.sha256(candidate.points.tobytes()).hexdigest(),
-                original=candidate.metadata(), batched=r['batched'].metadata(), **variants))
+                original=candidate.metadata(), batched=r['batched'].metadata(),
+                surface_depth=r['surface_depth'].metadata(), **variants))
         summary = dict(completed=True, candidates=len(records), original_replay_checks=self.replay_checks,
             common_frame_checks=self.common_frame_checks, observation_sets_identical=True,
             accumulator_seconds=self.seconds, actual_deletions=0, records=records,
