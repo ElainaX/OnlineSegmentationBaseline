@@ -35,17 +35,17 @@ class CorrectionTests(unittest.TestCase):
         np.testing.assert_allclose(c.max(1),[[0,.025,.05]])
 
     def test_actual_weight_erasure_and_index_consistency(self):
-        import tempfile
+        import tempfile,os
         from pathlib import Path
         from types import SimpleNamespace as NS
         import torch
         import open3d as o3d
         import open3d.core as core
         from submap_disjoint.ig_correction import IGCorrection, lattice_indices, frozen_grid_copy
-        device=core.Device('CPU:0')
+        device=core.Device(os.environ.get('IG_TEST_DEVICE','CPU:0'))
         grid=o3d.t.geometry.VoxelBlockGrid(('tsdf','weight','color'),(core.float32,)*3,
             (1,1,3),.025,4,10,device)
-        grid.hashmap().activate(core.Tensor([[0,0,0]],dtype=core.int32))
+        grid.hashmap().activate(core.Tensor([[0,0,0]],dtype=core.int32,device=device))
         grid.attribute('weight')[:]=5.;grid.attribute('tsdf')[:]=.2;grid.attribute('color')[:]=100.
         frozen=frozen_grid_copy(grid,.025,4,device)
         coords=torch.tensor([[0.,0,0],[.025,0,0],[.050,0,0]])
