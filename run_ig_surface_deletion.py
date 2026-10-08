@@ -28,7 +28,7 @@ p.add_argument('--detector-schedule-json')
 p.add_argument('--verify-erasure',action='store_true')
 p.add_argument('--whole-instance',choices=['off','audit','on'],default='off')
 p.add_argument('--instance-retirement-config',help='Optional JSON of RetirementOptions; saved in metadata')
-p.add_argument('--retirement-evidence',choices=['v1','persistent'],default='v1')
+p.add_argument('--retirement-evidence',choices=['v1','persistent','direct'],default='v1')
 p.add_argument('--smoke-stop',type=int,default=0)
 a=p.parse_args()
 out=Path(a.output_dir)/a.seq_name; out.mkdir(parents=True,exist_ok=True)
@@ -68,6 +68,9 @@ if a.whole_instance!='off':
     if a.retirement_evidence=='persistent':
         from submap_disjoint.persistent_retirement import PersistentIGInstanceRetirement
         whole_class=PersistentIGInstanceRetirement
+    elif a.retirement_evidence=='direct':
+        from submap_disjoint.direct_retirement import DirectIGInstanceRetirement
+        whole_class=DirectIGInstanceRetirement
     whole=whole_class(owner,detector,out/'instance_retirement',RetirementOptions(**whole_options),enabled=a.whole_instance=='on')
 run_metadata=dict(method='IG-Submap-v1',merge_selection=a.merge_selection,config=cfg,
     baseline_config_path=a.config,baseline_config_sha256=hashlib.sha256(Path(a.config).read_bytes()).hexdigest(),
