@@ -1,0 +1,72 @@
+[
+  {
+    "seq": "pair_01_0cac767c_19f1a892",
+    "unique_erased_corners": 1404,
+    "within_5cm": 1366,
+    "near_change_annotated": 1366,
+    "near_not_change_annotated": 0,
+    "near_unlabelled": 0,
+    "far": 38,
+    "object_counts": {
+      "24": 678,
+      "35": 6,
+      "3": 682
+    },
+    "note": "TSDF lattice corners, not surface samples or detection precision; no-change annotation is not proof of physical stasis."
+  },
+  {
+    "seq": "pair_02_751a55a1_751a557f",
+    "unique_erased_corners": 7934,
+    "within_5cm": 7116,
+    "near_change_annotated": 5875,
+    "near_not_change_annotated": 1150,
+    "near_unlabelled": 91,
+    "far": 818,
+    "object_counts": {
+      "38": 3564,
+      "23": 446,
+      "10": 268,
+      "15": 2025,
+      "13": 2,
+      "7": 436,
+      "4": 284
+    },
+    "note": "TSDF lattice corners, not surface samples or detection precision; no-change annotation is not proof of physical stasis."
+  },
+  {
+    "seq": "pair_03_f62fd5f8_20c9939d",
+    "unique_erased_corners": 3016,
+    "within_5cm": 2731,
+    "near_change_annotated": 2286,
+    "near_not_change_annotated": 422,
+    "near_unlabelled": 23,
+    "far": 285,
+    "object_counts": {
+      "35": 748,
+      "22": 310,
+      "11": 721,
+      "10": 202,
+      "9": 305,
+      "8": 59,
+      "28": 363
+    },
+    "note": "TSDF lattice corners, not surface samples or detection precision; no-change annotation is not proof of physical stasis."
+  },
+  {
+    "seq": "pair_04_752cc595_55551083",
+    "unique_erased_corners": 4423,
+    "within_5cm": 4247,
+    "near_change_annotated": 4247,
+    "near_not_change_annotated": 0,
+    "near_unlabelled": 0,
+    "far": 176,
+    "object_counts": {
+      "5": 869,
+      "4": 1713,
+      "17": 815,
+      "29": 334,
+      "40": 516
+    },
+    "note": "TSDF lattice corners, not surface samples or detection precision; no-change annotation is not proof of physical stasis."
+  }
+]
