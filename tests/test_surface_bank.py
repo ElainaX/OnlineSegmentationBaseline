@@ -56,5 +56,19 @@ class TestSurfaceBank(unittest.TestCase):
         self.assertTrue(independent_rays(points,origins,np.array([.2,0,0]),frames,10,cfg)[0])
         self.assertFalse(independent_rays(points,origins,np.array([0,0,.2]),frames,10,cfg)[0])
 
+    def test_nearby_measured_surface_vetoes_pixel_miss(self):
+        k=np.array([[100,0,2],[0,100,2],[0,0,1]],float)
+        depth=np.ones((5,5));valid=np.ones((5,5),bool)
+        plain=SurfaceBank(.025,CFG,seed_stride=1)
+        checked=SurfaceBank(.025,CFG,seed_stride=1,surface_support=True)
+        for bank in [plain,checked]:
+            bank.step(0,np.eye(4),k,depth,valid,.1,5)
+            bank.step(5,np.eye(4),k,depth,valid,.1,5)
+        missed=depth.copy();missed[2,2]=2
+        for frame in [10,15]:
+            for bank in [plain,checked]:bank.step(frame,np.eye(4),k,missed,valid,.1,5)
+        self.assertTrue(plain.active.any())
+        self.assertFalse(checked.active.any())
+
 
 if __name__=='__main__':unittest.main()

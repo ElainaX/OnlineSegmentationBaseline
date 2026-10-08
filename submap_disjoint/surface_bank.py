@@ -28,11 +28,12 @@ def independent_rays(points, old_centers, new_center, old_frames, frame, cfg):
 
 
 class SurfaceBank:
-    def __init__(self, voxel_size, cfg, seed_stride=2, require_color=False, view_gate='camera'):
+    def __init__(self, voxel_size, cfg, seed_stride=2, require_color=False, view_gate='camera', surface_support=False):
         self.voxel_size, self.cfg, self.seed_stride = voxel_size, cfg, seed_stride
         self.require_color = require_color
         if view_gate not in ('camera','ray'):raise ValueError(view_gate)
         self.view_gate=view_gate
+        self.surface_support=surface_support
         self.points = np.empty((0,3),np.float32)
         self.colors = np.empty((0,3),np.float32)
         self.keys = np.empty(0,np.int64)
@@ -95,6 +96,20 @@ class SurfaceBank:
                 codes[raw_free&(residual<=threshold)]=0
                 stats.update(color_threshold=float(threshold),depth_free_before_color=int(raw_free.sum()),
                              depth_free_after_color=int((codes==CONTRADICTION).sum()))
+            if self.surface_support and np.any(codes==CONTRADICTION):
+                from scipy.spatial import cKDTree
+                # A pixel can miss a thin surface because of discretization or
+                # registration error. A measured 3D surface within two voxels is
+                # counter-evidence to local geometric disappearance, even if it
+                # projects to another pixel. Do not infer object identity here.
+                cy,cx=np.nonzero(np.isfinite(depth)&(depth>near)&(depth<far))
+                rays=np.column_stack((cx,cy,np.ones(len(cx))))@np.linalg.inv(k).T
+                cloud=rays*depth[cy,cx,None]
+                free=np.flatnonzero(codes==CONTRADICTION)
+                distance,_=cKDTree(cloud).query(camera[ids[free]],distance_upper_bound=2*self.voxel_size)
+                veto=free[np.isfinite(distance)]
+                codes[veto]=SUPPORT
+                stats['nearby_surface_veto_points']=int(len(veto))
             good=(codes==SUPPORT)|(codes==CONTRADICTION)
             if self.view_gate=='camera':
                 independent=np.array([independent_observation(pose,oldpose,frame,oldframe,self.cfg)
