@@ -176,8 +176,8 @@ def cloud(path):
     return points
 
 
-def run_pair01():
-    ROOT=Path('/root/autodl-tmp/output/gap_20261009');ROOT.mkdir(exist_ok=True)
+def run_pair01(output_root=None,additional_variants=None):
+    ROOT=Path(output_root or '/root/autodl-tmp/output/gap_20261009');ROOT.mkdir(parents=True,exist_ok=True)
     OLD=Path('/root/autodl-tmp/output/ig_surface_deletion_20261008')
     WHOLE=Path('/root/autodl-tmp/output/ig_whole_instance_20261008')
     DATA=Path('/root/autodl-tmp/3RScan/3RScan_Dynamic_OnlineAnySeg');SEQ='pair_01_0cac767c_19f1a892'
@@ -197,6 +197,7 @@ def run_pair01():
     ignored=set(map(int,changes['nonrigid']))|{int(r['instance_reference']) for r in changes['rigid']}
     variants=dict(no_deletion=OLD/'off'/SEQ,local_historical=OLD/'on'/SEQ,
                   local_control=WHOLE/'local_control_run/hybrid'/SEQ,hybrid=WHOLE/'hybrid'/SEQ)
+    variants.update({name:Path(path) for name,path in (additional_variants or {}).items()})
     report=dict(name='G-AP (Global AP)',version='v1-20261009',standard_AP=False,
         definition='sum(GT_size * matched_IoU) / (sum(GT_size) + sum(unmatched_prediction_support_size)); summed over retention and deletion tasks',
         protocol=dict(voxel_size_m=.025,tolerance_m=.05,current_GT='all annotated instances; no 100-point or semantic-class exclusion',
@@ -225,4 +226,10 @@ def run_pair01():
     return report
 
 
-if __name__=='__main__':run_pair01()
+if __name__=='__main__':
+    import argparse
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--output-dir')
+    parser.add_argument('--variant',action='append',default=[],help='Additional name=/path/to/sequence')
+    args=parser.parse_args()
+    run_pair01(args.output_dir,dict(x.split('=',1) for x in args.variant))

@@ -82,6 +82,12 @@ class PersistentEvidenceTests(unittest.TestCase):
         u=union_states([c,new]);self.assertEqual(u['local_streak'][0],0)
         self.assertEqual(u['last_support'][0],20)
 
+    def test_union_does_not_recount_votes_before_newer_support(self):
+        b,c=self.state();b.streak[:]=5
+        new=init_state(c,b,20,False);new['last_support'][:]=20
+        u=union_states([c,new])
+        self.assertFalse(update_state(u,b,np.array([0]),21,2)[0])
+
     def test_resolve_expansion_only_for_audit(self):
         self.assertEqual(resolve_live_track({0},[0,0]),(0,'stable'))
         self.assertEqual(resolve_live_track({0,1},[0,1])[1],'split_or_partially_removed')

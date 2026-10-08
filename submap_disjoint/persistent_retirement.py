@@ -72,7 +72,14 @@ def union_states(states):
     keys,first,inverse=np.unique(data['keys'][order],return_index=True,return_inverse=True)
     take=order[first];out={k:data[k][take].copy() for k in STATE_FIELDS}
     latest=np.full(len(keys),-1,np.int64);np.maximum.at(latest,inverse,data['last_support'][order])
-    revoked=latest>out['last_support'];out['local_streak'][revoked]=0;out['last_support']=latest
+    revoked=latest>out['last_support'];out['local_streak'][revoked]=0
+    # Do not recount bank votes already present when newer support revoked
+    # the old record. Keep the latest supporting record's observation cursor.
+    support_cursor=np.zeros(len(keys),np.int64)
+    newer=data['last_support'][order]==latest[inverse]
+    np.maximum.at(support_cursor,inverse[newer],data['last_bank_streak'][order][newer])
+    out['last_bank_streak'][revoked]=support_cursor[revoked]
+    out['last_support']=latest
     return out
 
 
