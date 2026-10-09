@@ -395,6 +395,18 @@ class SnapshotAbsenceInspector:
         self.counter['tested_candidates']+=processed;self.counter['frames']+=1;self.seconds+=time.perf_counter()-start
 
     def save(self):
+        state_dir=self.out/'point_states';state_dir.mkdir(exist_ok=True)
+        state_manifest=[];status_totals=Counter()
+        for source,st in self.pending.items():
+            path=state_dir/f'point_state_{source[0]:06d}.npz'
+            np.savez_compressed(path, status=st['point_status'], absence_votes=st['point_absence_votes'],
+                                restore_votes=st['point_restore_votes'], tested=st['tested'],
+                                last_absence=st['last'], candidate_file=st['candidate_file'])
+            counts=Counter(int(x) for x in st['point_status'].tolist());status_totals.update(counts)
+            state_manifest.append(dict(raw_ids=list(source),candidate_file=st['candidate_file'],state_file=str(path),
+                                      active_points=counts.get(0,0),removing_points=counts.get(1,0),
+                                      deleted_points=counts.get(2,0),reference_points=len(st['point_status'])))
+        (self.out/'point_state_manifest.json').write_text(json.dumps(state_manifest,indent=2))
         report=dict(method='IG AABB-retrieved DINO snapshot disappearance + reversible point states v2',mode='read_only',GT_used=False,identity_association=False,
             options=asdict(self.opt),model_weight_sha256=self.encoder.sha256,model='DINOv2, not OASIS-Map DINOv3',
             counters=dict(self.counter),resident_snapshots=len(self.records),pending=len(self.pending),
@@ -402,6 +414,7 @@ class SnapshotAbsenceInspector:
             cache_peak_bytes=self.frames.peak,cache_hits=self.frames.hits,cache_misses=self.frames.misses,
             reference='mask-interior DINO patch-centre depth samples; sampled full IG volume support is a separate veto, not surface coverage',
             point_state_machine='active -> removing on independent low-semantic/free evidence -> deleted after point_delete_confirm_views; support or visible high-semantic evidence restores; no map mutation',
+            point_state_totals=dict(active=status_totals.get(0,0),removing=status_totals.get(1,0),deleted=status_totals.get(2,0),candidates=len(state_manifest)),
             threshold_status='initial engineering thresholds, not calibrated on GT',
             retrieval='world AABB overlap with current camera frustum; no global appearance/identity search')
         (self.out/'summary.json').write_text(json.dumps(report,indent=2));return report
