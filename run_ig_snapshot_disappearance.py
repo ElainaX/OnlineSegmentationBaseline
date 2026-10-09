@@ -30,6 +30,7 @@ p.add_argument('--whole-instance',choices=['off','audit','on'],default='off')
 p.add_argument('--instance-retirement-config',help='Optional JSON of RetirementOptions; saved in metadata')
 p.add_argument('--retirement-evidence',choices=['v1','persistent','direct','instance_views'],default='v1')
 p.add_argument('--snapshot-absence',choices=['off','audit'],default='off')
+p.add_argument('--snapshot-apply-deletion',action='store_true',help='Erase only point states that reached deleted; removing stays intact')
 p.add_argument('--snapshot-config',help='JSON SnapshotOptions; audit never mutates map')
 p.add_argument('--smoke-stop',type=int,default=0)
 a=p.parse_args()
@@ -110,6 +111,12 @@ if a.snapshot_absence=='audit':
     opts=json.loads(Path(a.snapshot_config).read_text()) if a.snapshot_config else {}
     snapshots=SnapshotAbsenceInspector(owner,cfg,out/'snapshot_absence',SnapshotOptions(**opts))
 run_metadata['snapshot_absence_mode']=a.snapshot_absence
+snapshot_deletion=None
+if a.snapshot_apply_deletion:
+    if snapshots is None: raise ValueError('--snapshot-apply-deletion requires --snapshot-absence audit')
+    from submap_disjoint.ig_deletion import IGDeletion
+    snapshot_deletion=IGDeletion(owner,None,out/'snapshot_deletion')
+run_metadata['snapshot_apply_deletion']=bool(a.snapshot_apply_deletion)
 trace=[]; original_update=owner.update_masks
 def update(fid):
     original_update(fid)
@@ -137,6 +144,34 @@ for frame_id,(rgb,depth,pose,seg,features,flag) in tqdm(enumerate(DataLoader(dat
             if flag[0] and frame_id % cfg['seg']['seg_add_interval']==0:
                 owner.observe(frame_id,rgb[0],depth[0],pose[0],blocks,seg,features); observed+=1
                 if snapshots and valid_pose:snapshots.capture(frame_id,rgb[0],depth[0],pose[0],seg)
+    # Apply point deletions only after the frame has been captured.  A raw
+    # lineage veto prevents a confirmed point from erasing support currently
+    # owned by another merged raw mask.
+    if snapshot_deletion and snapshots:
+        queued=snapshots.pop_deleted_requests()
+        if queued:
+            from submap_disjoint.ig_correction import lattice_indices
+            requests=[]; proposed=0; allowed_total=0; source_diag=[]
+            mapping=np.asarray(owner.global2merged_mask_id)
+            for source,points in queued:
+                if not len(points): continue
+                xyz=np.unique(np.rint(points/owner.cfg['scene']['voxel_size']).astype(np.int64),axis=0)*owner.cfg['scene']['voxel_size']
+                proposed+=len(xyz)
+                ids,exists=lattice_indices(owner.voxel_block_grids,xyz,owner.cfg['scene']['voxel_size'],owner.cfg['scene']['block_resolution'],owner.device_o3c)
+                ids,xyz=ids[exists],xyz[exists]
+                src=set(int(x) for x in source)
+                keep=[]
+                for j,i in enumerate(ids.tolist()):
+                    members=owner.voxel_hash_table.hash_table[int(i)] or ()
+                    active={int(r) for r in members if 0<=int(r)<len(mapping) and mapping[int(r)]>=0}
+                    keep.append(bool(active) and active.issubset(src))
+                keep=np.asarray(keep,dtype=bool)
+                allowed_total+=int(keep.sum())
+                source_diag.append(dict(raw_ids=list(source),proposed_voxels=int(len(xyz)),lineage_allowed=int(keep.sum())))
+                if keep.any(): requests.append((tuple(source),xyz[keep]))
+            result=snapshot_deletion.erase(frame_id,requests) if requests else dict(voxels=0)
+            snapshot_deletion.events.append(dict(frame=int(frame_id),queued_sources=len(queued),source_diagnostics=source_diag,proposed_voxels=int(proposed),lineage_allowed=int(allowed_total),**result))
+            snapshot_deletion.save()
     if cfg['save']['ckpt_interval']>0 and frame_id>0 and frame_id%cfg['save']['ckpt_interval']==0:
         ckpt=out/f'ckpt_{frame_id}'; ckpt.mkdir(exist_ok=True)
         owner.save_ckpt(frame_id,str(ckpt))
@@ -159,6 +194,7 @@ run_metadata.update(status='smoke_complete' if a.smoke_stop else 'complete',last
                     merge_audit=owner.migration_audit,export_points=(len(owner.points) if owner.points is not None else 0),
                     surface_detection_seconds=detector.seconds if detector else 0.,
                     snapshot_absence_summary=snapshots.save() if snapshots else None,
+                    snapshot_deletion_summary=snapshot_deletion.save() if snapshot_deletion else None,
                     instance_retirement_summary=whole_report,
                     deletion_summary=deletion_report)
 (out/'run_metadata.json').write_text(json.dumps(run_metadata,indent=2))

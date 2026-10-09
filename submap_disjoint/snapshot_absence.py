@@ -252,6 +252,8 @@ class SnapshotAbsenceInspector:
         self.out=Path(output);self.out.mkdir(parents=True,exist_ok=True)
         self.encoder=DinoEncoder(self.opt,owner.device);self.frames=FrameCache(self.out/'frames',self.opt.cache_mb)
         self.records={};self.pending={};self.next_record=0;self.counter=Counter();self.seconds=0.
+        # Transitions to deleted are handed to the IG voxel eraser by the runner.
+        self.deleted_queue=[]
         self.last_test={};self.last_input=None;self.index=BoxIndex(self.opt.bbox_grid_m,self.opt.bbox_max_cells)
 
     def group(self):
@@ -399,8 +401,17 @@ class SnapshotAbsenceInspector:
                 dino_contra=low
                 rgb_contra=self.opt.rgb_enabled & np.isfinite(rgb_best)&(rgb_best>self.opt.rgb_absence_above)
                 assert np.allclose(st['points'],rawpoints[idx])
+            previous_status=st.get('point_status',np.zeros(len(st['points']),dtype=np.uint8)).copy()
             accept,stats=update_evidence(st,st['points'],codes,low,frame,pose,self.opt,
                                          source_flags={'dino':dino_contra,'rgb':rgb_contra})
+            # Only confirmed transitions are queued. Pending `removing` points
+            # remain in the map until a later visible check without restoration.
+            newly_deleted=np.flatnonzero((st['point_status']==2)&(previous_status!=2))
+            if len(newly_deleted):
+                self.deleted_queue.append((tuple(source), st['points'][newly_deleted].copy()))
+                stats['queued_deleted_points']=int(len(newly_deleted))
+            else:
+                stats['queued_deleted_points']=0
             # Small clean snapshot alone cannot authorize a big contaminated IG
             # track. All sampled old IG geometry must pass the broad depth veto.
             stats['owned_support_fraction']=float((owned_codes==1).mean())
@@ -426,6 +437,11 @@ class SnapshotAbsenceInspector:
                 for log in logs:f.write(json.dumps(log)+'\n')
         self.counter['tested_candidates']+=processed;self.counter['frames']+=1;self.seconds+=time.perf_counter()-start
 
+    def pop_deleted_requests(self):
+        queued=self.deleted_queue
+        self.deleted_queue=[]
+        return queued
+
     def save(self):
         state_dir=self.out/'point_states';state_dir.mkdir(exist_ok=True)
         state_manifest=[];status_totals=Counter()
@@ -439,13 +455,13 @@ class SnapshotAbsenceInspector:
                                       active_points=counts.get(0,0),removing_points=counts.get(1,0),
                                       deleted_points=counts.get(2,0),reference_points=len(st['point_status'])))
         (self.out/'point_state_manifest.json').write_text(json.dumps(state_manifest,indent=2))
-        report=dict(method='IG AABB-retrieved DINO snapshot disappearance + reversible point states v2',mode='read_only',GT_used=False,identity_association=False,
+        report=dict(method='IG AABB-retrieved DINO snapshot disappearance + reversible point states v2',mode='point_deletion_enabled' if self.deleted_queue else 'read_only',GT_used=False,identity_association=False,
             options=asdict(self.opt),model_weight_sha256=self.encoder.sha256,model='DINOv2, not OASIS-Map DINOv3',
             counters=dict(self.counter),resident_snapshots=len(self.records),pending=len(self.pending),
             feature_extractions=self.encoder.calls,feature_seconds=self.encoder.seconds,total_seconds=self.seconds,
             cache_peak_bytes=self.frames.peak,cache_hits=self.frames.hits,cache_misses=self.frames.misses,
             reference='mask-interior DINO patch-centre depth samples; sampled full IG volume support is a separate veto, not surface coverage',
-            point_state_machine='active -> removing on depth/DINO/RGB union contradiction -> deleted after a later visible check without strong support; support without visual contradiction restores; no map mutation',
+            point_state_machine='active -> removing on depth/DINO/RGB union contradiction -> deleted after a later visible check without strong support; support without visual contradiction restores; deleted transitions are queued for optional IG voxel erasure',
             point_state_totals=dict(active=status_totals.get(0,0),removing=status_totals.get(1,0),deleted=status_totals.get(2,0),candidates=len(state_manifest)),
             threshold_status='initial engineering thresholds, not calibrated on GT',
             retrieval='world AABB overlap with current camera frustum; no global appearance/identity search')
