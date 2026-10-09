@@ -386,7 +386,7 @@ class SnapshotAbsenceInspector:
                         with torch.inference_mode():sim=F.normalize(q,dim=1)@F.normalize(k,dim=1).T;best,bi=sim.max(1);best=best.cpu().numpy();bi=bi.cpu().numpy()
                         old_uv=old['uv'][snap['tokens']].astype(np.int64);new_uv=current['uv'][selected][bi].astype(np.int64)
                         old_rgb=old['rgb'][old_uv[:,1],old_uv[:,0]]
-                        old_lab=cv2.cvtColor(old_rgb.astype(np.uint8),cv2.COLOR_RGB2LAB).astype(np.float32)
+                        old_lab=cv2.cvtColor(old_rgb.astype(np.uint8)[None,...],cv2.COLOR_RGB2LAB)[0].astype(np.float32)
                         rgb_best=np.linalg.norm(old_lab-current_lab[new_uv[:,1],new_uv[:,0]],axis=1)
                     scores.append(best);rgb_scores.append(rgb_best);all_points.append(snap['points'])
                     sim_details.append(dict(snapshot=sid,frame=snap['frame'],query_tokens=len(best),current_tokens=len(selected),
