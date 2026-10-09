@@ -43,10 +43,11 @@ class SnapshotOptions:
     min_current_free_fraction: float = .10
     min_points: int = 20
     confirm_views: int = 2
+    point_delete_confirm_views: int = 2
     max_reference_points: int = 4000
 
     def __post_init__(self):
-        for k in ['views_per_instance','retrieval_views','max_candidates_per_frame','max_pending','cache_mb','min_patch_tokens','max_tokens_per_view','confirm_views','max_reference_points']:
+        for k in ['views_per_instance','retrieval_views','max_candidates_per_frame','max_pending','cache_mb','min_patch_tokens','max_tokens_per_view','confirm_views','point_delete_confirm_views','max_reference_points']:
             if getattr(self,k)<1: raise ValueError(k)
         for k in ['semantic_absence_below','min_confirmed_fraction','min_tested_fraction','max_support_fraction','min_current_free_fraction']:
             if not 0<=getattr(self,k)<=1: raise ValueError(k)
@@ -104,10 +105,20 @@ def independent(points,old_camera,new_camera,old_frame,frame,opt):
 
 
 def update_evidence(state,points,codes,low_semantic,frame,pose,opt):
-    """1=support, 2=free, 3=occluded, 0=unknown. Unknown never adds absence."""
+    """Update reversible point states.
+
+    Depth codes are 1=support, 2=free, 3=occluded, 0=unknown.  A point first
+    enters ``removing`` on an independent low-semantic/free observation. It
+    enters ``deleted`` only after repeated independent observations. Support
+    or a high-semantic visible observation restores either state to active.
+    Unknown and occluded points never add absence evidence.
+    """
     n=len(points)
     if 'votes' not in state:
-        state.update(votes=np.zeros(n,np.uint16),last=np.full(n,-1,np.int64),camera=np.zeros((n,3)),tested=np.zeros(n,bool))
+        state.update(votes=np.zeros(n,np.uint16),last=np.full(n,-1,np.int64),camera=np.zeros((n,3)),tested=np.zeros(n,bool),
+                    point_status=np.zeros(n,np.uint8),point_absence_votes=np.zeros(n,np.uint16),
+                    point_restore_votes=np.zeros(n,np.uint16),point_last=np.full(n,-1,np.int64),
+                    point_camera=np.zeros((n,3)))
     if len(state['votes'])!=n:raise ValueError('Reference changed without resetting evidence')
     support=codes==1;free=codes==2
     state['tested']|=support|free
@@ -116,11 +127,45 @@ def update_evidence(state,points,codes,low_semantic,frame,pose,opt):
     good=negative & ((state['last']<0)|independent(points,state['camera'],pose[:3,3],state['last'],frame,opt))
     state['votes'][good]=np.minimum(state['votes'][good].astype(np.int32)+1,opt.confirm_views)
     state['last'][good]=frame;state['camera'][good]=pose[:3,3]
+    # Point-level reversible state.  The old whole-candidate vote is kept for
+    # comparison, but it no longer determines whether a point is deleted.
+    visible=support|free
+    restore=visible & (~low_semantic | support)
+    independent_point=(state['point_last']<0)|independent(points,state['point_camera'],pose[:3,3],state['point_last'],frame,opt)
+    # A direct depth support observation is sufficient to restore immediately;
+    # high-semantic free observations still require an independent view.
+    new_restore=support | (restore & independent_point)
+    new_absence=negative & independent_point
+    old_status=state['point_status'].copy()
+    state['point_restore_votes'][new_restore]=np.minimum(state['point_restore_votes'][new_restore].astype(np.int32)+1,opt.point_delete_confirm_views)
+    state['point_absence_votes'][new_absence]=np.minimum(state['point_absence_votes'][new_absence].astype(np.int32)+1,opt.point_delete_confirm_views)
+    state['point_last'][new_restore|new_absence]=frame
+    state['point_camera'][new_restore|new_absence]=pose[:3,3]
+    # A visible restoration wins over a pending contradiction.  A support
+    # observation is the strongest restoration evidence and clears history.
+    restored=new_restore & (support | (state['point_restore_votes']>0))
+    state['point_status'][restored]=0
+    state['point_absence_votes'][restored]=0
+    state['point_restore_votes'][restored]=0
+    removing=new_absence & (~restored)
+    state['point_status'][removing]=1
+    deleted=(state['point_status']==1)&(state['point_absence_votes']>=opt.point_delete_confirm_views)
+    state['point_status'][deleted]=2
+    # If a deleted point is later observed again, keep the tombstone reversible
+    # and restore it instead of silently losing the old geometry.
+    if np.any(restored):
+        state['point_status'][restored]=0
+    transitions=state['point_status']!=old_status
     confirmed=state['votes']>=opt.confirm_views
     stats=dict(reference_points=n,tested_fraction=float(state['tested'].mean()),confirmed_fraction=float(confirmed.mean()),
                current_free_fraction=float(free.mean()),current_support_fraction=float(support.mean()),
                current_joint_absence_points=int(negative.sum()),new_votes=int(good.sum()),confirmed_points=int(confirmed.sum()),
-               unknown_points=int((codes==0).sum()),occluded_points=int((codes==3).sum()))
+               unknown_points=int((codes==0).sum()),occluded_points=int((codes==3).sum()),
+               removing_points=int((state['point_status']==1).sum()),deleted_points=int((state['point_status']==2).sum()),
+               active_points=int((state['point_status']==0).sum()),removing_fraction=float((state['point_status']==1).mean()),
+               deleted_fraction=float((state['point_status']==2).mean()),new_removing_points=int(np.sum((state['point_status']==1)&(old_status==0))),
+               new_deleted_points=int(np.sum((state['point_status']==2)&(old_status!=2))),restored_points=int(np.sum(restored)),
+               state_transitions=int(transitions.sum()))
     reasons=[]
     if n<opt.min_points:reasons.append('too_few_reference_points')
     if stats['tested_fraction']<opt.min_tested_fraction:reasons.append('insufficient_tested_coverage')
@@ -350,12 +395,13 @@ class SnapshotAbsenceInspector:
         self.counter['tested_candidates']+=processed;self.counter['frames']+=1;self.seconds+=time.perf_counter()-start
 
     def save(self):
-        report=dict(method='IG AABB-retrieved DINO snapshot disappearance v1',mode='read_only',GT_used=False,identity_association=False,
+        report=dict(method='IG AABB-retrieved DINO snapshot disappearance + reversible point states v2',mode='read_only',GT_used=False,identity_association=False,
             options=asdict(self.opt),model_weight_sha256=self.encoder.sha256,model='DINOv2, not OASIS-Map DINOv3',
             counters=dict(self.counter),resident_snapshots=len(self.records),pending=len(self.pending),
             feature_extractions=self.encoder.calls,feature_seconds=self.encoder.seconds,total_seconds=self.seconds,
             cache_peak_bytes=self.frames.peak,cache_hits=self.frames.hits,cache_misses=self.frames.misses,
             reference='mask-interior DINO patch-centre depth samples; sampled full IG volume support is a separate veto, not surface coverage',
+            point_state_machine='active -> removing on independent low-semantic/free evidence -> deleted after point_delete_confirm_views; support or visible high-semantic evidence restores; no map mutation',
             threshold_status='initial engineering thresholds, not calibrated on GT',
             retrieval='world AABB overlap with current camera frustum; no global appearance/identity search')
         (self.out/'summary.json').write_text(json.dumps(report,indent=2));return report
