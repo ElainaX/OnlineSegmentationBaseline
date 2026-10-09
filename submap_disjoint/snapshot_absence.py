@@ -44,14 +44,18 @@ class SnapshotOptions:
     min_points: int = 20
     confirm_views: int = 2
     point_delete_confirm_views: int = 2
+    point_delete_after_visible_checks: int = 1
+    rgb_enabled: bool = True
+    rgb_absence_above: float = 50.0
     max_reference_points: int = 4000
 
     def __post_init__(self):
-        for k in ['views_per_instance','retrieval_views','max_candidates_per_frame','max_pending','cache_mb','min_patch_tokens','max_tokens_per_view','confirm_views','point_delete_confirm_views','max_reference_points']:
+        for k in ['views_per_instance','retrieval_views','max_candidates_per_frame','max_pending','cache_mb','min_patch_tokens','max_tokens_per_view','confirm_views','point_delete_confirm_views','point_delete_after_visible_checks','max_reference_points']:
             if getattr(self,k)<1: raise ValueError(k)
         for k in ['semantic_absence_below','min_confirmed_fraction','min_tested_fraction','max_support_fraction','min_current_free_fraction']:
             if not 0<=getattr(self,k)<=1: raise ValueError(k)
         if self.input_long_edge<56 or self.bbox_grid_m<=0: raise ValueError('Invalid spatial/image resolution')
+        if self.rgb_absence_above<0: raise ValueError('Invalid RGB contradiction threshold')
 
 
 def array(x):
@@ -104,7 +108,7 @@ def independent(points,old_camera,new_camera,old_frame,frame,opt):
     return ((frame-old_frame>=opt.min_vote_gap)&(motion>=opt.min_view_translation_m)&(angle>=opt.min_view_angle_deg))
 
 
-def update_evidence(state,points,codes,low_semantic,frame,pose,opt):
+def update_evidence(state,points,codes,low_semantic,frame,pose,opt,source_flags=None):
     """Update reversible point states.
 
     Depth codes are 1=support, 2=free, 3=occluded, 0=unknown.  A point first
@@ -118,23 +122,31 @@ def update_evidence(state,points,codes,low_semantic,frame,pose,opt):
         state.update(votes=np.zeros(n,np.uint16),last=np.full(n,-1,np.int64),camera=np.zeros((n,3)),tested=np.zeros(n,bool),
                     point_status=np.zeros(n,np.uint8),point_absence_votes=np.zeros(n,np.uint16),
                     point_restore_votes=np.zeros(n,np.uint16),point_last=np.full(n,-1,np.int64),
-                    point_camera=np.zeros((n,3)))
+                    point_camera=np.zeros((n,3)),point_visible_checks=np.zeros(n,np.uint16))
     if len(state['votes'])!=n:raise ValueError('Reference changed without resetting evidence')
     support=codes==1;free=codes==2
     state['tested']|=support|free
     state['votes'][support]=0;state['last'][support]=-1
-    negative=free&low_semantic
+    source_flags=source_flags or {}
+    dino_contra=np.asarray(source_flags.get('dino',free&low_semantic),dtype=bool)
+    rgb_contra=np.asarray(source_flags.get('rgb',np.zeros(n,bool)),dtype=bool)
+    dino_contra &= (support|free)
+    rgb_contra &= (support|free)
+    depth_contra=free
+    # Union rule: one valid visible modality is enough to create a
+    # contradiction. Unknown and occluded points remain neutral.
+    negative=depth_contra|dino_contra|rgb_contra
     good=negative & ((state['last']<0)|independent(points,state['camera'],pose[:3,3],state['last'],frame,opt))
     state['votes'][good]=np.minimum(state['votes'][good].astype(np.int32)+1,opt.confirm_views)
     state['last'][good]=frame;state['camera'][good]=pose[:3,3]
-    # Point-level reversible state.  The old whole-candidate vote is kept for
-    # comparison, but it no longer determines whether a point is deleted.
+    # Point-level reversible state. A first contradiction enters removing.
+    # A later visible check without strong restoration evidence deletes it;
+    # a second contradiction is not required.
     visible=support|free
-    restore=visible & (~low_semantic | support)
+    restore=support & ~dino_contra & ~rgb_contra
     independent_point=(state['point_last']<0)|independent(points,state['point_camera'],pose[:3,3],state['point_last'],frame,opt)
-    # A direct depth support observation is sufficient to restore immediately;
-    # high-semantic free observations still require an independent view.
-    new_restore=support | (restore & independent_point)
+    # Support is strong only when neither appearance modality contradicts it.
+    new_restore=restore & independent_point
     new_absence=negative & independent_point
     old_status=state['point_status'].copy()
     state['point_restore_votes'][new_restore]=np.minimum(state['point_restore_votes'][new_restore].astype(np.int32)+1,opt.point_delete_confirm_views)
@@ -149,7 +161,13 @@ def update_evidence(state,points,codes,low_semantic,frame,pose,opt):
     state['point_restore_votes'][restored]=0
     removing=new_absence & (~restored)
     state['point_status'][removing]=1
-    deleted=(state['point_status']==1)&(state['point_absence_votes']>=opt.point_delete_confirm_views)
+    old_removing=old_status==1
+    followup_visible=old_removing & visible & ~restored
+    state['point_visible_checks'][followup_visible]=np.minimum(
+        state['point_visible_checks'][followup_visible].astype(np.int32)+1,
+        opt.point_delete_after_visible_checks)
+    state['point_visible_checks'][restored]=0
+    deleted=old_removing & (state['point_visible_checks']>=opt.point_delete_after_visible_checks) & ~restored
     state['point_status'][deleted]=2
     # If a deleted point is later observed again, keep the tombstone reversible
     # and restore it instead of silently losing the old geometry.
@@ -161,6 +179,8 @@ def update_evidence(state,points,codes,low_semantic,frame,pose,opt):
                current_free_fraction=float(free.mean()),current_support_fraction=float(support.mean()),
                current_joint_absence_points=int(negative.sum()),new_votes=int(good.sum()),confirmed_points=int(confirmed.sum()),
                unknown_points=int((codes==0).sum()),occluded_points=int((codes==3).sum()),
+               depth_contradiction_points=int(depth_contra.sum()),dino_contradiction_points=int(dino_contra.sum()),
+               rgb_contradiction_points=int(rgb_contra.sum()),union_contradiction_points=int(negative.sum()),
                removing_points=int((state['point_status']==1).sum()),deleted_points=int((state['point_status']==2).sum()),
                active_points=int((state['point_status']==0).sum()),removing_fraction=float((state['point_status']==1).mean()),
                deleted_fraction=float((state['point_status']==2).mean()),new_removing_points=int(np.sum((state['point_status']==1)&(old_status==0))),
@@ -338,14 +358,17 @@ class SnapshotAbsenceInspector:
             ids=list(st['ids']);processed+=1;self.last_test[source[0]]=frame
             if context is None:context=DepthContext(depth,pose,self.K,self.cfg,self.cam['depth_near'],self.cam['depth_far'],2*self.voxel)
             codes=context.classify(st['points']);owned_codes=context.classify(st['owned'])
-            if not np.any(codes==2):
-                low=np.zeros(len(codes),bool);sim_details=[]
+            if not np.any((codes==1)|(codes==2)):
+                low=np.zeros(len(codes),bool);dino_contra=np.zeros(len(codes),bool);rgb_contra=np.zeros(len(codes),bool);sim_details=[]
             else:
                 if current is None:
                     current=self.features(frame,rgb_bytes(rgb));xy=current['uv']
                     rays=np.c_[xy,np.ones(len(xy))]@np.linalg.inv(self.K).T
                     current['rays_world']=rays@pose[:3,:3].T
-                scores=[];all_points=[];sim_details=[]
+                scores=[];rgb_scores=[];all_points=[];sim_details=[]
+                current_rgb=rgb_bytes(rgb)
+                import cv2
+                current_lab=cv2.cvtColor(current_rgb,cv2.COLOR_RGB2LAB).astype(np.float32)
                 for sid in ids:
                     snap=self.records.get(sid)
                     if snap is None:raise RuntimeError('Frozen snapshot was pruned')
@@ -356,20 +379,28 @@ class SnapshotAbsenceInspector:
                     t0=(box[0]-pose[:3,3])/safe;t1=(box[1]-pose[:3,3])/safe
                     a=np.minimum(t0,t1).max(1);b=np.maximum(t0,t1).min(1)
                     selected=np.flatnonzero((b>=np.maximum(a,self.cam['depth_near']))&(a<=self.cam['depth_far']))
-                    if not len(selected):best=np.full(len(snap['tokens']),np.nan)
+                    if not len(selected):best=np.full(len(snap['tokens']),np.nan);rgb_best=np.full(len(snap['tokens']),np.nan)
                     else:
                         q=torch.from_numpy(old['features'][snap['tokens']].astype(np.float32)).to(self.owner.device)
                         k=torch.from_numpy(current['features'][selected].astype(np.float32)).to(self.owner.device)
-                        with torch.inference_mode():best=(F.normalize(q,dim=1)@F.normalize(k,dim=1).T).max(1).values.cpu().numpy()
-                    scores.append(best);all_points.append(snap['points'])
+                        with torch.inference_mode():sim=F.normalize(q,dim=1)@F.normalize(k,dim=1).T;best,bi=sim.max(1);best=best.cpu().numpy();bi=bi.cpu().numpy()
+                        old_uv=old['uv'][snap['tokens']].astype(np.int64);new_uv=current['uv'][selected][bi].astype(np.int64)
+                        old_rgb=old['rgb'][old_uv[:,1],old_uv[:,0]]
+                        old_lab=cv2.cvtColor(old_rgb.astype(np.uint8),cv2.COLOR_RGB2LAB).astype(np.float32)
+                        rgb_best=np.linalg.norm(old_lab-current_lab[new_uv[:,1],new_uv[:,0]],axis=1)
+                    scores.append(best);rgb_scores.append(rgb_best);all_points.append(snap['points'])
                     sim_details.append(dict(snapshot=sid,frame=snap['frame'],query_tokens=len(best),current_tokens=len(selected),
                                             mean_similarity=float(np.nanmean(best)) if np.isfinite(best).any() else None))
-                rawpoints=np.concatenate(all_points);rawscores=np.concatenate(scores)
+                rawpoints=np.concatenate(all_points);rawscores=np.concatenate(scores);rawrgb=np.concatenate(rgb_scores)
                 cells=np.floor(rawpoints/self.voxel).astype(np.int64);_,idx,inv=np.unique(cells,axis=0,return_index=True,return_inverse=True)
                 best=np.full(len(idx),-np.inf);np.maximum.at(best,inv,np.where(np.isfinite(rawscores),rawscores,-np.inf))
                 low=np.isfinite(best)&(best<self.opt.semantic_absence_below)
+                rgb_best=np.full(len(idx),-np.inf);np.maximum.at(rgb_best,inv,np.where(np.isfinite(rawrgb),rawrgb,-np.inf))
+                dino_contra=low
+                rgb_contra=self.opt.rgb_enabled & np.isfinite(rgb_best)&(rgb_best>self.opt.rgb_absence_above)
                 assert np.allclose(st['points'],rawpoints[idx])
-            accept,stats=update_evidence(st,st['points'],codes,low,frame,pose,self.opt)
+            accept,stats=update_evidence(st,st['points'],codes,low,frame,pose,self.opt,
+                                         source_flags={'dino':dino_contra,'rgb':rgb_contra})
             # Small clean snapshot alone cannot authorize a big contaminated IG
             # track. All sampled old IG geometry must pass the broad depth veto.
             stats['owned_support_fraction']=float((owned_codes==1).mean())
@@ -382,6 +413,7 @@ class SnapshotAbsenceInspector:
             stats['dino_min_similarity']=float(np.min(finite_views)) if finite_views else None
             stats['dino_max_similarity']=float(np.max(finite_views)) if finite_views else None
             stats['dino_view_count']=len(finite_views)
+            stats['rgb_absence_above']=self.opt.rgb_absence_above
             event=dict(frame=frame,row=int(row),raw_ids=list(source),status='would_remove' if accept else 'pending',
                        candidate_file=st['candidate_file'],**stats,views=sim_details)
             logs.append(event)
@@ -400,7 +432,7 @@ class SnapshotAbsenceInspector:
         for source,st in self.pending.items():
             path=state_dir/f'point_state_{source[0]:06d}.npz'
             np.savez_compressed(path, status=st['point_status'], absence_votes=st['point_absence_votes'],
-                                restore_votes=st['point_restore_votes'], tested=st['tested'],
+                                restore_votes=st['point_restore_votes'], visible_checks=st['point_visible_checks'], tested=st['tested'],
                                 last_absence=st['last'], candidate_file=st['candidate_file'])
             counts=Counter(int(x) for x in st['point_status'].tolist());status_totals.update(counts)
             state_manifest.append(dict(raw_ids=list(source),candidate_file=st['candidate_file'],state_file=str(path),
@@ -413,7 +445,7 @@ class SnapshotAbsenceInspector:
             feature_extractions=self.encoder.calls,feature_seconds=self.encoder.seconds,total_seconds=self.seconds,
             cache_peak_bytes=self.frames.peak,cache_hits=self.frames.hits,cache_misses=self.frames.misses,
             reference='mask-interior DINO patch-centre depth samples; sampled full IG volume support is a separate veto, not surface coverage',
-            point_state_machine='active -> removing on independent low-semantic/free evidence -> deleted after point_delete_confirm_views; support or visible high-semantic evidence restores; no map mutation',
+            point_state_machine='active -> removing on depth/DINO/RGB union contradiction -> deleted after a later visible check without strong support; support without visual contradiction restores; no map mutation',
             point_state_totals=dict(active=status_totals.get(0,0),removing=status_totals.get(1,0),deleted=status_totals.get(2,0),candidates=len(state_manifest)),
             threshold_status='initial engineering thresholds, not calibrated on GT',
             retrieval='world AABB overlap with current camera frustum; no global appearance/identity search')
