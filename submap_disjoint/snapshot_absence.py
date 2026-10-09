@@ -276,8 +276,17 @@ class SnapshotAbsenceInspector:
                 if not len(owned):continue
                 ref=np.concatenate([self.records[i]['points'] for i in ids])
                 cells=np.floor(ref/self.voxel).astype(np.int64);_,idx=np.unique(cells,axis=0,return_index=True)
-                self.pending[source]=dict(ids=tuple(ids),points=ref[idx],created=frame,reported=False,
-                    owned=owned[np.linspace(0,len(owned)-1,min(len(owned),self.opt.max_reference_points)).astype(int)].copy())
+                ref=ref[idx]
+                owned_sample=owned[np.linspace(0,len(owned)-1,min(len(owned),self.opt.max_reference_points)).astype(int)].copy()
+                # Persist the frozen candidate geometry even when the candidate
+                # never reaches would_remove.  This makes pending/unknown
+                # candidates auditable against the reference GT offline.
+                candidate_file=self.out/f'candidate_{source[0]:06d}.npz'
+                np.savez_compressed(candidate_file, points=ref, owned_geometry=owned_sample,
+                                    raw_ids=np.asarray(source,dtype=np.int64), created_frame=np.asarray([frame],dtype=np.int64))
+                self.pending[source]=dict(ids=tuple(ids),points=ref,created=frame,reported=False,
+                    candidate_file=str(candidate_file),
+                    owned=owned_sample)
             st=self.pending[source]
             # Reference is frozen. Querying new views does not grow denominator
             # or overwrite the old appearance while disappearance is pending.
@@ -323,7 +332,13 @@ class SnapshotAbsenceInspector:
             if stats['owned_support_fraction']>self.opt.max_support_fraction:stats['reasons'].append('whole_IG_track_has_support')
             if stats['owned_free_fraction']<self.opt.min_confirmed_fraction:stats['reasons'].append('whole_IG_track_not_observed_free')
             accept=accept and not stats['reasons']
-            event=dict(frame=frame,row=int(row),raw_ids=list(source),status='would_remove' if accept else 'pending',**stats,views=sim_details)
+            finite_views=[v['mean_similarity'] for v in sim_details if v.get('mean_similarity') is not None]
+            stats['dino_mean_similarity']=float(np.mean(finite_views)) if finite_views else None
+            stats['dino_min_similarity']=float(np.min(finite_views)) if finite_views else None
+            stats['dino_max_similarity']=float(np.max(finite_views)) if finite_views else None
+            stats['dino_view_count']=len(finite_views)
+            event=dict(frame=frame,row=int(row),raw_ids=list(source),status='would_remove' if accept else 'pending',
+                       candidate_file=st['candidate_file'],**stats,views=sim_details)
             logs.append(event)
             if accept and not st['reported']:
                 st['reported']=True;self.counter['unique_would_remove']+=1
