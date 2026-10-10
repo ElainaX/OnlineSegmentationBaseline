@@ -176,7 +176,7 @@ class InstanceTSDFAdapter:
             self.audit['persistence_seconds'] += time.perf_counter()-t
             record = dict(key=fid,kind=key[0],window=len(self.windows),global_ids=gids,
                           observation_frames=sorted({self.packets[pi]['frame'] for pi,_,_ in observations}),
-                          surface_points=len(xyz),blocks=blocks)
+                          surface_points=len(xyz),blocks=blocks,status='active')
             self.fragments.append(record); window['fragments'].append(fid)
             del volume, store
         self.windows.append(window)
@@ -189,7 +189,8 @@ class InstanceTSDFAdapter:
         self.flush(frame_id)
         started = time.perf_counter(); output=Path(output)
         points=[]; colors=[]; lengths=[]; assignments=[]
-        for f in self.fragments:
+        active_fragments=[f for f in self.fragments if f.get('status','active') != 'inactive']
+        for f in active_fragments:
             with np.load(self.directory/f['key']/'surface.npz') as surface:
                 points.append(surface['points']); colors.append(surface['colors']); lengths.append(len(surface['points']))
             assignments.append(resolve_fragment(f['global_ids'],self.owner.global2merged_mask_id))
@@ -222,7 +223,7 @@ class InstanceTSDFAdapter:
                      pred_classes=np.zeros(0,np.int32),pred_sem_features=np.zeros((self.cfg['mask']['feature_dim'],0)))
         self.audit.update(export_seconds=time.perf_counter()-started,export_points=len(points),export_instances=len(masks))
         identities=defaultdict(list)
-        for f,mid in zip(self.fragments,assignments):
+        for f,mid in zip(active_fragments,assignments):
             if mid>=0: identities[str(mid)].append(f['key'])
         report=dict(options=vars(self.options),association='unchanged IG sparse disjoint',
                     fragment_policy='one existing merge period, causal identities at period end',
@@ -235,7 +236,7 @@ class InstanceTSDFAdapter:
                     association_geometry='shared TSDF used for original overlap and FCGF only',
                     export_geometry='independent TSDF surfaces; world-voxel coalescing for point indexing',
                     extraction_weight_note='IT strict threshold=0.5 retains >=1 observation; shared Open3D default=3; weights are not pooled across volumes',
-                    fragments=self.fragments,windows=self.windows,identities=dict(identities),
+                    fragments=self.fragments,active_fragments=[f['key'] for f in active_fragments],windows=self.windows,identities=dict(identities),
                     exported_instance_ids=ids,audit=self.audit)
         (output/'it_manifest.json').write_text(json.dumps(report,indent=2))
         return report
