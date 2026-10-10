@@ -1,0 +1,11 @@
+{
+  "source_root": "E:\\Code\\github\\\u51af\u535a\\onlineSeg",
+  "files": {
+    "remove_detection.py": "82b1c52cc657fb1b06a819bd43ac5e202637eb0454fcfaaa21d79b60d3739902",
+    "voxelized_points.py": "3c19aed4ac98d7a07e05623861c26936a5d7fc29caa32d84e64d10d41047b30b",
+    "voxel_hashing.py": "b2a308e585d64a28154675b04fe3345fc2d17a0c4f0c195315959f80205d0b5d",
+    "config/3rscan_cropformer.yaml": "0204523bcc7b2351422210b763f7f1217073c21f4b556ac6b56ef2b144c67620"
+  },
+  "detector_modified": false,
+  "helper_function_bodies_modified": false
+}
