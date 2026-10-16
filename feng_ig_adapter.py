@@ -76,7 +76,9 @@ class FengIGCorrection(IGCorrection):
     def delete_candidate(self,frame,candidate):
         o=self.owner;live=o.maskGraph.instance_dict
         slots=resolve_slots(candidate.source_raw_ids,o.global2merged_mask_id,live)
-        tracks={int(live[s].track_uid) for s in slots}
+        # Original Scene_rep instances predate persistent track_uid; use their
+        # current slot as the stable whole-instance identity in that case.
+        tracks={int(getattr(live[s], 'track_uid', s)) for s in slots}
         row=dict(frame=int(frame),candidate_id=candidate.candidate_id,source_slot=candidate.source_slot,
                  source_raw_ids=sorted(candidate.source_raw_ids),resolved_slots=slots,track_uids=sorted(tracks))
         if not slots:
@@ -93,7 +95,8 @@ class FengIGCorrection(IGCorrection):
         self.refs[slots[0]]=dict(deleted_voxels=0)
         result=self.erase(frame,[(slots[0],xyz)]) if len(xyz) else dict(voxels=0)
         # erase() may remove empties and renumber slots. Track UID is persistent.
-        remaining=[s for s,inst in o.maskGraph.instance_dict.items() if int(inst.track_uid) in tracks]
+        remaining=[s for s,inst in o.maskGraph.instance_dict.items()
+                   if int(getattr(inst, 'track_uid', s)) in tracks]
         if remaining:o.remove_masks(frame,torch.tensor(remaining,device=o.device,dtype=torch.long))
         row.update(status='applied',actual_erased_voxels=int(result['voxels']),
                    archive=str(self.archive/f'{frame}.npz') if result['voxels'] else None,

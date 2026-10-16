@@ -1,0 +1,7 @@
+# Reproducible source hashes across Linux and Windows checkouts.
+* text=auto eol=lf
+# These experiment snapshots intentionally retain their original CRLF bytes.
+# Do not normalize them: docs/current_source_provenance.json audits exact SHA256.
+run_instdel_multires.py -text
+feng_remove_detection.py -text
+feng_detector_config.json -text

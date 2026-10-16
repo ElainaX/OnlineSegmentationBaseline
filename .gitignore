@@ -28,3 +28,16 @@ eval/scannet200/validation/*
 eval/sceneNN/*
 !eval/sceneNN/sceneNN_gt_seg.zip
 
+# Keep new runs, downloaded data, model binaries and local credentials out of releases.
+work/
+results/
+raw/
+prepared/
+seg_result/
+*.evidence.npz
+*.pkl
+.env
+.env.*
+*.pem
+*.key
+

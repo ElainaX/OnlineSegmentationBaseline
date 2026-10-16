@@ -1,0 +1,9 @@
+# Evaluation/preparation helpers only; CUDA framework/extensions are installed separately.
+numpy==1.26.4
+scipy>=1.11,<1.16
+opencv-python>=4.8,<4.12
+open3d==0.18.0
+PyYAML>=6,<7
+natsort>=8,<9
+Pillow>=10
+tqdm>=4

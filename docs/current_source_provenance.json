@@ -1,0 +1,23 @@
+{
+  "release_base_commit": "93f6d56776271fc4daf7a91566a31c82c8a2cb62",
+  "experiment_source_commit": "68e1fd603839a8df8aa42cef7ea569291357ef2a",
+  "source_commit_note": "Source snapshot ported onto published branch; the unpublished experiment commit is provenance, not an ancestor promised by this release.",
+  "core_sha256": {
+    "run_instdel_multires.py": "3c2b130665b6101510315edba13aee4eff7885ed3124875be3d38b29bddb01e3",
+    "feng_ig_adapter.py": "730ff191dd30ebdc10169d5d15f0dd5605b5e58a0e87b8e17b67492576bcb9d4",
+    "feng_remove_detection.py": "82b1c52cc657fb1b06a819bd43ac5e202637eb0454fcfaaa21d79b60d3739902",
+    "feng_detector_config.json": "1892ab44370ae8707cadab41226eb1aa4de5fae80d0db5c0bd0b9b4849727231",
+    "feng_fast_owners.py": "46f1aee4d195605ad120bbbd871e1384e471f3aa6b2d61820cb7d2c5ab1aecad",
+    "submap_disjoint/sparse_owner.py": "7839402752cf04b52ad5a4a51422b27b4469ce3b79a8215ca20bb9afa1223622",
+    "submap_disjoint/owner.py": "33ca5979472cc0337466cf266371b0bd88281146888245384e326d1d33f7cd72",
+    "submap_disjoint/sparse_edges.py": "659126a394c3f348297a8062c88e4accaf21b1fb6a5f1005a0879a8164f0a9bb",
+    "submap_disjoint/it_adapter_multires.py": "22fc5b1686a81e6360cd24a3db4446bd1a1dae5fea6b7ee88bcf83bd9cd7c813",
+    "submap_disjoint/observation_refinement.py": "9be94a40ff0ed5bd4983078e3aee53586ff1f7533c05c9a87b7aa77bcf6ea6ad",
+    "submap_disjoint/ig_correction.py": "326e1d8914e9fe96abecf13f18f1fc55ce38e1445a164bd9f33255a5867129c7",
+    "Instance.py": "1c75912e8909d65ddd0a778787134565a4fdaa4cc4627e273c553bd8651cda5a",
+    "MaskGraph.py": "c33794a3798811b0d06401356e3398f3b092a944a72b6638e6fbec32f4728548"
+  },
+  "wrappers_note": "Portable wrappers and metrics are release additions. Core algorithm and original AP evaluator are unchanged. Runtime compatibility guards are explicit.",
+  "source_archive_sha256": "503fc0fe32522b37b9f49f10693c43578b605f2202c2d2c4b6065e655e15e626",
+  "validation_list_sha256": "106c8ffeee0bf4cf28b608af4c425e10f20acd2eed804b58fb29c59e83412a92"
+}

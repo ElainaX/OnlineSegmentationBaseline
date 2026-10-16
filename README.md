@@ -1,3 +1,14 @@
+# 当前研究系统入口 / Current research system
+
+本分支整理了当前 **IGSubmap + Feng + ObsRefine** 源码及 3RScan 全实例类无关 AP / GAP-v3 评价工具。使用共享全局 2.5 cm TSDF，不启用局部 TSDF 或多分辨率。
+
+- [当前系统使用说明：数据准备、运行、AP/GAP/D 定义与调用](docs/CURRENT_SYSTEM.md)
+- [3RScan 消融计划](docs/消融plan.md)
+- [源码来源与核心文件 SHA](docs/current_source_provenance.json)
+- [便携评估入口](tools/current_system/metrics.py) 与 [CPU 协议测试](tools/current_system/test_metrics.py)
+
+下方保留原 OnlineAnySeg 项目介绍、安装说明与归属。旧实验报告/脚本保留供追溯；当前协议以以上说明为准。GAP-v3 是自定义动作审计复合指标，不是官方语义 mAP。
+
 # OnlineAnySeg: Online Zero-Shot 3D Segmentation by Visual Foundation Model Guided 2D Mask Merging
 ### [Project Page](https://yjtang249.github.io/OnlineAnySeg/) | [Paper](https://arxiv.org/pdf/2503.01309)
 

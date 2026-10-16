@@ -1,0 +1,30 @@
+{
+  "core_files_verified": 13,
+  "ap_evaluator_sha256": "97fa1fbd91e81efe8f0749fd1f389f7f894a088d2ba392173b7f9c7b0035b292",
+  "gap_core_sha256": "692ff6dd9ef87bf2918ff1766fc524b443b3402760aeda8d1fa2a3f43e9b2fe6",
+  "gpu_end_to_end_rerun": false,
+  "historical_pairs_formula_checked": 110,
+  "historical_method_records_checked": 220,
+  "comparison_sha256": "84362c75cf948971c57aff6df3f680f2a67718b16339aa9e3fb5bb35c6f3bc06",
+  "historical_scene_means": {
+    "baseline": {
+      "AP": 0.08562004131853516,
+      "AP50": 0.17845824313745695,
+      "AP25": 0.36744784474607,
+      "D": 0.0,
+      "GAP_v3": 0.08562004131853516,
+      "GAP50": 0.17845824313745695,
+      "GAP25": 0.36744784474607
+    },
+    "current": {
+      "AP": 0.09345515214164982,
+      "AP50": 0.1999472336736479,
+      "AP25": 0.41807627677200637,
+      "D": 0.09125111015613178,
+      "GAP_v3": 0.17580493624785948,
+      "GAP50": 0.2718992578342236,
+      "GAP25": 0.469635740506219
+    }
+  },
+  "note": "Formula/count verification of saved results only; no geometric AP rerun and no claim of new ablation results."
+}

@@ -835,14 +835,15 @@ class DisjointSubmapManager:
         else:  # for pointcloud
             self.get_seg_pc_w_overlap(frame_id, mask_coords_list, self.points, seg_output_path, inst_rgb_list)
 
-    def process_mask_boundary_pts(self, pred_inst_masks, return_list=False):
+    def process_mask_boundary_pts(self, pred_inst_masks, return_list=False, return_order=False):
         if isinstance(pred_inst_masks, list):
             # An empty list is a valid result when no merged instance reaches
             # the current weight/size threshold.  Keep it empty for checkpoint
             # export instead of calling torch.stack([]), which raises.
             if len(pred_inst_masks) == 0:
-                return [] if return_list else torch.empty(
+                result = [] if return_list else torch.empty(
                     (0, 0), dtype=torch.bool, device=self.device)
+                return (result, torch.empty(0, dtype=torch.long, device=self.device)) if return_order else result
             pred_inst_masks = torch.stack(pred_inst_masks, dim=0)
 
         # Step 1: sort each predicted instance by mask size, with ascending order
@@ -855,7 +856,7 @@ class DisjointSubmapManager:
         if return_list:
             pred_inst_masks_new = [inst_mask for inst_mask in pred_inst_masks]
 
-        return pred_inst_masks_new
+        return (pred_inst_masks_new, pred_inst_idx_asc) if return_order else pred_inst_masks_new
 
     def get_pc(self):
         pcd = self.voxel_block_grids.extract_point_cloud()
@@ -1071,12 +1072,18 @@ class DisjointSubmapManager:
         instance_feature_list = [instance_sem_feature.cpu().numpy() for instance_sem_feature in sem_feature_list]
 
         # 2.2: for each pred instance mask, process boundary points
-        instance_mask_list = self.process_mask_boundary_pts(instance_mask_list, return_list=True)
+        instance_mask_list, export_order = self.process_mask_boundary_pts(
+            instance_mask_list, return_list=True, return_order=True)
+        export_ids = valid_merged_mask_ids[export_order].detach().cpu().tolist()
         instance_mask_list = [instance_mask.cpu().numpy() for instance_mask in instance_mask_list]
 
 
         # # Step 3: for each pred 3D instance, apply DBSCAN for filtering
         instance_mask_list_filtered, instance_feature_list_filtered, valid_instance_indices = filter_instances(self.points, instance_mask_list, instance_feature_list)
+        # Track identities follow the actual size sort and DBSCAN selection.
+        # Leave the legacy masks, features and their export behavior unchanged.
+        self.last_exported_instance_ids = ([export_ids[i] for i in valid_instance_indices]
+                                          if filter_flag else export_ids)
 
         # Opt-in diagnostics only: preserve the original export and merge behavior.
         if self.cfg.get('experiment', {}).get('export_stage_audit', False):
@@ -1152,6 +1159,8 @@ class DisjointSubmapManager:
                          pred_sem_features=np.zeros((self.cfg['mask']['feature_dim'],0)))
             self.save_merging_result(frame_id, reextract=False)
             self.save_pc(self.points, self.colors, str(out/'final.ply'))
+            (out/'export_instance_ids.json').write_text(json.dumps(
+                self.last_exported_instance_ids))
             self.finalize_fcgf_diagnostics()
         finally:
             self.pack_edges()
