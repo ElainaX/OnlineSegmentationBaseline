@@ -1,0 +1,16 @@
+{
+  "variant": "H",
+  "version": 1,
+  "base_confirm_observations": 2,
+  "dual_first_confirm_observations": 1,
+  "dual_source_fraction_setting": "min_contradicted_fraction",
+  "source_fraction_denominator": "all frozen reference points",
+  "each_source_minimum_fraction": 0.2,
+  "dual_scope": "current observation of same candidate; distinct reference points allowed",
+  "first": "hits==0 since creation or strong-support reset",
+  "single_source": "two qualified observations; sources may differ",
+  "strong_support": "original reset and cancellation",
+  "all_other_settings": "identical to Full(T2)",
+  "erasure": "original whole-instance with shared-node protection",
+  "uses_GT": false
+}

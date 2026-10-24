@@ -1,0 +1,203 @@
+{
+  "validated_at_utc": "2026-10-24T12:14:28.461623+00:00",
+  "host": "A100",
+  "environment": {
+    "python": "3.9.25 (main, Nov  3 2025, 22:33:05) \n[GCC 11.2.0]",
+    "numpy": "1.26.4",
+    "scipy": "1.13.1",
+    "open3d": "0.18.0",
+    "opencv": "4.8.1",
+    "torch": "2.1.0+cu118",
+    "cuda": "11.8",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "MinkowskiEngine": "0.5.4",
+    "pytorch3d": "0.7.9"
+  },
+  "code_manifest_sha256": "b88b6025b314e85c3bb166aee72fe8d5d9e268c4f3c183154ab4c7a918ada02c",
+  "input_equivalence": {
+    "frames": 762,
+    "rgb_depth_pose_intrinsics_identical": true,
+    "algorithm_inputs_verified": true
+  },
+  "protocols": {
+    "archive_and_raw_identical": true,
+    "compared_files": 2288,
+    "ap": {
+      "returncode": 0,
+      "passed": true
+    },
+    "change": {
+      "returncode": 0,
+      "passed": true
+    },
+    "manifest": {
+      "returncode": 0,
+      "passed": true
+    }
+  },
+  "cli_help": {
+    "passed": true,
+    "commands": 8
+  },
+  "mask_inference": {
+    "passed": true,
+    "frames": 1,
+    "image_shape": [
+      480,
+      640
+    ],
+    "embedding_shape": [
+      7,
+      1024
+    ],
+    "finite": true
+  },
+  "reject_smoke_scoring": {
+    "passed": true,
+    "reason": "Partial smoke output rejected before evaluation",
+    "returncode": 1
+  },
+  "policy_tests": {
+    "passed": true,
+    "count": 17
+  },
+  "full_policy_audit": {
+    "verified": true,
+    "observations": 2129,
+    "confirmations": {
+      "dual_first": 0,
+      "temporal": 21
+    }
+  },
+  "full_runs": {
+    "baseline": {
+      "status": "complete",
+      "frames": 762,
+      "returncode": 0,
+      "seconds": 430.35896158218384,
+      "metrics": {
+        "AP": 0.34491254003449123,
+        "AP50": 0.450849963045085,
+        "AP25": 0.5764966740576497,
+        "D": 0.0,
+        "GAP": 0.34491254003449123
+      },
+      "vertices": 410858,
+      "instances": 56,
+      "output_sha256": {
+        "final.ply": "9f5cbfda22f8d9765f3e13138fea987eed5f0dda32ba89888cb961da59bc92e8",
+        "ckpt_final.npz": "67ecdddde7af3a8909f385cc2707d3bcf066dafa961504833ae76cd42f947577"
+      },
+      "metrics_sha256": "7cb5aa800dc7dc923489f098580356f9b3d7e6038cb6b556b68ddc1ad31d65e0",
+      "deletion_status": "available_on_observed_domain"
+    },
+    "full": {
+      "status": "complete",
+      "frames": 762,
+      "returncode": 0,
+      "seconds": 1392.7675609588623,
+      "metrics": {
+        "AP": 0.36053517632465004,
+        "AP50": 0.4625199362041468,
+        "AP25": 0.5263157894736842,
+        "D": 0.7429304378952393,
+        "GAP": 0.8356130577963797
+      },
+      "vertices": 390523,
+      "instances": 43,
+      "output_sha256": {
+        "final.ply": "ec697f264f608833ce8fb4fb06182799cb4fce4de9af7057b3eb71638b5cf7cd",
+        "ckpt_final.npz": "ee4763270f58a898bab882a2b7f66027c1d5d26313c5825a726496c27bb31c46"
+      },
+      "metrics_sha256": "f77a3b30d891520148f7988d5c029843df37cf6c9411a1f7c836665c221325ee",
+      "deletion_status": "available_on_observed_domain"
+    }
+  },
+  "smoke_runs": {
+    "f0_smoke": {
+      "method": "f0",
+      "frames": 40,
+      "returncode": 0,
+      "seconds": 34.301798820495605
+    },
+    "full_metadata_smoke": {
+      "method": "full",
+      "frames": 40,
+      "returncode": 0,
+      "seconds": 48.764912128448486
+    },
+    "full_smoke": {
+      "method": "full",
+      "frames": 40,
+      "returncode": 0,
+      "seconds": 46.621095418930054
+    },
+    "l_smoke": {
+      "method": "l",
+      "frames": 40,
+      "returncode": 0,
+      "seconds": 43.48802471160889
+    },
+    "o0_smoke": {
+      "method": "o0",
+      "frames": 40,
+      "returncode": 0,
+      "seconds": 45.71789526939392
+    },
+    "t1-any_metadata_smoke": {
+      "method": "t1-any",
+      "frames": 40,
+      "returncode": 0,
+      "seconds": 91.32243847846985
+    },
+    "t1-any_smoke": {
+      "method": "t1-any",
+      "frames": 40,
+      "returncode": 0,
+      "seconds": 85.61857271194458
+    }
+  },
+  "metadata_fix_validation": {
+    "full": {
+      "verified": true,
+      "observations": 0,
+      "confirmations": {
+        "dual_first": 0,
+        "temporal": 0
+      }
+    },
+    "t1-any": {
+      "verified": true,
+      "observations": 0,
+      "immediate_confirmations": 0,
+      "single_point_triggers": 0
+    },
+    "generated_t1_step_exists": true,
+    "full_run_wrapper_sha256": "a4f1c22ff25c52f97f821c440a889e351565328ef06a4d14f9c794b61205e469",
+    "note": "Final wrapper adds policy metadata persistence only. Full 762-frame mapping used the prior wrapper; metadata was explicitly persisted afterward and observed decisions audited. Final wrapper validated on Full/T1-any 40-frame runs. Algorithm/configuration/scoring unchanged."
+  },
+  "limitations": [
+    "Existing compiled OASeg environment used; clean-system extension installation not tested.",
+    "Only one frame of new CropFormer/CLIP inference tested; full runs reused fixed 191-frame masks.",
+    "Other four ablations have prior full-run reference metrics and new 40-frame smoke verification, not full-sequence reruns in this cleanup."
+  ],
+  "evidence_log_sha256": {
+    "archive_prepare.log": "503eb27efe06b219cf76e2c54445656dbfd535d5e6fb4e6a51abbfc6d07d171a",
+    "baseline.launch.log": "7e6a2978ae6d2451509a06696bdab9c6fb8fde0c551a06e50b7df84f5eda8ea9",
+    "baseline_evaluation.log": "f51df14e7d1864bcabe9e0411bc47fed5abcf3c6dfcd41e9c200690ec775983a",
+    "check_inputs.log": "acad84c09e4a7c28c482001f6d7d2063422b7ec0d641977613bee60a13d5bace",
+    "environment.log": "017be5f0706c2d781eacf43d4324e209ac1f34b84dbc24782d8e7b39e642700d",
+    "full_metadata_smoke.log": "478d8879694fa8f266c6d4598dcb01399ca6e69ffa8d0052cd1abe5d925dd06c",
+    "full_smoke.launch.log": "369814ab1ea4c9d5da7daa6ed3c0b431ac45ab0c171257e8c7ea12af5acae928",
+    "full_validation.log": "a32ad8d7825d3fafa0820f0af68854c79dd7ae7b77659a33e6530f23531f473b",
+    "mask_inference_smoke.log": "41a49f7ea9470205029bf56ccd3b7980442ff4563035adc8070bc320571b7e77",
+    "masks.log": "74c76377f28a65effe7ab3b68aefe72a142a90c0efa80d8af869ee64e321ab78",
+    "policy_tests.log": "a38869917b8b4a9954e986ea1c30de16a6847bcc3e60c01c5ac941ec74ea25ba",
+    "prepare.log": "9b9ae41d0fb354b068c7767cafd9336712f890a0162485d81b041a4e1c46a1b7",
+    "protocol_ap.log": "27210ea52af389dd560863b3ebb84a3bc96d4d5cbaec933419974f9bffa46ddb",
+    "protocol_change.log": "a5cb495ff8949a3c6557bb3b695733513248e054fab3a9e0a60d51249a5cdfe7",
+    "protocol_manifest.log": "aeadafd43a6848e58480c8b22904d1ae4715d68a39a21730a6ed82502761db4f",
+    "t1_metadata_smoke.log": "43f245836ed552efff07a8c8c16630662b01b50376e860b8b703f511780680f5",
+    "variants_validation.log": "f8c5456022b597937fbcd073413f14c37294b1767a9d486eb57a9016ee280997"
+  }
+}

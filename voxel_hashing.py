@@ -65,7 +65,15 @@ class VoxelHashTable:
         corr_block_indices_o3c, _ = self.voxel_block_grids.hashmap().find(corr_block_coords_o3c)  # Tensor(n, )
 
         corr_block_coords_w = self.block_coords2world_coords(corr_block_coords)  # corresponding blocks' World coordinates, Tensor(n, 3)
-        corr_block_indices = torch.utils.dlpack.from_dlpack(corr_block_indices_o3c.to_dlpack()).to(torch.int64)  # corresponding blocks' 1D block indices, Tensor(n, )
+        # Explicitly synchronize/copy Open3D CUDA results before PyTorch use.
+        # The old DLPack handoff can race Open3D CUDA streams on the A100 runtime.
+        # Own the host buffer before the asynchronous host-to-device copy.
+        # Otherwise the temporary Open3D NumPy view can be released while
+        # PyTorch is still reading it, causing a long-run native crash.
+        corr_block_indices_host = np.array(corr_block_indices_o3c.cpu().numpy(), copy=True)
+        corr_block_indices = torch.from_numpy(corr_block_indices_host).to(device=voxel_coords.device, dtype=torch.int64)
+        if voxel_coords.device.type == 'cuda':
+            torch.cuda.synchronize(device=voxel_coords.device)
 
         # Step 2: for each input voxel coordinate, compute its x/y/z offset inter its corresponding VoxelBlock
         inter_block_offsets = torch.round( (voxel_coords - corr_block_coords_w) / self.voxel_size ).to(torch.int64)  # Tensor(n, 3)

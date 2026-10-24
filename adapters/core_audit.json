@@ -1,0 +1,6 @@
+{
+  "purpose": "Guard the exact detector source before installing the T1-any in-memory adapter",
+  "core_sha256": {
+    "feng_remove_detection.py": "82b1c52cc657fb1b06a819bd43ac5e202637eb0454fcfaaa21d79b60d3739902"
+  }
+}

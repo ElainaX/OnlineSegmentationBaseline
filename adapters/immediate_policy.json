@@ -1,0 +1,27 @@
+{
+  "name": "T1-any",
+  "identifier": "T1any",
+  "trigger": "At least one original valid owned depth OR RGB contradiction pixel immediately confirms whole-instance deletion in the same detector step.",
+  "removed": [
+    "candidate pixel count and contradiction ratio",
+    "reference surface minimum and reference tested/ratio gates",
+    "reference sampling as a trigger prerequisite",
+    "cumulative coverage and contradiction fraction",
+    "multiple independent observations",
+    "support veto",
+    "candidate-count cap"
+  ],
+  "preserved": [
+    "valid pose and frame-wide minimum depth/render pixels",
+    "widespread conflict frame veto",
+    "depth/RGB point classification thresholds",
+    "occlusion and boundaries",
+    "unambiguous reliable instance ownership",
+    "association checks",
+    "original whole-instance retirement and exclusive TSDF-node eraser with shared-node protection",
+    "ObsRefine",
+    "fixed evaluation domain"
+  ],
+  "historical_T1": "confirm_observations=1 with aggregate gates retained; not equivalent and not reused",
+  "interpretation": "Ablates the combined instance-level confirmation package, not temporal count alone. No GT in detection. Valid means passing the preserved frame/point/ownership checks."
+}

@@ -1,0 +1,8 @@
+{
+  "baseline": {"entry": "run_baseline.py", "correction": "off", "refine": false, "policy": "original OnlineAnySeg", "deletion_eval": "baseline"},
+  "full": {"entry": "run_recorded.py", "correction": "delete", "refine": true, "detector": "detector_H.json", "policy": "hybrid H confirmation, whole-instance retirement", "deletion_eval": "H"},
+  "f0": {"entry": "run_recorded.py", "correction": "off", "refine": true, "detector": "detector_F0.json", "policy": "Full without change detection/deletion", "deletion_eval": "baseline"},
+  "o0": {"entry": "run_recorded.py", "correction": "delete", "refine": false, "detector": "detector_O0.json", "policy": "Full without ObsRefine", "deletion_eval": "H"},
+  "l": {"entry": "run_recorded.py", "correction": "delete", "refine": true, "detector": "detector_L.json", "policy": "H confirmation, local contradicted surface corners, no forced whole retirement", "env_method": "L", "deletion_eval": "H"},
+  "t1-any": {"entry": "run_recorded_t1.py", "correction": "delete", "refine": true, "detector": "detector_H.json", "policy": "any one valid owned contradiction, immediate whole-instance retirement", "cuda_launch_blocking": true, "deletion_eval": "H"}
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "name": "Flat-derived observed-surface class-agnostic instance AP",
+  "not_an_official_Flat_3D_benchmark": true,
+  "fixed_before_model_outputs": true,
+  "domain": "All reliably labelled sampled points in derived_gt_v1/run2_domain.npz. All GT thing instances remain in recall denominators even when no reconstructed surface is nearby. No crop to method coverage.",
+  "projection": "Nearest reconstructed vertex to each labelled GT point in original world metres, distance <=0.05m. No ICP or other alignment fitting. All reconstructed vertices participate, including unassigned ones; no match gives an all-false predicted membership row. Ties choose the lowest reconstruction vertex index. Overlapping prediction masks remain separate instances.",
+  "confidence": "Use each checkpoint's finite pred_score unchanged; no GT-based ranking, threshold selection or calibration.",
+  "primary": "Minimum 100 sampled points for GT and projected prediction regions, matching the existing evaluator's size convention. Report the excluded instance IDs and sizes. This is a derived-surface convention, not physical object size.",
+  "secondary": "Predeclared sensitivity analysis with minimum 1 sampled point, covering every represented thing instance, including tiny objects. Do not select between primary and secondary based on which favours H.",
+  "unknown_and_stuff": "Unknown GT samples excluded from AP projection domain. Reliably labelled stuff remains a known negative: predictions spilling onto it enlarge their union or count as false positives. Small GT thing regions excluded by the selected minimum are ignored using the reference evaluator's overlap-dependent ignore rule.",
+  "outside_domain": "Predicted vertices outside labelled final-state surface coverage are reported separately and cannot be judged as correct or false solely from missing labels. Instances with no domain support are listed, not silently called correct. AP therefore does not measure global ghost geometry; use the independent old-surface domain for that.",
+  "PR": "Exact CPU-only copy of existing evaluate_matches function, pinned in reference_ap_provenance.json. Same strict IoU > threshold matching, duplicate handling, unique confidence thresholds and PR integration. Class-agnostic object category.",
+  "thresholds": "AP averages IoU 0.50,0.55,...,0.90 (nine thresholds), matching this repository's evaluator; AP50=0.50 and AP25=0.25. Do not label this AP50:95.",
+  "undefined": "No eligible GT => null AP, even if predictions exist; eligible GT with no predictions => zero. Retain eligible/excluded GT counts and prediction support counts.",
+  "change": {
+    "domain": "derived_change_gt_v1/reference_domain.npz; conservative observed moved/removed old-surface target",
+    "pending_action_evaluator": true,
+    "rules": "Do not report D or GAP until physical erasure archive integration and tests pass. Final absence alone is insufficient evidence of correction. Retain deleted-reference negative counts and off-reference deletions; missing archive evidence is unavailable, not zero.",
+    "label": "Any eventual D/GAP is Flat-derived, not an official benchmark or automatically numerically comparable to 3RScan."
+  },
+  "limitations": "Single Flat run1-to-run2 transition, partial observed surface coverage, synthetic official 2D GT projected into 3D, minimum-size sensitivity and unresolved change-name dictionary entries. No significance or stable-improvement claims.",
+  "GPU_gate": "No Flat GPU work until T1-any110 combined five-method delivery verification and cleanup."
+}

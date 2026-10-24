@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "name": "Flat-derived D_observed and GAP_observed",
+  "extends": "scoring_protocol.json change section; does not modify the frozen AP or either GT domain",
+  "prediction_independent": true,
+  "not_official_or_directly_comparable_to_3RScan": true,
+  "target": "Fixed target mask from derived_change_gt_v1/reference_domain.npz",
+  "physical_proof": "Require both actual erasure archive and full one-ring pre-erasure evidence. Match erased node indices, TSDF, weight and XYZ to the actual archive. Use positive-weight zero crossings incident on erased nodes, including surviving neighbours. Missing or inconsistent evidence gives unavailable scores, not zero. XYZ may differ only by float32/float64 representation rounding <=1e-5m and must identify identical 25mm lattice nodes.",
+  "final_absence": "Archived erased surface and affected reference sample must both be >0.05m from final reconstruction. No credit for erased geometry that was reconstructed again. No credit from final absence alone.",
+  "reference_assignment": "Reference sample within sqrt(3)*0.025m of supported erased surface. Union over actions deduplicates reference samples. Unknown/neutral reference samples are excluded. Off-reference surface atoms are disclosed separately and not counted as known false positives because Flat GT covers only observed labelled surfaces.",
+  "temporal": "Frames are original concatenated input indices. Reference run1 frames <400; rescan run2 frames >=400. Only rescan actions can earn target credit. An early-only erasure of a target is a false positive as well as a missed target; a later supported erasure can earn credit once.",
+  "formula": "TP=count(after & target); FP=count((before|after) & negative)+count(before & target & ~after); FN=count(target)-TP; D_observed=TP/(TP+FP+FN). Empty denominator=>null. GAP_observed=AP+(1-AP)*D_observed only when both defined. Compute separately for primary and all-size AP.",
+  "baseline": "Original baseline has no correction eraser by audited code. Absence of correction summary is expected only for baseline; no actions => D=0 when targets exist. H must produce a complete correction summary, even when it has zero actions.",
+  "disclosure": "Report target, neutral and negative counts, supported erased surface counts, unknown/off-reference atoms, early-only actions, archive SHAs, coverage and per-object target/cleared counts. These scores do not judge all deleted geometry and cannot certify globally safe deletion.",
+  "limitations": "Conservative partial derived old-surface domain; 13 held-out label disagreements at 12 non-target reference samples remain disclosed. Thin moved objects may have no evaluable vacancy targets. Do not convert absent coverage to success.",
+  "availability_gate": "CPU analytic tests and later actual-run archive/metadata consistency must pass. Synthetic tests do not establish evidence completeness in a future run."
+}

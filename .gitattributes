@@ -1,0 +1,3 @@
+# Preserve imported source and frozen protocol/config bytes on every platform.
+# Runtime guards and provenance use SHA256 of the actual file bytes.
+* -text

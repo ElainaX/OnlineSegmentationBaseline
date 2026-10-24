@@ -137,7 +137,11 @@ class SceneNNDataset(Dataset):
             self.latest_seg_img = segmentation
 
             instance_embed_path = os.path.join(self.mask_embed_dir, mask_embed_basename)
-            mask_embeddings = torch.load(instance_embed_path).to(self.device)
+            # Embeddings in the existing ScanNet cache were serialized from a
+            # CUDA run.  Map them explicitly so dataset preparation and
+            # validation also work without a GPU.
+            mask_embeddings = torch.load(
+                instance_embed_path, map_location=self.device).to(self.device)
             seg_flag = True
         else:
             segmentation = torch.zeros_like(self.latest_seg_img).to(self.device)
@@ -288,7 +292,8 @@ class ScannetDataset(Dataset):
             self.latest_seg_img = segmentation
 
             instance_embed_path = os.path.join(self.mask_embed_dir, mask_embed_basename)
-            mask_embeddings = torch.load(instance_embed_path).to(self.device)
+            mask_embeddings = torch.load(
+                instance_embed_path, map_location=self.device).to(self.device)
             seg_flag = True
         else:
             segmentation = torch.zeros_like(self.latest_seg_img).to(self.device)
@@ -371,7 +376,13 @@ class MyDataset(Dataset):
         if seg_interval <= 0:
             seg_interval = self.cfg["seg"]["seg_add_interval"]
 
-        seg_frame_ids = [ int(mask_base_name[:4]) for mask_base_name in self.mask_basename_list ]
+        seg_frame_ids = []
+        for mask_base_name in self.mask_basename_list:
+            stem, _ = os.path.splitext(mask_base_name)
+            if stem.isdigit():
+                seg_frame_ids.append(int(stem))
+        if not seg_frame_ids:
+            raise ValueError("No numeric segmentation frame files found in %s" % self.mask_image_dir)
         last_seg_frame_id = seg_frame_ids[0]
         for seg_frame_id in seg_frame_ids[::-1]:
             if seg_frame_id % seg_interval == 0:
@@ -407,8 +418,8 @@ class MyDataset(Dataset):
     def get_rgbd(self):
         rgb_dir = os.path.join(self.data_location, "color")
         depth_dir = os.path.join(self.data_location, "depth")
-        rgb_files = natsorted( os.listdir(rgb_dir) )
-        depth_files = natsorted( os.listdir(depth_dir) )
+        rgb_files = [os.path.join(rgb_dir, name) for name in natsorted(os.listdir(rgb_dir))]
+        depth_files = [os.path.join(depth_dir, name) for name in natsorted(os.listdir(depth_dir))]
         return rgb_files, depth_files
 
     def __getitem__(self, index):
@@ -427,7 +438,8 @@ class MyDataset(Dataset):
             self.latest_seg_img = segmentation
 
             instance_embed_path = os.path.join(self.mask_embed_dir, mask_embed_basename)
-            mask_embeddings = torch.load(instance_embed_path).to(self.device)
+            mask_embeddings = torch.load(
+                instance_embed_path, map_location=self.device).to(self.device)
             seg_flag = True
         else:
             segmentation = torch.zeros_like(self.latest_seg_img).to(self.device)

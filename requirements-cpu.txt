@@ -1,0 +1,14 @@
+# Validated on Python 3.9.25; also used by the GPU environment.
+numpy==1.26.4
+scipy==1.13.1
+open3d==0.18.0
+opencv-python==4.8.1.78
+Pillow==11.3.0
+PyYAML==6.0.3
+natsort==8.4.0
+tqdm==4.70.1
+scikit-learn==1.6.1
+networkx==3.2.1
+matplotlib==3.9.4
+# FCGF sources declare the future_fstrings codec, including on Python 3.9.
+future-fstrings==1.2.0
